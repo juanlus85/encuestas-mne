@@ -109,3 +109,12 @@
 ## Bugs pendientes (post-mejoras UX)
 - [x] Menú conteo peatonal no aparece para encuestadores (añadido acceso directo en pantalla de inicio del encuestador)
 - [x] ConteoResultados (admin) carga a todo el ancho y desaparece el sidebar (añadido DashboardLayout)
+
+## Rediseño módulo conteo peatonal (boceto 27/03)
+- [x] BD: tabla pedestrian_passes (pases individuales) y pedestrian_directions (sentidos por punto)
+- [x] Router tRPC: passes.add, directions.list, directions.create/update/delete, passes.stats
+- [x] UI encuestador pantalla 1: selector de punto de conteo
+- [x] UI encuestador pantalla 2: botones 1-8 + botón grupo (modal con número), selector de sentido, botón Añadir
+- [x] Panel admin: gestión de sentidos por punto (crear/editar/eliminar) en /conteo-sentidos
+- [x] Panel admin: visor de resultados con filtros por fecha, hora, franja y encuestador en /conteo-resultados
+- [x] Tests vitest: 8 tests de conteo (17 en total, todos pasando)

@@ -39,6 +39,14 @@ import {
   updateUser,
   updateUserPassword,
   upsertFieldMetric,
+  createPedestrianPass,
+  getPedestrianPasses,
+  getPedestrianPassStats,
+  createPedestrianDirection,
+  updatePedestrianDirection,
+  deletePedestrianDirection,
+  getDirectionsByPoint,
+  getAllDirectionPoints,
 } from "./db";
 import { hashPassword } from "./_core/localAuth";
 import { storagePut } from "./storage";
@@ -507,6 +515,93 @@ export const appRouter = router({
         const intervals = await getIntervalsBySession(input.id);
         return { ...session, intervals };
       }),
+  }),
+
+  // ─── Pedestrian Passes ──────────────────────────────────────────────────────────────────────────
+
+  passes: router({
+    add: encuestadorProcedure
+      .input(z.object({
+        surveyPoint: z.string(),
+        directionId: z.number().optional(),
+        directionLabel: z.string().optional(),
+        count: z.number().min(1).max(999),
+        latitude: z.number().optional(),
+        longitude: z.number().optional(),
+        gpsAccuracy: z.number().optional(),
+        recordedAt: z.date().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return createPedestrianPass({
+          encuestadorId: ctx.user.id,
+          encuestadorName: ctx.user.name ?? undefined,
+          encuestadorIdentifier: ctx.user.identifier ?? undefined,
+          surveyPoint: input.surveyPoint,
+          directionId: input.directionId ?? null,
+          directionLabel: input.directionLabel ?? null,
+          count: input.count,
+          latitude: input.latitude ? String(input.latitude) : null,
+          longitude: input.longitude ? String(input.longitude) : null,
+          gpsAccuracy: input.gpsAccuracy ? String(input.gpsAccuracy) : null,
+          recordedAt: input.recordedAt ?? new Date(),
+        });
+      }),
+
+    list: adminOrRevisorProcedure
+      .input(z.object({
+        surveyPoint: z.string().optional(),
+        encuestadorId: z.number().optional(),
+        dateFrom: z.string().optional(),
+        dateTo: z.string().optional(),
+        directionId: z.number().optional(),
+      }).optional())
+      .query(({ input }) => getPedestrianPasses(input ?? {})),
+
+    stats: adminOrRevisorProcedure
+      .input(z.object({
+        surveyPoint: z.string().optional(),
+        encuestadorId: z.number().optional(),
+        dateFrom: z.string().optional(),
+        dateTo: z.string().optional(),
+      }).optional())
+      .query(({ input }) => getPedestrianPassStats(input ?? {})),
+  }),
+
+  // ─── Pedestrian Directions ────────────────────────────────────────────────────────────────────
+
+  directions: router({
+    byPoint: protectedProcedure
+      .input(z.object({ surveyPoint: z.string() }))
+      .query(({ input }) => getDirectionsByPoint(input.surveyPoint)),
+
+    allPoints: protectedProcedure
+      .query(() => getAllDirectionPoints()),
+
+    create: adminProcedure
+      .input(z.object({
+        surveyPoint: z.string(),
+        label: z.string(),
+        description: z.string().optional(),
+        order: z.number().optional(),
+      }))
+      .mutation(({ input }) => createPedestrianDirection(input)),
+
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        label: z.string().optional(),
+        description: z.string().optional(),
+        isActive: z.boolean().optional(),
+        order: z.number().optional(),
+      }))
+      .mutation(({ input }) => {
+        const { id, ...data } = input;
+        return updatePedestrianDirection(id, data);
+      }),
+
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(({ input }) => deletePedestrianDirection(input.id)),
   }),
 
   // ─── Export CSV ───────────────────────────────────────────────────────────────────────────────

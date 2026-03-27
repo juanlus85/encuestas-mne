@@ -87,8 +87,8 @@ function EncuestadorHome() {
                 <PersonStanding className="h-5 w-5 text-amber-700" />
               </div>
               <div>
-                <p className="font-semibold text-foreground">Iniciar sesión de conteo</p>
-                <p className="text-sm text-muted-foreground">Registro de flujo peatonal por intervalos</p>
+                <p className="font-semibold text-foreground">Conteo Peatonal</p>
+                <p className="text-sm text-muted-foreground">Registrar pases de personas por sentido</p>
               </div>
             </div>
           </button>

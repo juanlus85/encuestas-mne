@@ -213,3 +213,56 @@ export const pedestrianIntervals = mysqlTable("pedestrian_intervals", {
 
 export type PedestrianInterval = typeof pedestrianIntervals.$inferSelect;
 export type InsertPedestrianInterval = typeof pedestrianIntervals.$inferInsert;
+
+// ─── Pedestrian Directions (sentidos por punto) ─────────────────────────────────
+
+/**
+ * Sentidos de paso definidos por el administrador para cada punto de conteo.
+ * Ejemplo: punto "Mateos Gago" puede tener sentidos "A→B", "B→A", "A→C"...
+ */
+export const pedestrianDirections = mysqlTable("pedestrian_directions", {
+  id: int("id").autoincrement().primaryKey(),
+  surveyPoint: varchar("surveyPoint", { length: 255 }).notNull(), // nombre del punto
+  label: varchar("label", { length: 128 }).notNull(),             // ej: "A → B"
+  description: text("description"),                               // descripción opcional
+  isActive: boolean("isActive").default(true).notNull(),
+  order: int("order").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PedestrianDirection = typeof pedestrianDirections.$inferSelect;
+export type InsertPedestrianDirection = typeof pedestrianDirections.$inferInsert;
+
+// ─── Pedestrian Passes (pases individuales) ─────────────────────────────────────
+
+/**
+ * Cada pase registrado en campo: un grupo de N personas en un sentido determinado.
+ * Cada vez que el encuestador pulsa "Añadir" se crea un registro.
+ */
+export const pedestrianPasses = mysqlTable("pedestrian_passes", {
+  id: int("id").autoincrement().primaryKey(),
+  encuestadorId: int("encuestadorId").notNull(),
+  encuestadorName: varchar("encuestadorName", { length: 255 }),
+  encuestadorIdentifier: varchar("encuestadorIdentifier", { length: 32 }),
+
+  // Ubicación y contexto
+  surveyPoint: varchar("surveyPoint", { length: 255 }).notNull(),
+  directionId: int("directionId"),           // FK a pedestrian_directions
+  directionLabel: varchar("directionLabel", { length: 128 }), // desnormalizado para consultas rápidas
+
+  // El dato principal
+  count: int("count").notNull(),             // número de personas en este pase
+
+  // GPS en el momento del pase
+  latitude: decimal("latitude", { precision: 10, scale: 7 }),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }),
+  gpsAccuracy: decimal("gpsAccuracy", { precision: 8, scale: 2 }),
+
+  // Timestamp exacto del pase (para consultas por minuto, hora, franja)
+  recordedAt: timestamp("recordedAt").notNull(),
+
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PedestrianPass = typeof pedestrianPasses.$inferSelect;
+export type InsertPedestrianPass = typeof pedestrianPasses.$inferInsert;

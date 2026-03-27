@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/useMobile";
 import {
+  ArrowUpDown,
   BarChart3,
   ClipboardList,
   FileDown,
@@ -41,6 +42,7 @@ const adminMenuItems = [
   { icon: Map, label: "Mapa de Campo", path: "/mapa" },
   { icon: ClipboardList, label: "Resultados", path: "/resultados" },
   { icon: PersonStanding, label: "Conteos Peatonales", path: "/conteo-resultados" },
+  { icon: ArrowUpDown, label: "Sentidos de Conteo", path: "/conteo-sentidos" },
   { icon: FileDown, label: "Exportar", path: "/exportar" },
   { icon: Users, label: "Usuarios", path: "/usuarios" },
   { icon: Settings, label: "Configuración", path: "/configuracion" },

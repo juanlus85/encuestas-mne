@@ -448,3 +448,116 @@ export async function getIntervalsBySession(sessionId: number) {
     .where(eq(pedestrianIntervals.sessionId, sessionId))
     .orderBy(pedestrianIntervals.intervalMinute);
 }
+
+// ─── Pedestrian Directions ────────────────────────────────────────────────────
+import {
+  pedestrianDirections,
+  pedestrianPasses,
+  InsertPedestrianPass,
+} from "../drizzle/schema";
+
+export async function getDirectionsByPoint(surveyPoint: string) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(pedestrianDirections)
+    .where(and(eq(pedestrianDirections.surveyPoint, surveyPoint), eq(pedestrianDirections.isActive, true)))
+    .orderBy(pedestrianDirections.order, pedestrianDirections.id);
+}
+
+export async function getAllDirectionPoints() {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select({ surveyPoint: pedestrianDirections.surveyPoint })
+    .from(pedestrianDirections)
+    .groupBy(pedestrianDirections.surveyPoint);
+  return rows.map(r => r.surveyPoint);
+}
+
+export async function createPedestrianDirection(data: { surveyPoint: string; label: string; description?: string; order?: number }) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const result = await db.insert(pedestrianDirections).values({
+    surveyPoint: data.surveyPoint,
+    label: data.label,
+    description: data.description ?? null,
+    order: data.order ?? 0,
+    isActive: true,
+  });
+  return result[0];
+}
+
+export async function updatePedestrianDirection(id: number, data: { label?: string; description?: string; isActive?: boolean; order?: number }) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(pedestrianDirections).set(data as any).where(eq(pedestrianDirections.id, id));
+}
+
+export async function deletePedestrianDirection(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(pedestrianDirections).where(eq(pedestrianDirections.id, id));
+}
+
+// ─── Pedestrian Passes ────────────────────────────────────────────────────────
+
+export async function createPedestrianPass(data: InsertPedestrianPass) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const result = await db.insert(pedestrianPasses).values(data);
+  return result[0];
+}
+
+export async function getPedestrianPasses(filters?: {
+  encuestadorId?: number;
+  surveyPoint?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  directionId?: number;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions: any[] = [];
+  if (filters?.encuestadorId) conditions.push(eq(pedestrianPasses.encuestadorId, filters.encuestadorId));
+  if (filters?.surveyPoint) conditions.push(eq(pedestrianPasses.surveyPoint, filters.surveyPoint));
+  if (filters?.directionId) conditions.push(eq(pedestrianPasses.directionId, filters.directionId));
+  if (filters?.dateFrom) {
+    conditions.push(gte(pedestrianPasses.recordedAt, new Date(filters.dateFrom)));
+  }
+  if (filters?.dateTo) {
+    const to = new Date(filters.dateTo);
+    to.setHours(23, 59, 59, 999);
+    conditions.push(lte(pedestrianPasses.recordedAt, to));
+  }
+  const query = db.select().from(pedestrianPasses).orderBy(desc(pedestrianPasses.recordedAt));
+  if (conditions.length > 0) return query.where(and(...conditions));
+  return query;
+}
+
+export async function getPedestrianPassStats(filters?: {
+  surveyPoint?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  encuestadorId?: number;
+}) {
+  const passes = await getPedestrianPasses(filters);
+  // Agrupar por sentido
+  const byDirection: Record<string, number> = {};
+  let total = 0;
+  for (const p of passes) {
+    const key = p.directionLabel ?? "Sin sentido";
+    byDirection[key] = (byDirection[key] ?? 0) + p.count;
+    total += p.count;
+  }
+  // Agrupar por hora
+  const byHour: Record<string, number> = {};
+  for (const p of passes) {
+    const h = new Date(p.recordedAt).getHours().toString().padStart(2, "0") + ":00";
+    byHour[h] = (byHour[h] ?? 0) + p.count;
+  }
+  // Agrupar por punto
+  const byPoint: Record<string, number> = {};
+  for (const p of passes) {
+    byPoint[p.surveyPoint] = (byPoint[p.surveyPoint] ?? 0) + p.count;
+  }
+  return { total, byDirection, byHour, byPoint, passes };
+}

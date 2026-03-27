@@ -15,6 +15,7 @@ import Usuarios from "./pages/Usuarios";
 import Configuracion from "./pages/Configuracion";
 import ConteoPeatonal from "./pages/ConteoPeatonal";
 import ConteoResultados from "./pages/ConteoResultados";
+import ConteoSentidos from "./pages/ConteoSentidos";
 
 function Router() {
   return (
@@ -31,6 +32,7 @@ function Router() {
       <Route path="/configuracion" component={Configuracion} />
       <Route path="/conteo" component={ConteoPeatonal} />
       <Route path="/conteo-resultados" component={ConteoResultados} />
+      <Route path="/conteo-sentidos" component={ConteoSentidos} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
