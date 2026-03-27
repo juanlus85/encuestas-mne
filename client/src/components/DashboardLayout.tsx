@@ -28,6 +28,7 @@ import {
   Settings,
   Users,
   PersonStanding,
+  Flame,
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -40,6 +41,7 @@ const adminMenuItems = [
   { icon: LayoutDashboard, label: "Inicio", path: "/" },
   { icon: BarChart3, label: "Estadísticas", path: "/estadisticas" },
   { icon: Map, label: "Mapa de Campo", path: "/mapa" },
+  { icon: Flame, label: "Mapa Conteos", path: "/mapa-conteos" },
   { icon: ClipboardList, label: "Resultados", path: "/resultados" },
   { icon: PersonStanding, label: "Conteos Peatonales", path: "/conteo-resultados" },
   { icon: ArrowUpDown, label: "Sentidos de Conteo", path: "/conteo-sentidos" },
@@ -52,6 +54,7 @@ const revisorMenuItems = [
   { icon: LayoutDashboard, label: "Inicio", path: "/" },
   { icon: BarChart3, label: "Estadísticas", path: "/estadisticas" },
   { icon: Map, label: "Mapa de Campo", path: "/mapa" },
+  { icon: Flame, label: "Mapa Conteos", path: "/mapa-conteos" },
   { icon: ClipboardList, label: "Resultados", path: "/resultados" },
   { icon: PersonStanding, label: "Conteos Peatonales", path: "/conteo-resultados" },
   { icon: FileDown, label: "Exportar", path: "/exportar" },

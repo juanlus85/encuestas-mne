@@ -124,3 +124,14 @@
 - [x] PWA instalable en Android e iPhone (manifest.json, service worker, iconos)
 - [x] Teclado numérico (inputmode="numeric") en diálogo de grupo grande en conteo
 - [x] Scroll automático al inicio al entrar en pantalla de conteo y formulario de encuesta
+
+## Mejoras 28/03 (tarde)
+- [x] BD: tabla survey_rejections (encuestador, punto, GPS, fecha, hora, tipo residente/visitante)
+- [x] Router tRPC: rejections.add, rejections.list, rejections.stats, rejections.csvExport
+- [x] UI encuestador: botones de rechazo rápido junto a "Encuesta Visitantes" y "Encuesta Residentes"
+- [x] Mapa de calor de conteos peatonales en /mapa-conteos (separado del mapa de encuestas)
+- [x] Exportación CSV de rechazos (incluida en el router rejections.csvExport)
+- [x] Tests vitest: 4 tests de rechazos (21 en total, todos pasando)
+
+## Bug: Pantallas arrancan desplazadas hacia abajo en móvil
+- [x] Corrección global: componente ScrollToTop en App.tsx que resetea window + documentElement + body en cada cambio de ruta

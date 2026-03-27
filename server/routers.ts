@@ -47,6 +47,9 @@ import {
   deletePedestrianDirection,
   getDirectionsByPoint,
   getAllDirectionPoints,
+  createSurveyRejection,
+  getSurveyRejections,
+  getSurveyRejectionStats,
 } from "./db";
 import { hashPassword } from "./_core/localAuth";
 import { storagePut } from "./storage";
@@ -702,9 +705,84 @@ export const appRouter = router({
           headers.map(escape).join(","),
           ...rows.map((row) => row.map(escape).join(",")),
         ];
+         return { csv: csvLines.join("\n"), count: rows.length };
+      }),
+  }),
+
+  // ─── Survey Rejections ────────────────────────────────────────────────────────────────────────────────────
+  rejections: router({
+    add: encuestadorProcedure
+      .input(z.object({
+        surveyType: z.enum(["residentes", "visitantes"]),
+        surveyPoint: z.string().optional(),
+        latitude: z.number().optional(),
+        longitude: z.number().optional(),
+        gpsAccuracy: z.number().optional(),
+        notes: z.string().optional(),
+        rejectedAt: z.date().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return createSurveyRejection({
+          encuestadorId: ctx.user.id,
+          encuestadorName: ctx.user.name ?? undefined,
+          encuestadorIdentifier: ctx.user.identifier ?? undefined,
+          surveyType: input.surveyType,
+          surveyPoint: input.surveyPoint ?? null,
+          latitude: input.latitude ? String(input.latitude) : null,
+          longitude: input.longitude ? String(input.longitude) : null,
+          gpsAccuracy: input.gpsAccuracy ? String(input.gpsAccuracy) : null,
+          notes: input.notes ?? null,
+          rejectedAt: input.rejectedAt ?? new Date(),
+        });
+      }),
+    list: adminOrRevisorProcedure
+      .input(z.object({
+        encuestadorId: z.number().optional(),
+        surveyType: z.enum(["residentes", "visitantes"]).optional(),
+        surveyPoint: z.string().optional(),
+        dateFrom: z.string().optional(),
+        dateTo: z.string().optional(),
+      }).optional())
+      .query(({ input }) => getSurveyRejections(input ?? {})),
+    stats: adminOrRevisorProcedure
+      .input(z.object({
+        encuestadorId: z.number().optional(),
+        surveyType: z.enum(["residentes", "visitantes"]).optional(),
+        dateFrom: z.string().optional(),
+        dateTo: z.string().optional(),
+      }).optional())
+      .query(({ input }) => getSurveyRejectionStats(input ?? {})),
+    csvExport: adminOrRevisorProcedure
+      .input(z.object({
+        encuestadorId: z.number().optional(),
+        surveyType: z.enum(["residentes", "visitantes"]).optional(),
+        surveyPoint: z.string().optional(),
+        dateFrom: z.string().optional(),
+        dateTo: z.string().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        const rejs = await getSurveyRejections(input ?? {});
+        const headers = ["ID", "Fecha", "Hora", "Tipo", "Punto", "Encuestador", "Identificador", "Latitud", "Longitud", "Precisión GPS (m)", "Notas"];
+        const rows = rejs.map((r) => {
+          const dt = new Date(r.rejectedAt);
+          return [
+            r.id,
+            dt.toLocaleDateString("es-ES"),
+            dt.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+            r.surveyType,
+            r.surveyPoint ?? "",
+            r.encuestadorName ?? "",
+            r.encuestadorIdentifier ?? "",
+            r.latitude ?? "",
+            r.longitude ?? "",
+            r.gpsAccuracy ?? "",
+            r.notes ?? "",
+          ];
+        });
+        const escape = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+        const csvLines = [headers.map(escape).join(","), ...rows.map((row) => row.map(escape).join(","))];
         return { csv: csvLines.join("\n"), count: rows.length };
       }),
   }),
 });
-
 export type AppRouter = typeof appRouter;

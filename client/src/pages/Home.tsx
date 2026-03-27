@@ -12,9 +12,12 @@ import {
   PersonStanding,
   TrendingUp,
   Users,
+  XCircle,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 // ─── Encuestador Home ─────────────────────────────────────────────────────────
 
@@ -23,6 +26,36 @@ function EncuestadorHome() {
   const [, setLocation] = useLocation();
   const { data: myResponses } = trpc.responses.myList.useQuery();
   const { data: templates } = trpc.templates.active.useQuery();
+
+  // GPS para rechazos
+  const [gps, setGps] = useState<{ lat: number; lng: number; acc: number } | null>(null);
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setGps({ lat: pos.coords.latitude, lng: pos.coords.longitude, acc: pos.coords.accuracy }),
+        () => {},
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+  }, []);
+
+  const addRejection = trpc.rejections.add.useMutation({
+    onSuccess: (_, vars) => {
+      toast.success(`Rechazo ${vars.surveyType === "residentes" ? "residente" : "visitante"} registrado`, { duration: 1500 });
+    },
+    onError: (err) => toast.error("Error al registrar rechazo: " + err.message),
+  });
+
+  const handleRejection = (surveyType: "residentes" | "visitantes", surveyPoint?: string) => {
+    addRejection.mutate({
+      surveyType,
+      surveyPoint,
+      latitude: gps?.lat,
+      longitude: gps?.lng,
+      gpsAccuracy: gps?.acc,
+      rejectedAt: new Date(),
+    });
+  };
 
   const todayStr = new Date().toDateString();
   const todayCount = myResponses?.filter(
@@ -99,32 +132,50 @@ function EncuestadorHome() {
           <h2 className="text-base font-semibold text-foreground mb-3">Encuestas Activas</h2>
           <div className="space-y-3">
             {templates?.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setLocation(`/encuesta/${t.id}`)}
-                className="w-full text-left bg-card border border-border rounded-xl p-4 hover:border-primary/50 hover:shadow-sm transition-all active:scale-[0.99]"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                        t.type === "residentes"
-                          ? "bg-blue-100 text-blue-700"
-                          : "bg-amber-100 text-amber-700"
-                      }`}>
-                        {t.type === "residentes" ? "Residentes" : "Visitantes"}
-                      </span>
+              <div key={t.id} className="flex items-stretch gap-2">
+                {/* Botón principal de encuesta */}
+                <button
+                  onClick={() => setLocation(`/encuesta/${t.id}`)}
+                  className="flex-1 text-left bg-card border border-border rounded-xl p-4 hover:border-primary/50 hover:shadow-sm transition-all active:scale-[0.99]"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                          t.type === "residentes"
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-amber-100 text-amber-700"
+                        }`}>
+                          {t.type === "residentes" ? "Residentes" : "Visitantes"}
+                        </span>
+                      </div>
+                      <p className="font-semibold text-foreground">{t.name}</p>
+                      {t.description && (
+                        <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{t.description}</p>
+                      )}
                     </div>
-                    <p className="font-semibold text-foreground">{t.name}</p>
-                    {t.description && (
-                      <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{t.description}</p>
-                    )}
+                    <div className="shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <ClipboardList className="h-5 w-5 text-primary" />
+                    </div>
                   </div>
-                  <div className="shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <ClipboardList className="h-5 w-5 text-primary" />
-                  </div>
-                </div>
-              </button>
+                </button>
+                {/* Botón de rechazo rápido */}
+                <button
+                  onClick={() => handleRejection(t.type as "residentes" | "visitantes")}
+                  disabled={addRejection.isPending}
+                  title={`Registrar rechazo ${t.type === "residentes" ? "residente" : "visitante"}`}
+                  className={`shrink-0 flex flex-col items-center justify-center gap-1 px-3 rounded-xl border-2 transition-all active:scale-95 ${
+                    t.type === "residentes"
+                      ? "bg-red-50 border-red-200 text-red-600 hover:bg-red-100 hover:border-red-400"
+                      : "bg-orange-50 border-orange-200 text-orange-600 hover:bg-orange-100 hover:border-orange-400"
+                  }`}
+                >
+                  <XCircle className="h-5 w-5" />
+                  <span className="text-[10px] font-semibold leading-tight text-center">
+                    Rechazo<br />{t.type === "residentes" ? "resid." : "visit."}
+                  </span>
+                </button>
+              </div>
             ))}
             {(!templates || templates.length === 0) && (
               <div className="text-center py-8 text-muted-foreground">

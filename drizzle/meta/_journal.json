@@ -43,6 +43,13 @@
       "when": 1774651805627,
       "tag": "0005_common_kingpin",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1774653845768,
+      "tag": "0006_slow_human_cannonball",
+      "breakpoints": true
     }
   ]
 }

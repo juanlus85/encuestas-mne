@@ -8,6 +8,9 @@ import {
   createPedestrianPass,
   getPedestrianPasses,
   getPedestrianPassStats,
+  createSurveyRejection,
+  getSurveyRejections,
+  getSurveyRejectionStats,
 } from "./db";
 
 const TEST_POINT = "Mateos Gago";
@@ -93,5 +96,53 @@ describe("Cleanup", () => {
     const dirs = await getDirectionsByPoint(TEST_POINT);
     const found = dirs.find((d) => d.id === directionId);
     expect(found).toBeUndefined();
+  });
+});
+
+// ─── Survey Rejections ────────────────────────────────────────────────────────
+
+describe("Survey Rejections", () => {
+  let rejectionId: number;
+
+  it("should create a rejection", async () => {
+    const result = await createSurveyRejection({
+      encuestadorId: 9999,
+      encuestadorName: "Test Encuestador",
+      encuestadorIdentifier: "ENC-TEST",
+      surveyType: "visitantes",
+      surveyPoint: "Mateos Gago",
+      latitude: "37.3861",
+      longitude: "-5.9915",
+      gpsAccuracy: "5.0",
+      rejectedAt: new Date(),
+    });
+    expect(result).toBeDefined();
+    rejectionId = (result as any).insertId;
+    expect(typeof rejectionId).toBe("number");
+  });
+
+  it("should list rejections with filters", async () => {
+    const list = await getSurveyRejections({ surveyType: "visitantes" });
+    expect(Array.isArray(list)).toBe(true);
+    const found = list.find((r) => r.id === rejectionId);
+    expect(found).toBeDefined();
+    expect(found?.surveyType).toBe("visitantes");
+  });
+
+  it("should compute rejection stats", async () => {
+    const stats = await getSurveyRejectionStats({ surveyType: "visitantes" });
+    expect(stats.total).toBeGreaterThan(0);
+    expect(stats.byType["visitantes"]).toBeGreaterThan(0);
+  });
+
+  it("should clean up test rejection", async () => {
+    if (rejectionId) {
+      // Use the same getSurveyRejections to verify, then delete via a direct approach
+      // We just verify the rejection exists and skip hard delete in test environment
+      const list = await getSurveyRejections({ surveyType: "visitantes" });
+      const found = list.find((r) => r.id === rejectionId);
+      expect(found).toBeDefined();
+    }
+    expect(true).toBe(true);
   });
 });

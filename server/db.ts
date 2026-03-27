@@ -561,3 +561,62 @@ export async function getPedestrianPassStats(filters?: {
   }
   return { total, byDirection, byHour, byPoint, passes };
 }
+
+// ─── Survey Rejections ────────────────────────────────────────────────────────
+import {
+  surveyRejections,
+  InsertSurveyRejection,
+} from "../drizzle/schema";
+
+export async function createSurveyRejection(data: InsertSurveyRejection) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const result = await db.insert(surveyRejections).values(data);
+  return result[0];
+}
+
+export async function getSurveyRejections(filters?: {
+  encuestadorId?: number;
+  surveyType?: "residentes" | "visitantes";
+  surveyPoint?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions: any[] = [];
+  if (filters?.encuestadorId) conditions.push(eq(surveyRejections.encuestadorId, filters.encuestadorId));
+  if (filters?.surveyType) conditions.push(eq(surveyRejections.surveyType, filters.surveyType));
+  if (filters?.surveyPoint) conditions.push(eq(surveyRejections.surveyPoint, filters.surveyPoint));
+  if (filters?.dateFrom) conditions.push(gte(surveyRejections.rejectedAt, new Date(filters.dateFrom)));
+  if (filters?.dateTo) {
+    const to = new Date(filters.dateTo);
+    to.setHours(23, 59, 59, 999);
+    conditions.push(lte(surveyRejections.rejectedAt, to));
+  }
+  const query = db.select().from(surveyRejections).orderBy(desc(surveyRejections.rejectedAt));
+  if (conditions.length > 0) return query.where(and(...conditions));
+  return query;
+}
+
+export async function getSurveyRejectionStats(filters?: {
+  encuestadorId?: number;
+  surveyType?: "residentes" | "visitantes";
+  dateFrom?: string;
+  dateTo?: string;
+}) {
+  const rejections = await getSurveyRejections(filters);
+  const byType: Record<string, number> = { residentes: 0, visitantes: 0 };
+  const byPoint: Record<string, number> = {};
+  const byHour: Record<string, number> = {};
+  const byEncuestador: Record<string, number> = {};
+  for (const r of rejections) {
+    byType[r.surveyType] = (byType[r.surveyType] ?? 0) + 1;
+    if (r.surveyPoint) byPoint[r.surveyPoint] = (byPoint[r.surveyPoint] ?? 0) + 1;
+    const h = new Date(r.rejectedAt).getHours().toString().padStart(2, "0") + ":00";
+    byHour[h] = (byHour[h] ?? 0) + 1;
+    const enc = r.encuestadorName ?? `ID ${r.encuestadorId}`;
+    byEncuestador[enc] = (byEncuestador[enc] ?? 0) + 1;
+  }
+  return { total: rejections.length, byType, byPoint, byHour, byEncuestador, rejections };
+}

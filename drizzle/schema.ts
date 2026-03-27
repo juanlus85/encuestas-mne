@@ -266,3 +266,39 @@ export const pedestrianPasses = mysqlTable("pedestrian_passes", {
 
 export type PedestrianPass = typeof pedestrianPasses.$inferSelect;
 export type InsertPedestrianPass = typeof pedestrianPasses.$inferInsert;
+
+// ─── Survey Rejections (rechazos rápidos) ──────────────────────────────────
+
+/**
+ * Registro de rechazo rápido a la encuesta.
+ * El encuestador pulsa "Rechazo" sin abrir el formulario completo.
+ * Permite analizar la tasa de rechazo por punto, hora y tipo.
+ */
+export const surveyRejections = mysqlTable("survey_rejections", {
+  id: int("id").autoincrement().primaryKey(),
+  encuestadorId: int("encuestadorId").notNull(),
+  encuestadorName: varchar("encuestadorName", { length: 255 }),
+  encuestadorIdentifier: varchar("encuestadorIdentifier", { length: 32 }),
+
+  // Tipo de encuesta rechazada
+  surveyType: mysqlEnum("surveyType", ["residentes", "visitantes"]).notNull(),
+
+  // Punto de encuesta
+  surveyPoint: varchar("surveyPoint", { length: 255 }),
+
+  // GPS en el momento del rechazo
+  latitude: decimal("latitude", { precision: 10, scale: 7 }),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }),
+  gpsAccuracy: decimal("gpsAccuracy", { precision: 8, scale: 2 }),
+
+  // Timestamp exacto del rechazo
+  rejectedAt: timestamp("rejectedAt").notNull(),
+
+  // Notas opcionales (motivo del rechazo)
+  notes: text("notes"),
+
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SurveyRejection = typeof surveyRejections.$inferSelect;
+export type InsertSurveyRejection = typeof surveyRejections.$inferInsert;

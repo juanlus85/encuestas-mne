@@ -1,7 +1,8 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
+import { useEffect } from "react";
+import { Route, Switch, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
@@ -16,26 +17,43 @@ import Configuracion from "./pages/Configuracion";
 import ConteoPeatonal from "./pages/ConteoPeatonal";
 import ConteoResultados from "./pages/ConteoResultados";
 import ConteoSentidos from "./pages/ConteoSentidos";
+import MapaConteos from "./pages/MapaConteos";
+
+// Resetea el scroll al inicio en cada cambio de ruta (fix para móvil)
+function ScrollToTop() {
+  const [location] = useLocation();
+  useEffect(() => {
+    // Resetear tanto window como document.documentElement para compatibilidad iOS/Android
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [location]);
+  return null;
+}
 
 function Router() {
   return (
-    <Switch>
-      <Route path="/login" component={Login} />
-      <Route path="/" component={Home} />
-      <Route path="/encuesta" component={SurveyForm} />
-      <Route path="/encuesta/:id" component={SurveyForm} />
-      <Route path="/resultados" component={Resultados} />
-      <Route path="/estadisticas" component={Estadisticas} />
-      <Route path="/mapa" component={Mapa} />
-      <Route path="/exportar" component={Exportar} />
-      <Route path="/usuarios" component={Usuarios} />
-      <Route path="/configuracion" component={Configuracion} />
-      <Route path="/conteo" component={ConteoPeatonal} />
-      <Route path="/conteo-resultados" component={ConteoResultados} />
-      <Route path="/conteo-sentidos" component={ConteoSentidos} />
-      <Route path="/404" component={NotFound} />
-      <Route component={NotFound} />
-    </Switch>
+    <>
+      <ScrollToTop />
+      <Switch>
+        <Route path="/login" component={Login} />
+        <Route path="/" component={Home} />
+        <Route path="/encuesta" component={SurveyForm} />
+        <Route path="/encuesta/:id" component={SurveyForm} />
+        <Route path="/resultados" component={Resultados} />
+        <Route path="/estadisticas" component={Estadisticas} />
+        <Route path="/mapa" component={Mapa} />
+        <Route path="/exportar" component={Exportar} />
+        <Route path="/usuarios" component={Usuarios} />
+        <Route path="/configuracion" component={Configuracion} />
+        <Route path="/conteo" component={ConteoPeatonal} />
+        <Route path="/conteo-resultados" component={ConteoResultados} />
+        <Route path="/conteo-sentidos" component={ConteoSentidos} />
+        <Route path="/mapa-conteos" component={MapaConteos} />
+        <Route path="/404" component={NotFound} />
+        <Route component={NotFound} />
+      </Switch>
+    </>
   );
 }
 
