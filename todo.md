@@ -105,3 +105,7 @@
 - [x] Botón de cerrar sesión visible en la cabecera/sidebar para todos los roles
 - [x] Botón "Siguiente" pegado debajo de la pregunta en el formulario (no al pie de página)
 - [x] Menú de conteo peatonal visible para encuestadores en su sidebar (verificado: sí aparece con rol encuestador)
+
+## Bugs pendientes (post-mejoras UX)
+- [x] Menú conteo peatonal no aparece para encuestadores (añadido acceso directo en pantalla de inicio del encuestador)
+- [x] ConteoResultados (admin) carga a todo el ancho y desaparece el sidebar (añadido DashboardLayout)

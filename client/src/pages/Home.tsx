@@ -7,7 +7,9 @@ import {
   BarChart3,
   CheckCircle2,
   ClipboardList,
+  LogOut,
   MapPin,
+  PersonStanding,
   TrendingUp,
   Users,
 } from "lucide-react";
@@ -17,7 +19,7 @@ import { Button } from "@/components/ui/button";
 // ─── Encuestador Home ─────────────────────────────────────────────────────────
 
 function EncuestadorHome() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [, setLocation] = useLocation();
   const { data: myResponses } = trpc.responses.myList.useQuery();
   const { data: templates } = trpc.templates.active.useQuery();
@@ -40,10 +42,19 @@ function EncuestadorHome() {
             IATUR · Trabajo de Campo
           </p>
           <h1 className="text-2xl font-bold">{greeting}, {user?.name?.split(" ")[0]}</h1>
-          <p className="text-primary-foreground/70 text-sm mt-1">
-            {user?.identifier && <span className="font-mono bg-primary-foreground/10 px-2 py-0.5 rounded mr-2">{user.identifier}</span>}
-            Barrio de Santa Cruz · Sevilla
-          </p>
+          <div className="flex items-center justify-between mt-1">
+            <p className="text-primary-foreground/70 text-sm">
+              {user?.identifier && <span className="font-mono bg-primary-foreground/10 px-2 py-0.5 rounded mr-2">{user.identifier}</span>}
+              Barrio de Santa Cruz · Sevilla
+            </p>
+            <button
+              onClick={logout}
+              className="flex items-center gap-1.5 text-primary-foreground/60 hover:text-primary-foreground text-xs transition-colors"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              Salir
+            </button>
+          </div>
         </div>
       </div>
 
@@ -62,6 +73,25 @@ function EncuestadorHome() {
               <p className="text-sm text-muted-foreground mt-1">Total realizadas</p>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Conteo Peatonal */}
+        <div>
+          <h2 className="text-base font-semibold text-foreground mb-3">Conteo Peatonal</h2>
+          <button
+            onClick={() => setLocation("/conteo")}
+            className="w-full text-left bg-card border border-border rounded-xl p-4 hover:border-primary/50 hover:shadow-sm transition-all active:scale-[0.99]"
+          >
+            <div className="flex items-center gap-3">
+              <div className="shrink-0 w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+                <PersonStanding className="h-5 w-5 text-amber-700" />
+              </div>
+              <div>
+                <p className="font-semibold text-foreground">Iniciar sesión de conteo</p>
+                <p className="text-sm text-muted-foreground">Registro de flujo peatonal por intervalos</p>
+              </div>
+            </div>
+          </button>
         </div>
 
         {/* Active surveys */}

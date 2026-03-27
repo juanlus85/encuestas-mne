@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import DashboardLayout from "@/components/DashboardLayout";
 import { trpc } from "@/lib/trpc";
 import { ArrowDownLeft, ArrowUpRight, BarChart3, Camera, Clock, Eye, MapPin, Users } from "lucide-react";
 import { useState } from "react";
@@ -36,6 +37,7 @@ export default function ConteoResultados() {
   };
 
   return (
+    <DashboardLayout>
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
@@ -270,5 +272,6 @@ export default function ConteoResultados() {
         </DialogContent>
       </Dialog>
     </div>
+    </DashboardLayout>
   );
 }
