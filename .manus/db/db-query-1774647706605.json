@@ -1,0 +1,31 @@
+{
+  "query": "UPDATE survey_templates SET targetCount = 450 WHERE id = 30002;\nSELECT id, name, type, targetCount, isActive FROM survey_templates ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user uN1yFnMXg2uz2sS.ecce8a0683a4 --database nHD7C8PRaURA7Ubm8Aop3k --execute UPDATE survey_templates SET targetCount = 450 WHERE id = 30002;\nSELECT id, name, type, targetCount, isActive FROM survey_templates ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Residentes",
+      "type": "residentes",
+      "targetCount": "0",
+      "isActive": "0"
+    },
+    {
+      "id": "30001",
+      "name": "Encuesta a Residentes - Barrio de Santa Cruz",
+      "type": "residentes",
+      "targetCount": "300",
+      "isActive": "1"
+    },
+    {
+      "id": "30002",
+      "name": "Encuesta a Visitantes - Barrio de Santa Cruz",
+      "type": "visitantes",
+      "targetCount": "450",
+      "isActive": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\ttype\ttargetCount\tisActive\n1\tResidentes\tresidentes\t0\t0\n30001\tEncuesta a Residentes - Barrio de Santa Cruz\tresidentes\t300\t1\n30002\tEncuesta a Visitantes - Barrio de Santa Cruz\tvisitantes\t450\t1\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

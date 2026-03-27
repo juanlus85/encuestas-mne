@@ -1,0 +1,8 @@
+{
+  "query": "SELECT id, name, surveyType, targetCount FROM survey_templates;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user uN1yFnMXg2uz2sS.ecce8a0683a4 --database nHD7C8PRaURA7Ubm8Aop3k --execute SELECT id, name, surveyType, targetCount FROM survey_templates;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'surveytype' in 'field list'"
+  ]
+}

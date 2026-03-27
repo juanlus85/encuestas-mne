@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `surveyTypeAssigned` enum('residentes','visitantes','ambos') DEFAULT 'ambos';

@@ -78,6 +78,18 @@
 - [x] Plantilla "Encuesta a Residentes" con preguntas P.01-P.13 (29 preguntas, ID 30001)
 
 ## Encuesta a Visitantes
-- [ ] Plantilla "Encuesta a Visitantes" con preguntas P1-P15 (cuestionario IATUR)
-- [ ] Metadatos de campo específicos: punto de encuesta, bloque horario, código de ventana, minutos inicio/fin
+- [x] Plantilla "Encuesta a Visitantes" con preguntas P1-P15 (cuestionario IATUR)
+- [x] Metadatos de campo específicos: punto de encuesta, bloque horario, código de ventana, minutos inicio/fin
 - [ ] Cuotas de visitantes: 40 no sevillanos, 180 nacionales, 180 extranjeros
+
+## Cambios reunión 27/03 - Concepción Foronda
+- [x] Ajustar objetivo visitantes de 400 a 450 (total 750)
+- [x] Actualizar calendario: inicio 15 abril, fin encuestas 6 junio
+- [x] Especialización de encuestadores: asignar tipo (residentes/visitantes/ambos) en perfil de usuario
+- [x] Filtrar encuestas disponibles según tipo asignado al encuestador
+- [x] Tramo de 30 min automático calculado en exportación CSV
+- [x] Precisión GPS (metros) en exportación CSV
+- [x] Módulo de conteo peatonal: BD y servidor
+- [x] Módulo de conteo peatonal: UI para encuestador (conteo por dirección, fotos cada minuto)
+- [x] Módulo de conteo peatonal: visor en panel de administración
+- [x] Formato de exportación configurable (separador: coma, punto y coma, tabulador + BOM UTF-8)

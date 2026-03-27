@@ -128,6 +128,15 @@ function UserCard({ user, onUpdate }: { user: any; onUpdate: () => void }) {
           {user.identifier && (
             <span className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded text-muted-foreground">{user.identifier}</span>
           )}
+          {user.role === "encuestador" && user.surveyTypeAssigned && user.surveyTypeAssigned !== "ambos" && (
+            <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
+              user.surveyTypeAssigned === "residentes"
+                ? "bg-blue-100 text-blue-700"
+                : "bg-amber-100 text-amber-700"
+            }`}>
+              {user.surveyTypeAssigned === "residentes" ? "Solo residentes" : "Solo visitantes"}
+            </span>
+          )}
           {!user.isActive && (
             <span className="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded">Inactivo</span>
           )}
@@ -167,6 +176,7 @@ function CreateUserDialog({ onCreated }: { onCreated: () => void }) {
     email: "",
     role: "encuestador" as "admin" | "encuestador" | "revisor",
     identifier: "",
+    surveyTypeAssigned: "ambos" as "residentes" | "visitantes" | "ambos",
     openId: "",
     username: "",
     password: "",
@@ -175,7 +185,7 @@ function CreateUserDialog({ onCreated }: { onCreated: () => void }) {
   const createMutation = trpc.users.create.useMutation({
     onSuccess: () => {
       setOpen(false);
-      setForm({ name: "", email: "", role: "encuestador", identifier: "", openId: "", username: "", password: "" });
+      setForm({ name: "", email: "", role: "encuestador", identifier: "", surveyTypeAssigned: "ambos", openId: "", username: "", password: "" });
       onCreated();
       toast.success("Usuario creado correctamente");
     },
@@ -234,15 +244,30 @@ function CreateUserDialog({ onCreated }: { onCreated: () => void }) {
           </div>
 
           {form.role === "encuestador" && (
-            <div>
-              <Label className="mb-1.5 block">Identificador de campo</Label>
-              <Input
-                value={form.identifier}
-                onChange={(e) => setForm({ ...form, identifier: e.target.value })}
-                className="font-mono"
-                placeholder="Ej: ENC-01"
-              />
-            </div>
+            <>
+              <div>
+                <Label className="mb-1.5 block">Identificador de campo</Label>
+                <Input
+                  value={form.identifier}
+                  onChange={(e) => setForm({ ...form, identifier: e.target.value })}
+                  className="font-mono"
+                  placeholder="Ej: ENC-01"
+                />
+              </div>
+              <div>
+                <Label className="mb-1.5 block">Tipo de encuesta asignado</Label>
+                <select
+                  value={form.surveyTypeAssigned}
+                  onChange={(e) => setForm({ ...form, surveyTypeAssigned: e.target.value as any })}
+                  className="w-full border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="ambos">Ambos tipos (residentes y visitantes)</option>
+                  <option value="residentes">Solo Residentes (Técnicos 1 y 3)</option>
+                  <option value="visitantes">Solo Visitantes (Técnicos 2, 4 y 5)</option>
+                </select>
+                <p className="text-xs text-muted-foreground mt-1">El encuestador solo verá las encuestas de este tipo en su pantalla</p>
+              </div>
+            </>
           )}
 
           {/* Separator for credentials */}

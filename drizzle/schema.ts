@@ -25,6 +25,7 @@ export const users = mysqlTable("users", {
   passwordHash: varchar("passwordHash", { length: 255 }),
   // Encuestador-specific fields
   identifier: varchar("identifier", { length: 32 }), // e.g. ENC-01
+  surveyTypeAssigned: mysqlEnum("surveyTypeAssigned", ["residentes", "visitantes", "ambos"]).default("ambos"),
   isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -147,3 +148,68 @@ export const fieldMetrics = mysqlTable("field_metrics", {
 
 export type FieldMetric = typeof fieldMetrics.$inferSelect;
 export type InsertFieldMetric = typeof fieldMetrics.$inferInsert;
+
+// ─── Pedestrian Counts ───────────────────────────────────────────────────────
+
+/**
+ * Sesión de conteo peatonal: una sesión por técnico, punto y franja horaria.
+ * Contiene múltiples intervalos de 5 minutos.
+ */
+export const pedestrianSessions = mysqlTable("pedestrian_sessions", {
+  id: int("id").autoincrement().primaryKey(),
+  encuestadorId: int("encuestadorId").notNull(),
+  encuestadorName: varchar("encuestadorName", { length: 255 }),
+  encuestadorIdentifier: varchar("encuestadorIdentifier", { length: 32 }),
+
+  // Localización y contexto
+  surveyPoint: varchar("surveyPoint", { length: 255 }).notNull(),
+  timeSlot: mysqlEnum("timeSlot", ["manana", "tarde", "noche", "fin_semana"]),
+  date: varchar("date", { length: 10 }).notNull(), // YYYY-MM-DD
+
+  // GPS de la sesión
+  latitude: decimal("latitude", { precision: 10, scale: 7 }),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }),
+  gpsAccuracy: decimal("gpsAccuracy", { precision: 8, scale: 2 }),
+
+  // Timestamps
+  startedAt: timestamp("startedAt").notNull(),
+  finishedAt: timestamp("finishedAt"),
+
+  // Totales calculados (suma de todos los intervalos)
+  totalIn: int("totalIn").default(0).notNull(),
+  totalOut: int("totalOut").default(0).notNull(),
+
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PedestrianSession = typeof pedestrianSessions.$inferSelect;
+export type InsertPedestrianSession = typeof pedestrianSessions.$inferInsert;
+
+/**
+ * Intervalo de 5 minutos dentro de una sesión de conteo peatonal.
+ * Cada intervalo registra entradas y salidas por dirección.
+ */
+export const pedestrianIntervals = mysqlTable("pedestrian_intervals", {
+  id: int("id").autoincrement().primaryKey(),
+  sessionId: int("sessionId").notNull(),
+
+  // Tiempo del intervalo
+  intervalStart: timestamp("intervalStart").notNull(),
+  intervalEnd: timestamp("intervalEnd").notNull(),
+  intervalMinute: int("intervalMinute").notNull(), // minuto 0, 5, 10...
+
+  // Conteos por dirección
+  countIn: int("countIn").default(0).notNull(),   // entrando al barrio
+  countOut: int("countOut").default(0).notNull(),  // saliendo del barrio
+
+  // Foto del intervalo (opcional)
+  photoUrl: text("photoUrl"),
+  photoKey: varchar("photoKey", { length: 512 }),
+
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PedestrianInterval = typeof pedestrianIntervals.$inferSelect;
+export type InsertPedestrianInterval = typeof pedestrianIntervals.$inferInsert;

@@ -13,6 +13,8 @@ import Mapa from "./pages/Mapa";
 import Exportar from "./pages/Exportar";
 import Usuarios from "./pages/Usuarios";
 import Configuracion from "./pages/Configuracion";
+import ConteoPeatonal from "./pages/ConteoPeatonal";
+import ConteoResultados from "./pages/ConteoResultados";
 
 function Router() {
   return (
@@ -27,6 +29,8 @@ function Router() {
       <Route path="/exportar" component={Exportar} />
       <Route path="/usuarios" component={Usuarios} />
       <Route path="/configuracion" component={Configuracion} />
+      <Route path="/conteo" component={ConteoPeatonal} />
+      <Route path="/conteo-resultados" component={ConteoResultados} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

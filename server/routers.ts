@@ -6,6 +6,8 @@ import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import {
   createPhoto,
+  createPedestrianInterval,
+  createPedestrianSession,
   createQuestion,
   createSurveyResponse,
   createSurveyTemplate,
@@ -17,6 +19,9 @@ import {
   getEncuestadores,
   getFieldMetrics,
   getGpsLocations,
+  getIntervalsBySession,
+  getPedestrianSessionById,
+  getPedestrianSessions,
   getPhotosByResponse,
   getQuestionsByTemplate,
   getResponsesByDay,
@@ -27,6 +32,8 @@ import {
   getSurveyResponsesByEncuestador,
   getSurveyTemplateById,
   getSurveyTemplates,
+  updatePedestrianInterval,
+  updatePedestrianSession,
   updateQuestion,
   updateSurveyTemplate,
   updateUser,
@@ -80,6 +87,7 @@ export const appRouter = router({
         email: z.string().email().optional(),
         role: z.enum(["admin", "encuestador", "revisor"]),
         identifier: z.string().optional(),
+        surveyTypeAssigned: z.enum(["residentes", "visitantes", "ambos"]).optional(),
         openId: z.string(),
         // Optional local login credentials
         username: z.string().min(3).max(64).optional(),
@@ -105,6 +113,7 @@ export const appRouter = router({
         name: z.string().optional(),
         role: z.enum(["admin", "encuestador", "revisor", "user"]).optional(),
         identifier: z.string().optional(),
+        surveyTypeAssigned: z.enum(["residentes", "visitantes", "ambos"]).optional(),
         isActive: z.boolean().optional(),
         username: z.string().min(3).max(64).optional(),
       }))
@@ -133,7 +142,15 @@ export const appRouter = router({
 
   templates: router({
     list: protectedProcedure.query(() => getSurveyTemplates()),
-    active: protectedProcedure.query(() => getActiveSurveyTemplates()),
+    active: protectedProcedure.query(async ({ ctx }) => {
+      const all = await getActiveSurveyTemplates();
+      // Si el usuario es encuestador con tipo asignado, filtrar
+      const assigned = (ctx.user as any).surveyTypeAssigned;
+      if (ctx.user.role === "encuestador" && assigned && assigned !== "ambos") {
+        return all.filter((t: any) => t.type === assigned);
+      }
+      return all;
+    }),
 
     byId: protectedProcedure
       .input(z.object({ id: z.number() }))
@@ -392,7 +409,107 @@ export const appRouter = router({
       .query(({ input }) => getGpsLocations(input)),
   }),
 
-  // ─── Export CSV ─────────────────────────────────────────────────────────────
+  // ─── Conteo Peatonal ───────────────────────────────────────────────────────────────────────────────
+
+  pedestrian: router({
+    createSession: encuestadorProcedure
+      .input(z.object({
+        surveyPoint: z.string().min(1),
+        timeSlot: z.enum(["manana", "tarde", "noche", "fin_semana"]).optional(),
+        date: z.string(),
+        latitude: z.number().optional(),
+        longitude: z.number().optional(),
+        gpsAccuracy: z.number().optional(),
+        startedAt: z.date(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const result = await createPedestrianSession({
+          ...input,
+          encuestadorId: ctx.user.id,
+          encuestadorName: ctx.user.name ?? "",
+          encuestadorIdentifier: ctx.user.identifier ?? "",
+          latitude: input.latitude?.toString(),
+          longitude: input.longitude?.toString(),
+          gpsAccuracy: input.gpsAccuracy?.toString(),
+        });
+        return { success: true, id: (result as any)?.insertId };
+      }),
+
+    finishSession: encuestadorProcedure
+      .input(z.object({
+        id: z.number(),
+        finishedAt: z.date(),
+        notes: z.string().optional(),
+        totalIn: z.number(),
+        totalOut: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await updatePedestrianSession(id, data);
+        return { success: true };
+      }),
+
+    addInterval: encuestadorProcedure
+      .input(z.object({
+        sessionId: z.number(),
+        intervalStart: z.date(),
+        intervalEnd: z.date(),
+        intervalMinute: z.number(),
+        countIn: z.number().default(0),
+        countOut: z.number().default(0),
+        photoBase64: z.string().optional(),
+        photoMimeType: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        let photoUrl: string | undefined;
+        let photoKey: string | undefined;
+        if (input.photoBase64) {
+          const suffix = nanoid(8);
+          const ext = input.photoMimeType === "image/png" ? "png" : "jpg";
+          photoKey = `encuestas/pedestrian/${input.sessionId}/${suffix}.${ext}`;
+          const buffer = Buffer.from(input.photoBase64, "base64");
+          const uploaded = await storagePut(photoKey, buffer, input.photoMimeType ?? "image/jpeg");
+          photoUrl = uploaded.url;
+        }
+        const { photoBase64, photoMimeType, ...rest } = input;
+        const result = await createPedestrianInterval({ ...rest, photoUrl, photoKey });
+        return { success: true, id: (result as any)?.insertId };
+      }),
+
+    updateInterval: encuestadorProcedure
+      .input(z.object({
+        id: z.number(),
+        countIn: z.number().optional(),
+        countOut: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await updatePedestrianInterval(id, data);
+        return { success: true };
+      }),
+
+    listSessions: adminOrRevisorProcedure
+      .input(z.object({
+        encuestadorId: z.number().optional(),
+        dateFrom: z.string().optional(),
+        dateTo: z.string().optional(),
+      }).optional())
+      .query(({ input }) => getPedestrianSessions(input ?? {})),
+
+    mySessions: encuestadorProcedure
+      .query(({ ctx }) => getPedestrianSessions({ encuestadorId: ctx.user.id })),
+
+    sessionDetail: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        const session = await getPedestrianSessionById(input.id);
+        if (!session) throw new TRPCError({ code: "NOT_FOUND" });
+        const intervals = await getIntervalsBySession(input.id);
+        return { ...session, intervals };
+      }),
+  }),
+
+  // ─── Export CSV ───────────────────────────────────────────────────────────────────────────────
 
   export: router({
     csv: adminOrRevisorProcedure
@@ -404,19 +521,30 @@ export const appRouter = router({
       }).optional())
       .query(async ({ input }) => {
         const responses = await getSurveyResponses(input);
+        // Helper: calcular tramo de media hora a partir de la hora de inicio
+        const getHalfHourSlot = (dt: Date | null | undefined): string => {
+          if (!dt) return "";
+          const h = dt.getHours().toString().padStart(2, "0");
+          const m = dt.getMinutes() < 30 ? "00" : "30";
+          const endMin = dt.getMinutes() < 30 ? "30" : "00";
+          const endH = dt.getMinutes() < 30 ? dt.getHours() : dt.getHours() + 1;
+          return `${h}:${m}-${endH.toString().padStart(2, "0")}:${endMin}`;
+        };
         const headers = [
-          "ID", "Plantilla", "Encuestador", "Identificador", "Dispositivo",
-          "Punto Encuesta", "Franja", "Latitud", "Longitud", "Precisión GPS",
+          "ID", "Plantilla", "Tipo", "Encuestador", "Identificador", "Dispositivo",
+          "Punto Encuesta", "Franja", "Tramo30min", "Latitud", "Longitud", "Precisión GPS (m)",
           "Inicio", "Fin", "Idioma", "Estado", "Respuestas"
         ];
         const rows = responses.map((r) => [
           r.id,
           r.templateId,
+          (r as any).templateType ?? "",
           r.encuestadorName ?? "",
           r.encuestadorIdentifier ?? "",
           r.deviceInfo ?? "",
           r.surveyPoint ?? "",
           r.timeSlot ?? "",
+          getHalfHourSlot(r.startedAt),
           r.latitude ?? "",
           r.longitude ?? "",
           r.gpsAccuracy ?? "",

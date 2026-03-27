@@ -116,8 +116,8 @@ export default function Estadisticas() {
   });
 
   const TARGET_RESIDENTES = 300;
-  const TARGET_VISITANTES = 400;
-  const TARGET_TOTAL = 700;
+  const TARGET_VISITANTES = 450;
+  const TARGET_TOTAL = 750;
 
   const residentes = Number(stats?.residentes ?? 0);
   const visitantes = Number(stats?.visitantes ?? 0);
@@ -211,9 +211,9 @@ export default function Estadisticas() {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap justify-around gap-6 py-4">
-                  <ProgressRing value={total} max={TARGET_TOTAL} color={COLORS.primary} label="Total" sublabel="objetivo 700" />
+                  <ProgressRing value={total} max={TARGET_TOTAL} color={COLORS.primary} label="Total" sublabel="objetivo 750" />
                   <ProgressRing value={residentes} max={TARGET_RESIDENTES} color={COLORS.secondary} label="Residentes" sublabel="objetivo 300" />
-                  <ProgressRing value={visitantes} max={TARGET_VISITANTES} color={COLORS.warning} label="Visitantes" sublabel="objetivo 400" />
+                  <ProgressRing value={visitantes} max={TARGET_VISITANTES} color={COLORS.warning} label="Visitantes" sublabel="objetivo 450" />
                 </div>
               </CardContent>
             </Card>

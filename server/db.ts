@@ -188,7 +188,30 @@ export async function getSurveyResponses(filters?: {
   if (filters?.dateTo) conditions.push(lte(surveyResponses.startedAt, filters.dateTo));
   if (filters?.status) conditions.push(eq(surveyResponses.status, filters.status as any));
 
-  const query = db.select().from(surveyResponses).orderBy(desc(surveyResponses.startedAt));
+  const query = db
+    .select({
+      id: surveyResponses.id,
+      templateId: surveyResponses.templateId,
+      templateType: surveyTemplates.type,
+      encuestadorId: surveyResponses.encuestadorId,
+      encuestadorName: surveyResponses.encuestadorName,
+      encuestadorIdentifier: surveyResponses.encuestadorIdentifier,
+      deviceInfo: surveyResponses.deviceInfo,
+      surveyPoint: surveyResponses.surveyPoint,
+      timeSlot: surveyResponses.timeSlot,
+      latitude: surveyResponses.latitude,
+      longitude: surveyResponses.longitude,
+      gpsAccuracy: surveyResponses.gpsAccuracy,
+      startedAt: surveyResponses.startedAt,
+      finishedAt: surveyResponses.finishedAt,
+      language: surveyResponses.language,
+      answers: surveyResponses.answers,
+      status: surveyResponses.status,
+      createdAt: surveyResponses.createdAt,
+    })
+    .from(surveyResponses)
+    .leftJoin(surveyTemplates, eq(surveyResponses.templateId, surveyTemplates.id))
+    .orderBy(desc(surveyResponses.startedAt));
   if (conditions.length > 0) return query.where(and(...conditions));
   return query;
 }
@@ -358,4 +381,70 @@ export async function getGpsLocations(filters?: { dateFrom?: Date; dateTo?: Date
     .from(surveyResponses)
     .where(and(...conditions))
     .limit(1000);
+}
+
+// ─── Pedestrian Counts ────────────────────────────────────────────────────────
+
+import {
+  pedestrianSessions,
+  pedestrianIntervals,
+  InsertPedestrianSession,
+  InsertPedestrianInterval,
+} from "../drizzle/schema";
+
+export async function createPedestrianSession(data: InsertPedestrianSession) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const result = await db.insert(pedestrianSessions).values(data);
+  return result[0];
+}
+
+export async function updatePedestrianSession(id: number, data: Partial<InsertPedestrianSession>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(pedestrianSessions).set(data as any).where(eq(pedestrianSessions.id, id));
+}
+
+export async function getPedestrianSessionById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(pedestrianSessions).where(eq(pedestrianSessions.id, id)).limit(1);
+  return result[0];
+}
+
+export async function getPedestrianSessions(filters?: {
+  encuestadorId?: number;
+  dateFrom?: string;
+  dateTo?: string;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions: any[] = [];
+  if (filters?.encuestadorId) conditions.push(eq(pedestrianSessions.encuestadorId, filters.encuestadorId));
+  if (filters?.dateFrom) conditions.push(gte(pedestrianSessions.date, filters.dateFrom));
+  if (filters?.dateTo) conditions.push(lte(pedestrianSessions.date, filters.dateTo));
+  const query = db.select().from(pedestrianSessions).orderBy(desc(pedestrianSessions.startedAt));
+  if (conditions.length > 0) return query.where(and(...conditions));
+  return query;
+}
+
+export async function createPedestrianInterval(data: InsertPedestrianInterval) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const result = await db.insert(pedestrianIntervals).values(data);
+  return result[0];
+}
+
+export async function updatePedestrianInterval(id: number, data: Partial<InsertPedestrianInterval>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(pedestrianIntervals).set(data as any).where(eq(pedestrianIntervals.id, id));
+}
+
+export async function getIntervalsBySession(sessionId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(pedestrianIntervals)
+    .where(eq(pedestrianIntervals.sessionId, sessionId))
+    .orderBy(pedestrianIntervals.intervalMinute);
 }

@@ -24,6 +24,7 @@ function ExportSection() {
     encuestadorId: undefined as number | undefined,
     templateId: undefined as number | undefined,
   });
+  const [separator, setSeparator] = useState<"," | ";" | "\t">(",");
   const [isExporting, setIsExporting] = useState(false);
 
   const { data: encuestadores = [] } = trpc.users.encuestadores.useQuery();
@@ -45,7 +46,14 @@ function ExportSection() {
       const result = await refetch();
       if (!result.data) { toast.error("No hay datos para exportar"); return; }
 
-      const blob = new Blob([result.data.csv], { type: "text/csv;charset=utf-8;" });
+      // Apply custom separator if not comma
+      let csvContent = result.data.csv;
+      if (separator !== ",") {
+        csvContent = csvContent.split("\n").map(line =>
+          line.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).join(separator)
+        ).join("\n");
+      }
+      const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -119,9 +127,32 @@ function ExportSection() {
           </div>
         </div>
 
+        {/* Separator selector */}
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-muted-foreground">Separador de columnas</label>
+          <div className="flex gap-2">
+            {([[",", "Coma  ,"], [";", "Punto y coma  ;"], ["\t", "Tabulador  ⇥"]] as const).map(([val, label]) => (
+              <button
+                key={val}
+                onClick={() => setSeparator(val)}
+                className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
+                  separator === val
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-background border-border hover:bg-muted"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Usa <strong>punto y coma</strong> si abres el CSV con Excel en español. Usa <strong>tabulador</strong> para compatibilidad con SIG.
+          </p>
+        </div>
+
         <div className="bg-muted/40 rounded-lg p-3 text-xs text-muted-foreground">
           <p className="font-medium text-foreground mb-1">Campos incluidos en el CSV:</p>
-          <p>ID, Plantilla, Tipo, Encuestador, Identificador, Dispositivo, Punto de encuesta, Franja horaria, Fecha inicio, Hora inicio, Fecha fin, Hora fin, Duración (min), Latitud, Longitud, Precisión GPS (m), Idioma, Estado, Respuestas (JSON), Número de fotos</p>
+          <p>ID · Plantilla · Tipo · Encuestador · Identificador · Dispositivo · Punto de encuesta · Franja horaria · Tramo 30 min · Latitud · Longitud · Precisión GPS (m) · Inicio · Fin · Idioma · Estado · Respuestas (JSON)</p>
         </div>
 
         <Button onClick={handleExport} disabled={isExporting} className="w-full sm:w-auto">

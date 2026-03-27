@@ -147,8 +147,8 @@ function AdminHome() {
   const { data: encuestadores } = trpc.users.encuestadores.useQuery();
 
   const TARGET_RESIDENTES = 300;
-  const TARGET_VISITANTES = 400;
-  const TARGET_TOTAL = 700;
+  const TARGET_VISITANTES = 450;
+  const TARGET_TOTAL = 750;
 
   const residentes = Number(stats?.residentes ?? 0);
   const visitantes = Number(stats?.visitantes ?? 0);

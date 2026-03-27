@@ -33,6 +33,7 @@ import {
   PanelLeft,
   Settings,
   Users,
+  PersonStanding,
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -46,6 +47,7 @@ const adminMenuItems = [
   { icon: BarChart3, label: "Estadísticas", path: "/estadisticas" },
   { icon: Map, label: "Mapa de Campo", path: "/mapa" },
   { icon: ClipboardList, label: "Resultados", path: "/resultados" },
+  { icon: PersonStanding, label: "Conteos Peatonales", path: "/conteo-resultados" },
   { icon: FileDown, label: "Exportar", path: "/exportar" },
   { icon: Users, label: "Usuarios", path: "/usuarios" },
   { icon: Settings, label: "Configuración", path: "/configuracion" },
@@ -56,12 +58,14 @@ const revisorMenuItems = [
   { icon: BarChart3, label: "Estadísticas", path: "/estadisticas" },
   { icon: Map, label: "Mapa de Campo", path: "/mapa" },
   { icon: ClipboardList, label: "Resultados", path: "/resultados" },
+  { icon: PersonStanding, label: "Conteos Peatonales", path: "/conteo-resultados" },
   { icon: FileDown, label: "Exportar", path: "/exportar" },
 ];
 
 const encuestadorMenuItems = [
   { icon: LayoutDashboard, label: "Inicio", path: "/" },
   { icon: ClipboardList, label: "Nueva Encuesta", path: "/encuesta" },
+  { icon: PersonStanding, label: "Conteo Peatonal", path: "/conteo" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
