@@ -144,3 +144,8 @@
 - [x] UI encuestador: selector de punto de encuesta en pantalla principal (persiste en localStorage); GPS con watchPosition continuo
 - [x] Rechazos en estadísticas: sección de rechazos con total, por tipo, tasa de rechazo y desglose por punto
 - [x] GPS en conteos: cambiado de getCurrentPosition a watchPosition para GPS continuo y más preciso
+
+## Bug: TypeError Invalid URL en VPS propio
+- [x] Causa: getLoginUrl() llamada al renderizar useAuth() con VITE_OAUTH_PORTAL_URL vacío
+- [x] Corrección: getLoginUrl() devuelve /login si OAuth no está configurado (try/catch + guard)
+- [x] Instalado vite-plugin-pwa que faltaba en devDependencies
