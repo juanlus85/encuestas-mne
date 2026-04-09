@@ -171,8 +171,9 @@ class SDKServer {
     return this.signSession(
       {
         openId,
-        appId: ENV.appId,
-        name: options.name || "",
+        // Use a fallback appId for local auth when VITE_APP_ID is not configured
+        appId: ENV.appId || "local-app",
+        name: options.name || openId,
       },
       options
     );
@@ -214,8 +215,7 @@ class SDKServer {
 
       if (
         !isNonEmptyString(openId) ||
-        !isNonEmptyString(appId) ||
-        !isNonEmptyString(name)
+        !isNonEmptyString(appId)
       ) {
         console.warn("[Auth] Session payload missing required fields");
         return null;
@@ -224,7 +224,8 @@ class SDKServer {
       return {
         openId,
         appId,
-        name,
+        // name may be empty for local auth users, use openId as fallback
+        name: isNonEmptyString(name) ? name : String(openId),
       };
     } catch (error) {
       console.warn("[Auth] Session verification failed", String(error));

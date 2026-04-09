@@ -149,3 +149,8 @@
 - [x] Causa: getLoginUrl() llamada al renderizar useAuth() con VITE_OAUTH_PORTAL_URL vacío
 - [x] Corrección: getLoginUrl() devuelve /login si OAuth no está configurado (try/catch + guard)
 - [x] Instalado vite-plugin-pwa que faltaba en devDependencies
+
+## Bug: Error 500 en /api/auth/local/login en VPS
+- [x] Causa: appId y name vacios en JWT cuando VITE_APP_ID no esta configurado en VPS
+- [x] Corregido: createSessionToken usa 'local-app' como fallback; verifySession no requiere name no-vacio
+- [x] Reinstalado vite-plugin-pwa que faltaba en node_modules
