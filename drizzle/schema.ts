@@ -400,3 +400,131 @@ export const surveyAnswers = mysqlTable("survey_answers", {
 });
 export type SurveyAnswer = typeof surveyAnswers.$inferSelect;
 export type InsertSurveyAnswer = typeof surveyAnswers.$inferInsert;
+
+// ─── Survey Responses Flat (una fila por encuesta, columnas por pregunta) ──────
+/**
+ * Tabla desnormalizada: UNA FILA POR ENCUESTA.
+ * Cada pregunta tiene su propia columna (R01..R38 para residentes, V01..V26 para visitantes).
+ * Facilita el análisis directo con SQL/Excel/SPSS sin parsear JSON.
+ *
+ * Metadatos de campo (calculados automáticamente, no preguntados al encuestador):
+ *   survey_id          → FK a survey_responses.id (fuente de verdad)
+ *   survey_type        → "visitantes" | "residentes"
+ *   survey_number      → número correlativo de encuesta (0001, 0002...)
+ *   survey_point       → punto de encuesta (seleccionado antes del formulario)
+ *   time_slot          → franja horaria calculada automáticamente
+ *   window_code        → ventana de 30 min calculada automáticamente
+ *   minute_start       → minuto de inicio de la entrevista
+ *   minute_end         → minuto de fin de la entrevista
+ *   encuestador_id     → FK a users.id
+ *   encuestador_name   → nombre del encuestador
+ *   encuestador_code   → identificador del encuestador
+ *   started_at         → timestamp de inicio
+ *   finished_at        → timestamp de fin
+ *   latitude           → GPS latitud
+ *   longitude          → GPS longitud
+ *   gps_accuracy       → precisión GPS en metros
+ *   language           → idioma de la encuesta (es/en)
+ *   status             → completa | incompleta | rechazada | sustitucion
+ *   early_exit         → true si la encuesta terminó anticipadamente (P1 residentes = NO)
+ *
+ * Respuestas de visitantes (V01..V26):
+ *   v01..v26           → respuestas a las preguntas P1..P18 de visitantes
+ *
+ * Respuestas de residentes (R01..R38):
+ *   r01..r38           → respuestas a las preguntas P1..P14 de residentes
+ */
+export const surveyResponsesFlat = mysqlTable("survey_responses_flat", {
+  id: int("id").autoincrement().primaryKey(),
+  // FK a la encuesta principal
+  surveyId: int("surveyId").notNull(),
+  // Tipo de encuesta
+  surveyType: mysqlEnum("surveyType", ["visitantes", "residentes"]).notNull(),
+  // Metadatos de campo
+  surveyNumber: varchar("surveyNumber", { length: 8 }),         // "0001", "0002"...
+  surveyPoint: varchar("surveyPoint", { length: 255 }),
+  timeSlot: varchar("timeSlot", { length: 32 }),                // "manana", "tarde", etc.
+  windowCode: varchar("windowCode", { length: 16 }),            // "10:00-10:30"
+  minuteStart: varchar("minuteStart", { length: 5 }),           // "10:05"
+  minuteEnd: varchar("minuteEnd", { length: 5 }),               // "10:18"
+  encuestadorId: int("encuestadorId").notNull(),
+  encuestadorName: varchar("encuestadorName", { length: 255 }),
+  encuestadorCode: varchar("encuestadorCode", { length: 32 }),
+  startedAt: timestamp("startedAt").notNull(),
+  finishedAt: timestamp("finishedAt"),
+  latitude: decimal("latitude", { precision: 10, scale: 7 }),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }),
+  gpsAccuracy: decimal("gpsAccuracy", { precision: 8, scale: 2 }),
+  language: mysqlEnum("language", ["es", "en"]).default("es").notNull(),
+  status: mysqlEnum("status", ["completa", "incompleta", "rechazada", "sustitucion"]).default("completa").notNull(),
+  earlyExit: boolean("earlyExit").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  // ── Respuestas VISITANTES (V01..V26) ──────────────────────────────────────
+  v01: text("v01"),   // P1. País de residencia
+  v02: text("v02"),   // P1b. Provincia/Ciudad (si España)
+  v03: text("v03"),   // P2. ¿Primera vez en Sevilla?
+  v04: text("v04"),   // P3. Días de estancia
+  v05: text("v05"),   // P4. Rango de edad
+  v06: text("v06"),   // P4b. Género
+  v07: text("v07"),   // P5. Motivo principal de visita
+  v08: text("v08"),   // P6. ¿Con quién viaja?
+  v09: text("v09"),   // P6b. Número de personas en grupo
+  v10: text("v10"),   // P7. Cómo llegó al punto
+  v11: text("v11"),   // P8. Qué le llevó a este punto
+  v12: text("v12"),   // P9. ¿Modificó recorrido por la gente?
+  v13: text("v13"),   // P11. Cantidad de gente (1-5)
+  v14: text("v14"),   // P12. Afecta a su experiencia (1-5)
+  v15: text("v15"),   // P13. Nivel de afluencia le resulta...
+  v16: text("v16"),   // P14. Adaptación del espacio (1-5)
+  v17: text("v17"),   // P15. Uso principal del espacio
+  v18: text("v18"),   // P16. Qué le gusta más
+  v19: text("v19"),   // P17. Qué le incomoda
+  v20: text("v20"),   // P18. Recomendaría este punto (1-5)
+  v21: text("v21"),   // (reserva)
+  v22: text("v22"),   // (reserva)
+  v23: text("v23"),   // (reserva)
+  v24: text("v24"),   // (reserva)
+  v25: text("v25"),   // (reserva)
+  v26: text("v26"),   // (reserva)
+  // ── Respuestas RESIDENTES (R01..R38) ─────────────────────────────────────
+  r01: text("r01"),   // P1. ¿Reside habitualmente en este barrio? (SI/NO → si NO: fin)
+  r02: text("r02"),   // P1.1. ¿En qué calle?
+  r03: text("r03"),   // P2. Años viviendo en el barrio
+  r04: text("r04"),   // P3. ¿Percibe beneficios económicos del turismo?
+  r05: text("r05"),   // P4. Género
+  r06: text("r06"),   // P5. Edad
+  r07: text("r07"),   // P6.01. Turismo mejora economía local
+  r08: text("r08"),   // P6.02. Turismo genera congestión
+  r09: text("r09"),   // P6.03. Turismo atrae inversores
+  r10: text("r10"),   // P6.04. Turismo encarece viviendas
+  r11: text("r11"),   // P6.05. Turismo aumenta calidad de vida
+  r12: text("r12"),   // P6.06. Turismo provoca desplazamientos
+  r13: text("r13"),   // P6.07. Turismo mejora prestigio ciudad
+  r14: text("r14"),   // P6.08. Turismo pérdida identidad/cultura
+  r15: text("r15"),   // P6.09. Turismo conserva monumentos
+  r16: text("r16"),   // P6.10. Turismo aumenta tráfico
+  r17: text("r17"),   // P6.11. Turismo incrementa ocio
+  r18: text("r18"),   // P6.12. Turismo mejora servicios
+  r19: text("r19"),   // P6.13. Turismo consume recursos
+  r20: text("r20"),   // P6.14. Turismo aumenta contaminación
+  r21: text("r21"),   // P6.15. Turismo sociedad más tolerante
+  r22: text("r22"),   // P7a. Frecuencia: Compras en el barrio
+  r23: text("r23"),   // P7b. Frecuencia: Restaurantes/bares
+  r24: text("r24"),   // P7c. Frecuencia: Espacios culturales
+  r25: text("r25"),   // P7d. Frecuencia: Espacios naturales
+  r26: text("r26"),   // P7e. Frecuencia: Transporte público
+  r27: text("r27"),   // P7f. Frecuencia: A pie o en bicicleta
+  r28: text("r28"),   // P8. ¿Ha modificado comportamiento por turistas?
+  r29: text("r29"),   // P9. Situaciones experimentadas (múltiple)
+  r30: text("r30"),   // P10. Presencia turística cambió uso espacio público (1-5)
+  r31: text("r31"),   // P11. Cómo le afecta el turismo (1-5)
+  r32: text("r32"),   // P12. Cómo afecta el turismo a su comunidad (1-5)
+  r33: text("r33"),   // P13. Medidas a priorizar (múltiple)
+  r34: text("r34"),   // P14. Observaciones/comentarios finales
+  r35: text("r35"),   // (reserva)
+  r36: text("r36"),   // (reserva)
+  r37: text("r37"),   // (reserva)
+  r38: text("r38"),   // (reserva)
+});
+export type SurveyResponseFlat = typeof surveyResponsesFlat.$inferSelect;
+export type InsertSurveyResponseFlat = typeof surveyResponsesFlat.$inferInsert;

@@ -12,6 +12,8 @@ import {
   questions,
   surveyAnswers,
   InsertSurveyAnswer,
+  surveyResponsesFlat,
+  InsertSurveyResponseFlat,
   surveyResponses,
   surveyTemplates,
   users,
@@ -181,6 +183,16 @@ export async function createSurveyResponse(data: InsertSurveyResponse) {
   if (!db) return null;
   const result = await db.insert(surveyResponses).values(data);
   return result[0];
+}
+
+/**
+ * Inserta una fila desnormalizada en survey_responses_flat (una por encuesta).
+ * Cada pregunta tiene su propia columna (V01..V26 para visitantes, R01..R38 para residentes).
+ */
+export async function insertSurveyResponseFlat(row: InsertSurveyResponseFlat) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(surveyResponsesFlat).values(row);
 }
 
 /**

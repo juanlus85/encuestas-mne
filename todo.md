@@ -190,3 +190,12 @@
 - [x] Error a.answer.map is not a function: parse defensivo en responses.byId (MySQL estándar devuelve JSON como string)
 - [x] Reestructurar BD: tabla survey_answers creada (una fila por pregunta), insertada automáticamente al guardar encuesta completa
 - [x] Eliminar botón 'Acceso institucional' del login (OAuth Manus)
+
+## Reestructuración mayor BD y formulario (10 abril - noche 2)
+- [x] BD: nueva tabla survey_responses_flat (una fila por encuesta, columnas por pregunta + metadatos)
+- [x] Formulario: eliminar preguntas META del formulario (código cuestionario, punto duplicado, bloque, ventana)
+- [x] Formulario: unificar punto de encuesta (solo preguntar una vez, en paso 0 de metadatos)
+- [x] Formulario residentes: salida anticipada si P1 responde NO reside habitualmente en el barrio
+- [x] Menú encuestador: añadido Mis Horarios al sidebar (Cuotas y Cierre de Turno ya existían)
+- [x] Router: insertar en survey_responses_flat al guardar encuesta completa (mapeo order → v01-v26 / r01-r38)
+- [x] Router: earlyExit y windowCode añadidos al schema de responses.submit

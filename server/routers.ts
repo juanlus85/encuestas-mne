@@ -60,6 +60,7 @@ import {
   getShiftClosuresByEncuestador,
   getAllShiftClosures,
   insertSurveyAnswers,
+  insertSurveyResponseFlat,
 } from "./db";
 import { hashPassword } from "./_core/localAuth";
 import { storagePut } from "./storage";
@@ -287,6 +288,8 @@ export const appRouter = router({
         answers: z.array(z.object({ questionId: z.number(), answer: z.any() })),
         status: z.enum(["completa", "incompleta", "rechazada", "sustitucion"]).default("completa"),
         deviceInfo: z.string().optional(),
+        earlyExit: z.boolean().optional(),
+        windowCode: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         const result = await createSurveyResponse({
@@ -365,6 +368,58 @@ export const appRouter = router({
           } catch (err) {
             // No bloquear la respuesta si falla la inserción normalizada
             console.error("[survey_answers] Error al insertar respuestas normalizadas:", err);
+          }
+          // ── Insertar en survey_responses_flat (una fila por encuesta) ──────────
+          try {
+            const template2 = await getSurveyTemplateById(input.templateId);
+            const surveyType2 = (template2?.type ?? "visitantes") as "visitantes" | "residentes";
+            const templateQuestions2 = await getQuestionsByTemplate(input.templateId);
+            // Filtrar preguntas META (text empieza con "META:")
+            const realQuestions = templateQuestions2.filter((q) => !q.text.startsWith("META:"));
+            // Offset de orden: para visitantes las META son orders 1-6, para residentes 1-4
+            const metaCount = surveyType2 === "visitantes" ? 6 : 4;
+            // Construir mapa order → answer
+            const qMap2 = new Map(templateQuestions2.map((q) => [q.id, q]));
+            const answerByOrder: Record<number, string> = {};
+            for (const a of input.answers) {
+              const q = qMap2.get(a.questionId);
+              if (!q) continue;
+              const rawVal = a.answer;
+              let strVal: string;
+              if (Array.isArray(rawVal)) strVal = JSON.stringify(rawVal);
+              else if (rawVal === null || rawVal === undefined) strVal = "";
+              else strVal = String(rawVal);
+              answerByOrder[q.order] = strVal;
+            }
+            // Construir el objeto flat
+            const flatRow: Record<string, unknown> = {
+              surveyId,
+              surveyType: surveyType2,
+              surveyPoint: input.surveyPoint,
+              timeSlot: input.timeSlot,
+              windowCode: input.windowCode,
+              encuestadorId: ctx.user.id,
+              encuestadorName: ctx.user.name ?? "",
+              encuestadorCode: ctx.user.identifier ?? "",
+              startedAt: input.startedAt,
+              finishedAt: input.finishedAt ?? new Date(),
+              latitude: input.latitude?.toString(),
+              longitude: input.longitude?.toString(),
+              gpsAccuracy: input.gpsAccuracy?.toString(),
+              language: input.language,
+              status: input.status,
+              earlyExit: input.earlyExit ?? false,
+            };
+            // Mapear respuestas a columnas vXX / rXX
+            const prefix2 = surveyType2 === "visitantes" ? "v" : "r";
+            for (const q of realQuestions) {
+              const colIdx = q.order - metaCount; // 1-based index of real question
+              const colName = `${prefix2}${String(colIdx).padStart(2, "0")}`;
+              flatRow[colName] = answerByOrder[q.order] ?? null;
+            }
+            await insertSurveyResponseFlat(flatRow as any);
+          } catch (err) {
+            console.error("[survey_responses_flat] Error al insertar fila plana:", err);
           }
         }
         return { success: true, id: surveyId };

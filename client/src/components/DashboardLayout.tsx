@@ -19,6 +19,7 @@ import { useIsMobile } from "@/hooks/useMobile";
 import {
   ArrowUpDown,
   BarChart3,
+  Calendar,
   ClipboardList,
   FileDown,
   LayoutDashboard,
@@ -70,6 +71,7 @@ const encuestadorMenuItems = [
   { icon: ClipboardList, label: "Nueva Encuesta", path: "/encuesta" },
   { icon: PersonStanding, label: "Conteo Peatonal", path: "/conteo" },
   { icon: Target, label: "Cuotas", path: "/cuotas" },
+  { icon: Calendar, label: "Mis Horarios", path: "/mis-horarios" },
   { icon: DoorOpen, label: "Cierre de Turno", path: "/cierre-turno" },
 ];
 

@@ -64,6 +64,13 @@
       "when": 1775781203700,
       "tag": "0008_glorious_medusa",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1775782873147,
+      "tag": "0009_hesitant_shadow_king",
+      "breakpoints": true
     }
   ]
 }

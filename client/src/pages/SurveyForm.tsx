@@ -8,7 +8,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
-  Globe,
   Loader2,
   MapPin,
   X,
@@ -26,6 +25,7 @@ type PhotoData = { base64: string; preview: string; questionId?: number };
 interface QuestionOption { value: string; label: string; labelEn?: string }
 interface Question {
   id: number;
+  order: number;
   type: string;
   text: string;
   textEn?: string | null;
@@ -118,7 +118,7 @@ function QuestionRenderer({
   onPhoto,
 }: {
   question: Question;
-  lang?: "es" | "en"; // kept for compat but ignored — we show both
+  lang?: "es" | "en";
   answer: any;
   onAnswer: (val: any) => void;
   photos: PhotoData[];
@@ -196,28 +196,30 @@ function QuestionRenderer({
       )}
 
       {/* Scale */}
-      {question.type === "scale" && (
+      {question.type === "scale" && opts && (
         <div className="space-y-3">
           <div className="grid grid-cols-5 gap-2">
-            {[1, 2, 3, 4, 5].map((n) => (
+            {opts.map((opt) => (
               <button
-                key={n}
+                key={opt.value}
                 type="button"
-                onClick={() => onAnswer(n)}
-                className={`py-4 rounded-xl border-2 font-bold text-lg transition-all ${
-                  answer === n
+                onClick={() => onAnswer(opt.value)}
+                className={`py-3 rounded-xl border-2 font-bold text-base transition-all ${
+                  answer === opt.value
                     ? "border-primary bg-primary text-primary-foreground"
                     : "border-border hover:border-primary/50"
                 }`}
               >
-                {n}
+                {opt.value}
               </button>
             ))}
           </div>
-          <div className="flex justify-between text-xs text-muted-foreground px-1">
-            <span>Muy malo / Very bad</span>
-            <span>Excelente / Excellent</span>
-          </div>
+          {opts.length > 0 && (
+            <div className="flex justify-between text-xs text-muted-foreground px-1">
+              <span>{opts[0]?.label}</span>
+              <span>{opts[opts.length - 1]?.label}</span>
+            </div>
+          )}
         </div>
       )}
 
@@ -293,6 +295,75 @@ function QuestionRenderer({
   );
 }
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function calcTimeSlot(d: Date): string {
+  const h = d.getHours();
+  if (h >= 10 && h < 12) return "manana";
+  if (h >= 12 && h < 15) return "mediodia";
+  if (h >= 17 && h < 20) return "tarde";
+  if (h >= 20 && h < 23) return "noche";
+  return "manana";
+}
+
+function calcWindowCode(d: Date): string {
+  const min = d.getMinutes();
+  if (min < 30) return "V1";
+  return "V2";
+}
+
+function fmtTime(d: Date): string {
+  return d.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+}
+
+const TIME_SLOT_LABELS: Record<string, string> = {
+  manana: "Mañana (10–12h)",
+  mediodia: "Mediodía (12–15h)",
+  tarde: "Tarde (17–20h)",
+  noche: "Noche (20–23h)",
+};
+
+const SURVEY_POINTS = [
+  { val: "01", label: "01 · Virgen de los Reyes" },
+  { val: "02", label: "02 · Mateos Gago" },
+  { val: "03", label: "03 · Patio de Banderas" },
+  { val: "04", label: "04 · Agua / Vida" },
+  { val: "05", label: "05 · Plaza Alfaro" },
+];
+
+// ─── Early Exit Screen ────────────────────────────────────────────────────────
+
+function EarlyExitScreen({ onRestart }: { onRestart: () => void }) {
+  const [, setLocation] = useLocation();
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="max-w-sm w-full text-center space-y-5">
+        <div className="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center mx-auto">
+          <AlertCircle className="h-10 w-10 text-amber-600" />
+        </div>
+        <div>
+          <h2 className="text-xl font-bold text-foreground">Encuesta finalizada</h2>
+          <p className="text-muted-foreground text-sm mt-2">
+            La persona indicó que <strong>no reside habitualmente en este barrio</strong>.
+            La encuesta ha concluido anticipadamente.
+          </p>
+          <p className="text-muted-foreground text-xs mt-1 italic">
+            The person indicated they do not usually reside in this neighbourhood. Survey ended early.
+          </p>
+        </div>
+        <div className="flex flex-col gap-3">
+          <Button onClick={onRestart} className="w-full" size="lg">
+            Nueva encuesta
+          </Button>
+          <Button onClick={() => setLocation("/")} variant="outline" className="w-full">
+            Volver al inicio
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Survey Form ─────────────────────────────────────────────────────────
 
 export default function SurveyForm() {
@@ -306,36 +377,23 @@ export default function SurveyForm() {
   const uploadPhotoMutation = trpc.photos.upload.useMutation();
 
   const { gps, gpsStatus, retryGps } = useGPS();
-  const [lang, setLang] = useState<"es" | "en">("es");
-  const [currentStep, setCurrentStep] = useState(0); // 0 = metadata, 1..n = questions
+  const [lang] = useState<"es" | "en">("es");
+  const [currentStep, setCurrentStep] = useState(0); // 0 = metadata, 1..n = real questions
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [photos, setPhotos] = useState<PhotoData[]>([]);
   const [surveyPoint, setSurveyPoint] = useState("");
   const [startedAt] = useState(new Date());
-
-  // Calcular franja horaria automáticamente según la hora actual
-  const calcTimeSlot = (d: Date): string => {
-    const h = d.getHours();
-    if (h >= 10 && h < 12) return "manana";
-    if (h >= 12 && h < 15) return "mediodia";
-    if (h >= 17 && h < 20) return "tarde";
-    if (h >= 20 && h < 23) return "noche";
-    return "manana"; // fallback
-  };
-  // Calcular ventana (tramo 30 min) automáticamente
-  const calcWindowCode = (d: Date): string => {
-    const min = d.getMinutes();
-    if (min < 30) return "V1";
-    if (min < 60) return "V2";
-    return "V3";
-  };
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submittedId, setSubmittedId] = useState<number | null>(null);
+  const [earlyExit, setEarlyExit] = useState(false);
 
   const isVisitantes = templateData?.type === "visitantes";
+  const isResidentes = templateData?.type === "residentes";
 
-  const questions = templateData?.questions ?? [];
+  // Filtrar preguntas META (orden 1-6 visitantes, 1-4 residentes) — no se muestran en el formulario
+  const allQuestions: Question[] = (templateData?.questions ?? []) as Question[];
+  const questions = allQuestions.filter((q) => !q.text.startsWith("META:"));
   const totalSteps = questions.length;
 
   const getAnswer = (qId: number) => answers.find((a) => a.questionId === qId)?.answer;
@@ -352,7 +410,6 @@ export default function SurveyForm() {
   };
 
   const currentQuestion = currentStep > 0 ? questions[currentStep - 1] : null;
-  const isLastStep = currentStep === totalSteps;
 
   // Scroll al inicio al cambiar de paso
   useEffect(() => {
@@ -360,13 +417,58 @@ export default function SurveyForm() {
   }, [currentStep]);
 
   const canProceed = () => {
-    if (currentStep === 0) return true;
+    if (currentStep === 0) {
+      // El punto de encuesta es obligatorio para visitantes
+      if (isVisitantes && !surveyPoint) return false;
+      return true;
+    }
     if (!currentQuestion) return true;
     if (!currentQuestion.isRequired) return true;
     const ans = getAnswer(currentQuestion.id);
     if (ans === undefined || ans === null || ans === "") return false;
     if (Array.isArray(ans) && ans.length === 0) return false;
     return true;
+  };
+
+  // Lógica de salida anticipada: P1 de residentes (¿Reside habitualmente en este barrio?)
+  // Es la primera pregunta real (order 5 en el seed, pero la primera no-META)
+  const handleNext = () => {
+    if (isResidentes && currentStep === 1 && currentQuestion) {
+      const ans = getAnswer(currentQuestion.id);
+      if (ans === "no") {
+        // Guardar encuesta como salida anticipada y mostrar pantalla de fin
+        handleEarlyExit();
+        return;
+      }
+    }
+    setCurrentStep((s) => s + 1);
+  };
+
+  const handleEarlyExit = async () => {
+    setSubmitting(true);
+    try {
+      const result = await submitMutation.mutateAsync({
+        templateId,
+        surveyPoint: surveyPoint || undefined,
+        timeSlot: calcTimeSlot(startedAt) as any,
+        latitude: gps?.lat,
+        longitude: gps?.lng,
+        gpsAccuracy: gps?.accuracy,
+        startedAt,
+        finishedAt: new Date(),
+        language: lang,
+        answers,
+        status: "incompleta",
+        deviceInfo: navigator.userAgent.substring(0, 200),
+        earlyExit: true,
+      });
+      setSubmittedId(result.id as number);
+      setEarlyExit(true);
+    } catch {
+      toast.error("Error al guardar. Inténtelo de nuevo.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -385,7 +487,6 @@ export default function SurveyForm() {
         answers,
         status: "completa",
         deviceInfo: navigator.userAgent.substring(0, 200),
-        // Metadatos específicos de visitantes (calculados automáticamente)
         ...(isVisitantes && {
           windowCode: calcWindowCode(startedAt),
         }),
@@ -406,13 +507,19 @@ export default function SurveyForm() {
       }
 
       setSubmitted(true);
-    } catch (e) {
+    } catch {
       toast.error("Error al enviar la encuesta. Inténtelo de nuevo.");
     } finally {
       setSubmitting(false);
     }
   };
 
+  // ── Pantalla de salida anticipada ────────────────────────────────────────────
+  if (earlyExit) {
+    return <EarlyExitScreen onRestart={() => setLocation("/")} />;
+  }
+
+  // ── Pantalla de éxito ────────────────────────────────────────────────────────
   if (submitted) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -423,7 +530,7 @@ export default function SurveyForm() {
           <div>
             <h2 className="text-xl font-bold text-foreground">¡Encuesta enviada!</h2>
             <p className="text-muted-foreground text-sm mt-1">
-              Referencia #{submittedId} · {new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}
+              Referencia #{submittedId} · {fmtTime(new Date())}
             </p>
           </div>
           <Button onClick={() => setLocation("/")} className="w-full" size="lg">
@@ -458,7 +565,10 @@ export default function SurveyForm() {
       {/* Top bar */}
       <div className="bg-primary text-primary-foreground sticky top-0 z-30">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
-          <button onClick={() => setLocation("/")} className="flex items-center gap-1.5 text-primary-foreground/80 hover:text-primary-foreground transition-colors">
+          <button
+            onClick={() => setLocation("/")}
+            className="flex items-center gap-1.5 text-primary-foreground/80 hover:text-primary-foreground transition-colors"
+          >
             <X className="h-5 w-5" />
           </button>
           <div className="text-center">
@@ -467,7 +577,11 @@ export default function SurveyForm() {
               <p className="text-xs text-primary-foreground/70 italic">{templateData.nameEn}</p>
             )}
             <p className="text-xs text-primary-foreground/60">
-              {currentStep === 0 ? "Datos de campo / Field data" : `Pregunta ${currentStep} de ${totalSteps}`}
+              {currentStep === 0
+                ? "Datos de campo / Field data"
+                : currentStep <= totalSteps
+                  ? `Pregunta ${currentStep} de ${totalSteps}`
+                  : "Resumen"}
             </p>
           </div>
           <div className="w-8" />
@@ -485,12 +599,14 @@ export default function SurveyForm() {
       {/* Content */}
       <div className="flex-1 max-w-2xl mx-auto w-full px-4 py-6">
 
-        {/* Step 0: Metadata */}
+        {/* ── Step 0: Datos de campo ── */}
         {currentStep === 0 && (
           <div className="space-y-6">
             <div>
               <h2 className="text-lg font-bold text-foreground">Datos de campo</h2>
-              <p className="text-sm text-muted-foreground mt-1">Complete la información antes de iniciar la encuesta.</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Complete la información antes de iniciar la encuesta.
+              </p>
             </div>
 
             {/* GPS status */}
@@ -516,23 +632,27 @@ export default function SurveyForm() {
                 )}
               </div>
               {gpsStatus === "error" && (
-                <button onClick={retryGps} className="text-xs text-red-600 font-medium underline shrink-0">Reintentar</button>
+                <button
+                  onClick={retryGps}
+                  className="text-xs text-red-600 font-medium underline shrink-0"
+                >
+                  Reintentar
+                </button>
               )}
-              {gpsStatus === "loading" && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground shrink-0" />}
+              {gpsStatus === "loading" && (
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground shrink-0" />
+              )}
             </div>
 
-            {/* Survey point — botones visibles */}
+            {/* Punto de encuesta */}
             <div>
               <label className="text-sm font-medium text-foreground block mb-2">
-                Punto de encuesta {isVisitantes && <span className="text-destructive">*</span>}
+                Punto de encuesta
+                {isVisitantes && <span className="text-destructive ml-1">*</span>}
               </label>
               <div className="grid grid-cols-1 gap-2">
                 {[
-                  { val: "01 Virgen de los Reyes", label: "01 · Virgen de los Reyes" },
-                  { val: "02 Mateos Gago", label: "02 · Mateos Gago" },
-                  { val: "03 Patio de Banderas", label: "03 · Patio de Banderas" },
-                  { val: "04 Agua / Vida", label: "04 · Agua / Vida" },
-                  { val: "05 Plaza Alfaro", label: "05 · Plaza Alfaro" },
+                  ...SURVEY_POINTS,
                   ...(!isVisitantes ? [{ val: "Otro", label: "Otro" }] : []),
                 ].map(({ val, label }) => (
                   <button
@@ -551,37 +671,42 @@ export default function SurveyForm() {
               </div>
             </div>
 
-
-
-            {/* Campos exclusivos de visitantes: ventana y franja se calculan automáticamente */}
-            {isVisitantes && (
-              <div className="bg-muted/50 rounded-xl p-4 text-sm space-y-1">
-                <p className="text-muted-foreground font-medium mb-2">Datos asignados automáticamente:</p>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Franja horaria</span>
-                  <span className="font-medium">{({
-                    manana: "Mañana (10–12h)",
-                    mediodia: "Mediodía (12–15h)",
-                    tarde: "Tarde (17–20h)",
-                    noche: "Noche (20–23h)",
-                  } as Record<string,string>)[calcTimeSlot(startedAt)] ?? calcTimeSlot(startedAt)}</span>
-                </div>
+            {/* Datos automáticos */}
+            <div className="bg-muted/50 rounded-xl p-4 text-sm space-y-2">
+              <p className="text-muted-foreground font-medium mb-1">Datos asignados automáticamente:</p>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Franja horaria</span>
+                <span className="font-medium">
+                  {TIME_SLOT_LABELS[calcTimeSlot(startedAt)] ?? calcTimeSlot(startedAt)}
+                </span>
+              </div>
+              {isVisitantes && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Ventana (tramo 30 min)</span>
                   <span className="font-medium">{calcWindowCode(startedAt)}</span>
                 </div>
+              )}
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Hora de inicio</span>
+                <span className="font-medium">{fmtTime(startedAt)}</span>
               </div>
-            )}
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Encuestador</span>
+                <span className="font-medium">
+                  {user?.name}{user?.identifier ? ` (${user.identifier})` : ""}
+                </span>
+              </div>
+            </div>
 
-            {/* Time info */}
+            {/* Idioma de la encuesta */}
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Clock className="h-4 w-4" />
-              <span>Inicio: {startedAt.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</span>
+              <span>Encuesta en español · Survey in Spanish</span>
             </div>
           </div>
         )}
 
-        {/* Steps 1..n: Questions */}
+        {/* ── Steps 1..n: Questions ── */}
         {currentStep > 0 && currentQuestion && (
           <div className="space-y-5">
             <QuestionRenderer
@@ -592,7 +717,7 @@ export default function SurveyForm() {
               photos={photos.filter((p) => p.questionId === currentQuestion.id)}
               onPhoto={(d) => setPhotos((prev) => [...prev, d])}
             />
-            {/* Navigation buttons — right below the question */}
+            {/* Navigation buttons */}
             <div className="flex gap-3 pt-2">
               {currentStep > 1 && (
                 <Button
@@ -607,13 +732,16 @@ export default function SurveyForm() {
               )}
               {currentStep < totalSteps ? (
                 <Button
-                  onClick={() => setCurrentStep((s) => s + 1)}
+                  onClick={handleNext}
                   className="flex-1"
-                  disabled={!canProceed()}
+                  disabled={!canProceed() || submitting}
                   size="lg"
                 >
-                  Siguiente
-                  <ChevronRight className="h-4 w-4 ml-1" />
+                  {submitting ? (
+                    <><Loader2 className="h-4 w-4 mr-1 animate-spin" />Guardando...</>
+                  ) : (
+                    <>Siguiente <ChevronRight className="h-4 w-4 ml-1" /></>
+                  )}
                 </Button>
               ) : (
                 <Button
@@ -633,30 +761,43 @@ export default function SurveyForm() {
           </div>
         )}
 
-        {/* Last step: Summary + extra photos */}
+        {/* ── Last step: Summary + extra photos ── */}
         {currentStep === totalSteps && totalSteps > 0 && (
           <div className="space-y-6">
             <div>
               <h2 className="text-lg font-bold text-foreground">Resumen y envío</h2>
-              <p className="text-sm text-muted-foreground mt-1">Revise y añada fotografías adicionales antes de enviar.</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Revise y añada fotografías adicionales antes de enviar.
+              </p>
             </div>
 
             <div className="bg-muted/50 rounded-xl p-4 space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Encuestador</span>
-                <span className="font-medium">{user?.name} {user?.identifier ? `(${user.identifier})` : ""}</span>
+                <span className="font-medium">
+                  {user?.name}{user?.identifier ? ` (${user.identifier})` : ""}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Punto</span>
                 <span className="font-medium">{surveyPoint || "—"}</span>
               </div>
-
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Franja</span>
+                <span className="font-medium">
+                  {TIME_SLOT_LABELS[calcTimeSlot(startedAt)] ?? calcTimeSlot(startedAt)}
+                </span>
+              </div>
               {isVisitantes && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Ventana</span>
                   <span className="font-medium">{calcWindowCode(startedAt)}</span>
                 </div>
               )}
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Inicio</span>
+                <span className="font-medium">{fmtTime(startedAt)}</span>
+              </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">GPS</span>
                 <span className={`font-medium ${gpsStatus === "ok" ? "text-green-600" : "text-amber-600"}`}>
@@ -685,7 +826,7 @@ export default function SurveyForm() {
         )}
       </div>
 
-      {/* Step 0 navigation: Iniciar encuesta */}
+      {/* ── Step 0 navigation ── */}
       {currentStep === 0 && (
         <div className="max-w-2xl mx-auto w-full px-4 pb-6">
           <Button
@@ -699,7 +840,8 @@ export default function SurveyForm() {
           </Button>
         </div>
       )}
-      {/* Last step navigation: Enviar */}
+
+      {/* ── Last step navigation ── */}
       {currentStep === totalSteps && totalSteps > 0 && (
         <div className="max-w-2xl mx-auto w-full px-4 pb-6">
           <div className="flex gap-3">
