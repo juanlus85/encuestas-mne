@@ -283,7 +283,7 @@ export const appRouter = router({
         latitude: z.number().optional(),
         longitude: z.number().optional(),
         gpsAccuracy: z.number().optional(),
-        startedAt: z.date(),
+        startedAt: z.date().optional(),   // opcional: si no viene, se genera en el servidor
         finishedAt: z.date().optional(),
         language: z.enum(["es", "en"]).default("es"),
         answers: z.array(z.object({ questionId: z.number(), answer: z.any() })),
@@ -342,6 +342,7 @@ export const appRouter = router({
           console.error("[responses.submit] Error construyendo columnas planas:", err);
         }
 
+        const now = new Date();
         const result = await createSurveyResponse({
           ...input,
           ...flatCols,
@@ -352,7 +353,8 @@ export const appRouter = router({
           longitude: input.longitude?.toString(),
           gpsAccuracy: input.gpsAccuracy?.toString(),
           answers: input.answers,
-          finishedAt: input.finishedAt ?? new Date(),
+          startedAt: input.startedAt ?? now,   // usar hora del servidor si no viene del cliente
+          finishedAt: input.finishedAt ?? now,
         });
         const surveyId = result?.insertId as number | undefined;
         // Si la encuesta se guardó correctamente y está completa, insertar en survey_answers
@@ -561,8 +563,8 @@ export const appRouter = router({
       }).optional())
       .query(({ input }) => getFieldMetrics(input ? {
         encuestadorId: input.encuestadorId,
-        dateFrom: input.dateFrom?.toISOString().split('T')[0],
-        dateTo: input.dateTo?.toISOString().split('T')[0],
+        dateFrom: input.dateFrom ? new Date(input.dateFrom).toLocaleDateString("sv-SE", { timeZone: "Europe/Madrid" }) : undefined,
+        dateTo: input.dateTo ? new Date(input.dateTo).toLocaleDateString("sv-SE", { timeZone: "Europe/Madrid" }) : undefined,
       } : undefined)),
   }),
 
@@ -905,8 +907,8 @@ export const appRouter = router({
             rAny.windowCode ?? "",
             rAny.minuteStart ?? "",
             rAny.minuteEnd ?? "",
-            r.startedAt?.toISOString() ?? "",
-            r.finishedAt?.toISOString() ?? "",
+            r.startedAt ? new Date(r.startedAt).toLocaleString("es-ES", { timeZone: "Europe/Madrid", hour12: false }) : "",
+            r.finishedAt ? new Date(r.finishedAt).toLocaleString("es-ES", { timeZone: "Europe/Madrid", hour12: false }) : "",
             durMin,
             r.language,
             r.status,
@@ -956,7 +958,8 @@ export const appRouter = router({
             r.id, r.surveyType ?? "", r.surveyPoint ?? "", r.timeSlot ?? "",
             r.windowCode ?? "", r.minuteStart ?? "", r.minuteEnd ?? "",
             r.encuestadorName ?? "", r.encuestadorCode ?? "",
-            r.startedAt?.toISOString() ?? "", r.finishedAt?.toISOString() ?? "",
+            r.startedAt ? new Date(r.startedAt).toLocaleString("es-ES", { timeZone: "Europe/Madrid", hour12: false }) : "",
+            r.finishedAt ? new Date(r.finishedAt).toLocaleString("es-ES", { timeZone: "Europe/Madrid", hour12: false }) : "",
             r.language, r.status, r.latitude ?? "", r.longitude ?? "",
             r.gpsAccuracy ?? "", r.earlyExit ? "SI" : "NO",
           ];
@@ -1115,12 +1118,12 @@ export const appRouter = router({
       const today = new Date();
       const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
       const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
-      const todayStr = today.toISOString().split("T")[0];
+      const todayStr = today.toLocaleDateString("sv-SE", { timeZone: "Europe/Madrid" });
       // Encuestas del día
       const allResponses = await getSurveyResponsesByEncuestador(ctx.user.id);
       const todayEncuestas = allResponses.filter((r) => {
-        const d = new Date(r.startedAt);
-        return d >= todayStart && d <= todayEnd;
+        const dStr = new Date(r.startedAt).toLocaleDateString("sv-SE", { timeZone: "Europe/Madrid" });
+        return dStr === todayStr;
       });
       // Rechazos del día
       const allRejections = await getSurveyRejections({ encuestadorId: ctx.user.id, dateFrom: todayStr, dateTo: todayStr });

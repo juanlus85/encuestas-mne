@@ -1,4 +1,6 @@
 import "dotenv/config";
+// Forzar timezone España (UTC+2 en verano, UTC+1 en invierno)
+process.env.TZ = "Europe/Madrid";
 import express from "express";
 import { createServer } from "http";
 import net from "net";

@@ -588,7 +588,7 @@ export async function getPedestrianPassStats(filters?: {
   // Agrupar por hora
   const byHour: Record<string, number> = {};
   for (const p of passes) {
-    const h = new Date(p.recordedAt).getHours().toString().padStart(2, "0") + ":00";
+    const h = new Date(p.recordedAt).toLocaleTimeString("es-ES", { timeZone: "Europe/Madrid", hour: "2-digit", hour12: false }).slice(0, 2) + ":00";
     byHour[h] = (byHour[h] ?? 0) + p.count;
   }
   // Agrupar por punto
@@ -650,7 +650,7 @@ export async function getSurveyRejectionStats(filters?: {
   for (const r of rejections) {
     byType[r.surveyType] = (byType[r.surveyType] ?? 0) + 1;
     if (r.surveyPoint) byPoint[r.surveyPoint] = (byPoint[r.surveyPoint] ?? 0) + 1;
-    const h = new Date(r.rejectedAt).getHours().toString().padStart(2, "0") + ":00";
+    const h = new Date(r.rejectedAt).toLocaleTimeString("es-ES", { timeZone: "Europe/Madrid", hour: "2-digit", hour12: false }).slice(0, 2) + ":00";
     byHour[h] = (byHour[h] ?? 0) + 1;
     const enc = r.encuestadorName ?? `ID ${r.encuestadorId}`;
     byEncuestador[enc] = (byEncuestador[enc] ?? 0) + 1;
