@@ -61,6 +61,7 @@ import {
   getAllShiftClosures,
   insertSurveyAnswers,
   insertSurveyResponseFlat,
+  getSurveyResponsesFlat,
 } from "./db";
 import { hashPassword } from "./_core/localAuth";
 import { storagePut } from "./storage";
@@ -292,8 +293,58 @@ export const appRouter = router({
         windowCode: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
+        // ── Construir columnas por pregunta (v_p01..v_p20 / r_p01..r_p36) ──────
+        let flatCols: Record<string, string | null> = {};
+        try {
+          const tplQuestions = await getQuestionsByTemplate(input.templateId);
+          const tpl = await getSurveyTemplateById(input.templateId);
+          const sType = (tpl?.type ?? "visitantes") as "visitantes" | "residentes";
+          const metaCount = sType === "visitantes" ? 6 : 4;
+          const qMapById = new Map(tplQuestions.map((q) => [q.id, q]));
+          // Construir mapa order → valor de respuesta (string)
+          const answerByOrder: Record<number, string> = {};
+          for (const a of input.answers) {
+            const q = qMapById.get(a.questionId);
+            if (!q) continue;
+            const rawVal = a.answer;
+            let strVal: string;
+            if (Array.isArray(rawVal)) strVal = JSON.stringify(rawVal);
+            else if (rawVal === null || rawVal === undefined) strVal = "";
+            else strVal = String(rawVal);
+            answerByOrder[q.order] = strVal;
+          }
+          // Mapear a columnas v_p01..v_p20 o r_p01..r_p36
+          const prefix = sType === "visitantes" ? "v" : "r";
+          const realQuestions = tplQuestions.filter((q) => !q.text.startsWith("META:"));
+          for (const q of realQuestions) {
+            const colIdx = q.order - metaCount;
+            const rawVal = answerByOrder[q.order] ?? null;
+            if (sType === "visitantes") {
+              // v_p01..v_p20
+              const colName = `v_p${String(colIdx).padStart(2, "0")}`;
+              flatCols[colName] = rawVal;
+            } else {
+              // r_p01..r_p34 (normales) + r_p35a/b/c (múltiple, order 37 = colIdx 33)
+              if (colIdx === 33) {
+                // P13 múltiple: r_p35a, r_p35b, r_p35c
+                let vals: string[] = [];
+                try { vals = rawVal ? JSON.parse(rawVal) : []; } catch { vals = rawVal ? [rawVal] : []; }
+                flatCols["r_p35a"] = vals[0] ?? null;
+                flatCols["r_p35b"] = vals[1] ?? null;
+                flatCols["r_p35c"] = vals[2] ?? null;
+              } else {
+                const colName = `r_p${String(colIdx).padStart(2, "0")}`;
+                flatCols[colName] = rawVal;
+              }
+            }
+          }
+        } catch (err) {
+          console.error("[responses.submit] Error construyendo columnas planas:", err);
+        }
+
         const result = await createSurveyResponse({
           ...input,
+          ...flatCols,
           encuestadorId: ctx.user.id,
           encuestadorName: ctx.user.name ?? "",
           encuestadorIdentifier: ctx.user.identifier ?? "",
@@ -672,9 +723,12 @@ export const appRouter = router({
   passes: router({
     add: encuestadorProcedure
       .input(z.object({
-        surveyPoint: z.string(),
+        surveyPoint: z.string(),           // nombre completo (ej: "01 Virgen de los Reyes")
+        surveyPointCode: z.string().optional(), // solo código (ej: "01")
         directionId: z.number().optional(),
         directionLabel: z.string().optional(),
+        flowOrigin: z.string().optional(),      // origen del flujo
+        flowDestination: z.string().optional(), // destino del flujo
         count: z.number().min(1).max(999),
         latitude: z.number().optional(),
         longitude: z.number().optional(),
@@ -687,8 +741,11 @@ export const appRouter = router({
           encuestadorName: ctx.user.name ?? undefined,
           encuestadorIdentifier: ctx.user.identifier ?? undefined,
           surveyPoint: input.surveyPoint,
+          surveyPointCode: input.surveyPointCode ?? null,
           directionId: input.directionId ?? null,
           directionLabel: input.directionLabel ?? null,
+          flowOrigin: input.flowOrigin ?? null,
+          flowDestination: input.flowDestination ?? null,
           count: input.count,
           latitude: input.latitude ? String(input.latitude) : null,
           longitude: input.longitude ? String(input.longitude) : null,
@@ -813,50 +870,102 @@ export const appRouter = router({
       }).optional())
       .query(async ({ input }) => {
         const responses = await getSurveyResponses(input);
-        // Helper: calcular tramo de media hora a partir de la hora de inicio
-        const getHalfHourSlot = (dt: Date | null | undefined): string => {
-          if (!dt) return "";
-          const h = dt.getHours().toString().padStart(2, "0");
-          const m = dt.getMinutes() < 30 ? "00" : "30";
-          const endMin = dt.getMinutes() < 30 ? "30" : "00";
-          const endH = dt.getMinutes() < 30 ? dt.getHours() : dt.getHours() + 1;
-          return `${h}:${m}-${endH.toString().padStart(2, "0")}:${endMin}`;
-        };
-        const headers = [
-          "ID", "Plantilla", "Tipo", "Encuestador", "Identificador", "Dispositivo",
-          "Punto Encuesta", "Franja", "Tramo30min", "Latitud", "Longitud", "Precisión GPS (m)",
-          "Inicio", "Fin", "Idioma", "Estado", "Respuestas"
-        ];
-        const rows = responses.map((r) => [
-          r.id,
-          r.templateId,
-          (r as any).templateType ?? "",
-          r.encuestadorName ?? "",
-          r.encuestadorIdentifier ?? "",
-          r.deviceInfo ?? "",
-          r.surveyPoint ?? "",
-          r.timeSlot ?? "",
-          getHalfHourSlot(r.startedAt),
-          r.latitude ?? "",
-          r.longitude ?? "",
-          r.gpsAccuracy ?? "",
-          r.startedAt?.toISOString() ?? "",
-          r.finishedAt?.toISOString() ?? "",
-          r.language,
-          r.status,
-          JSON.stringify(r.answers),
-        ]);
-        // Build CSV string
         const escape = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+        // Cabeceras metadatos
+        const metaHeaders = [
+          "ID", "Tipo", "Encuestador", "CodEncuestador",
+          "PuntoEncuesta", "FranjaHoraria", "VentanaMedia", "MinutoInicio", "MinutoFin",
+          "Inicio", "Fin", "DuracionMin", "Idioma", "Estado", "SalidaAnticipada",
+          "Latitud", "Longitud", "GPS_m",
+        ];
+        // Cabeceras visitantes (v_p01..v_p20)
+        const vHeaders = Array.from({ length: 20 }, (_, i) => `V_P${String(i + 1).padStart(2, "0")}`);
+        // Cabeceras residentes (r_p01..r_p34 + r_p35a/b/c + r_p36)
+        const rHeaders = [
+          ...Array.from({ length: 34 }, (_, i) => `R_P${String(i + 1).padStart(2, "0")}`),
+          "R_P35a", "R_P35b", "R_P35c", "R_P36",
+        ];
+        const headers = [...metaHeaders, ...vHeaders, ...rHeaders];
+        const rows = responses.map((r) => {
+          const rAny = r as any;
+          // Duración en minutos
+          const durMin = (r.startedAt && r.finishedAt)
+            ? Math.round((r.finishedAt.getTime() - r.startedAt.getTime()) / 60000)
+            : "";
+          const meta = [
+            r.id,
+            rAny.templateType ?? "",
+            r.encuestadorName ?? "",
+            r.encuestadorIdentifier ?? "",
+            r.surveyPoint ?? "",
+            r.timeSlot ?? "",
+            rAny.windowCode ?? "",
+            rAny.minuteStart ?? "",
+            rAny.minuteEnd ?? "",
+            r.startedAt?.toISOString() ?? "",
+            r.finishedAt?.toISOString() ?? "",
+            durMin,
+            r.language,
+            r.status,
+            rAny.earlyExit ? "SI" : "NO",
+            r.latitude ?? "",
+            r.longitude ?? "",
+            r.gpsAccuracy ?? "",
+          ];
+          // Columnas visitantes
+          const vCols = Array.from({ length: 20 }, (_, i) => rAny[`v_p${String(i + 1).padStart(2, "0")}`] ?? "");
+          // Columnas residentes
+          const rCols = [
+            ...Array.from({ length: 34 }, (_, i) => rAny[`r_p${String(i + 1).padStart(2, "0")}`] ?? ""),
+            rAny.r_p35a ?? "", rAny.r_p35b ?? "", rAny.r_p35c ?? "", rAny.r_p36 ?? "",
+          ];
+          return [...meta, ...vCols, ...rCols];
+        });
         const csvLines = [
           headers.map(escape).join(","),
           ...rows.map((row) => row.map(escape).join(",")),
         ];
-         return { csv: csvLines.join("\n"), count: rows.length };
+        return { csv: csvLines.join("\n"), count: rows.length };
+      }),
+    csvFlat: adminOrRevisorProcedure
+      .input(z.object({
+        encuestadorId: z.number().optional(),
+        surveyType: z.string().optional(),
+        dateFrom: z.date().optional(),
+        dateTo: z.date().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        const rows = await getSurveyResponsesFlat(input);
+        // Cabeceras metadatos
+        const metaHeaders = [
+          "ID", "Tipo", "Punto", "Franja", "Ventana", "MinutoInicio", "MinutoFin",
+          "Encuestador", "CodEncuestador", "Inicio", "Fin", "Idioma", "Estado",
+          "Lat", "Lon", "GPS_m", "SalidaAnticipada",
+        ];
+        // Cabeceras visitantes
+        const vHeaders = Array.from({ length: 26 }, (_, i) => `V${String(i + 1).padStart(2, "0")}`);
+        // Cabeceras residentes
+        const rHeaders = Array.from({ length: 38 }, (_, i) => `R${String(i + 1).padStart(2, "0")}`);
+        const headers = [...metaHeaders, ...vHeaders, ...rHeaders];
+        const escape = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+        const csvRows = rows.map((r) => {
+          const meta = [
+            r.id, r.surveyType ?? "", r.surveyPoint ?? "", r.timeSlot ?? "",
+            r.windowCode ?? "", r.minuteStart ?? "", r.minuteEnd ?? "",
+            r.encuestadorName ?? "", r.encuestadorCode ?? "",
+            r.startedAt?.toISOString() ?? "", r.finishedAt?.toISOString() ?? "",
+            r.language, r.status, r.latitude ?? "", r.longitude ?? "",
+            r.gpsAccuracy ?? "", r.earlyExit ? "SI" : "NO",
+          ];
+          const vCols = Array.from({ length: 26 }, (_, i) => (r as any)[`v${String(i + 1).padStart(2, "0")}`] ?? "");
+          const rCols = Array.from({ length: 38 }, (_, i) => (r as any)[`r${String(i + 1).padStart(2, "0")}`] ?? "");
+          return [...meta, ...vCols, ...rCols];
+        });
+        const csvLines = [headers.map(escape).join(","), ...csvRows.map((row) => row.map(escape).join(","))];
+        return { csv: csvLines.join("\n"), count: rows.length };
       }),
   }),
-
-  // ─── Survey Rejections ────────────────────────────────────────────────────────────────────────────────────
+  // ─── Survey Rejectionss ────────────────────────────────────────────────────────────────────────────────────
   rejections: router({
     add: encuestadorProcedure
       .input(z.object({

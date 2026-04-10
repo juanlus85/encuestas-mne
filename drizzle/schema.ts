@@ -97,8 +97,132 @@ export const surveyResponses = mysqlTable("survey_responses", {
   // Language
   language: mysqlEnum("language", ["es", "en"]).default("es").notNull(),
 
-  // Answers: JSON array of {questionId, answer}
+  // Answers: JSON array of {questionId, answer} — campo de auditoría completo
   answers: json("answers").notNull(),
+
+  // Campos adicionales de metadatos
+  windowCode: varchar("windowCode", { length: 16 }),     // ventana de 30 min (ej. V1, V2...)
+  minuteStart: int("minuteStart"),                        // minuto de inicio de la entrevista
+  minuteEnd: int("minuteEnd"),                            // minuto de fin de la entrevista
+  earlyExit: boolean("earlyExit").default(false),         // salida anticipada (P1 residentes = NO)
+
+  // ─── Respuestas VISITANTES (orders 7-26 → v_p01..v_p20) ──────────────────
+  // P1. País de residencia
+  v_p01: varchar("v_p01", { length: 255 }),
+  // P1b. Si España → Provincia/Ciudad
+  v_p02: varchar("v_p02", { length: 255 }),
+  // P2. ¿Cuántas veces ha visitado Sevilla?
+  v_p03: varchar("v_p03", { length: 64 }),
+  // P3. ¿Cuántos días lleva en Sevilla?
+  v_p04: varchar("v_p04", { length: 64 }),
+  // P4. Rango de edad
+  v_p05: varchar("v_p05", { length: 64 }),
+  // P4b. Género
+  v_p06: varchar("v_p06", { length: 64 }),
+  // P5. Tipo de alojamiento
+  v_p07: varchar("v_p07", { length: 64 }),
+  // P5b. Zona de alojamiento
+  v_p08: varchar("v_p08", { length: 255 }),
+  // P6. Motivo principal de la visita
+  v_p09: varchar("v_p09", { length: 64 }),
+  // P7. Tamaño del grupo
+  v_p10: varchar("v_p10", { length: 64 }),
+  // P8. Tiempo en este lugar (minutos)
+  v_p11: varchar("v_p11", { length: 64 }),
+  // P9. Actividad principal en este lugar
+  v_p12: varchar("v_p12", { length: 64 }),
+  // P10. Gasto aproximado hoy en Sevilla
+  v_p13: varchar("v_p13", { length: 64 }),
+  // P11. Densidad percibida (1-5)
+  v_p14: varchar("v_p14", { length: 8 }),
+  // P12. Satisfacción general (1-5)
+  v_p15: varchar("v_p15", { length: 8 }),
+  // P13. Adaptación del espacio (1-5)
+  v_p16: varchar("v_p16", { length: 8 }),
+  // P14. ¿Volvería?
+  v_p17: varchar("v_p17", { length: 64 }),
+  // P15. ¿Recomendaría?
+  v_p18: varchar("v_p18", { length: 64 }),
+  // P16. Comentario libre
+  v_p19: text("v_p19"),
+  // P17. Nombre (opcional)
+  v_p20: varchar("v_p20", { length: 255 }),
+
+  // ─── Respuestas RESIDENTES (orders 5-38 → r_p01..r_p34) ──────────────────
+  // P1. ¿Reside habitualmente en este barrio?
+  r_p01: varchar("r_p01", { length: 16 }),
+  // P1.1. ¿En qué calle?
+  r_p02: varchar("r_p02", { length: 255 }),
+  // P2. ¿Cuántos años lleva viviendo en el barrio?
+  r_p03: varchar("r_p03", { length: 64 }),
+  // P3. ¿Percibe beneficios económicos del turismo?
+  r_p04: varchar("r_p04", { length: 64 }),
+  // P4. Género
+  r_p05: varchar("r_p05", { length: 64 }),
+  // P5. Edad
+  r_p06: varchar("r_p06", { length: 64 }),
+  // P6.01 El turismo mejora la economía local (1-5)
+  r_p07: varchar("r_p07", { length: 8 }),
+  // P6.02 El turismo genera congestión (1-5)
+  r_p08: varchar("r_p08", { length: 8 }),
+  // P6.03 El turismo atrae inversores (1-5)
+  r_p09: varchar("r_p09", { length: 8 }),
+  // P6.04 El turismo encarece viviendas (1-5)
+  r_p10: varchar("r_p10", { length: 8 }),
+  // P6.05 El turismo aumenta calidad de vida (1-5)
+  r_p11: varchar("r_p11", { length: 8 }),
+  // P6.06 El turismo provoca desplazamientos (1-5)
+  r_p12: varchar("r_p12", { length: 8 }),
+  // P6.07 El turismo mejora imagen de la ciudad (1-5)
+  r_p13: varchar("r_p13", { length: 8 }),
+  // P6.08 El turismo contribuye a pérdida de identidad (1-5)
+  r_p14: varchar("r_p14", { length: 8 }),
+  // P6.09 El turismo conserva monumentos (1-5)
+  r_p15: varchar("r_p15", { length: 8 }),
+  // P6.10 El turismo genera ruido y suciedad (1-5)
+  r_p16: varchar("r_p16", { length: 8 }),
+  // P6.11 El turismo dificulta el comercio local (1-5)
+  r_p17: varchar("r_p17", { length: 8 }),
+  // P6.12 El turismo mejora la oferta cultural (1-5)
+  r_p18: varchar("r_p18", { length: 8 }),
+  // P6.13 El turismo encarece el coste de vida (1-5)
+  r_p19: varchar("r_p19", { length: 8 }),
+  // P6.14 El turismo fomenta la inseguridad (1-5)
+  r_p20: varchar("r_p20", { length: 8 }),
+  // P7. ¿Cómo valora la gestión del turismo en el barrio? (1-5)
+  r_p21: varchar("r_p21", { length: 8 }),
+  // P8. ¿Considera que hay demasiados turistas? (1-5)
+  r_p22: varchar("r_p22", { length: 8 }),
+  // P9. ¿Ha pensado en mudarse por el turismo?
+  r_p23: varchar("r_p23", { length: 64 }),
+  // P10. Frecuencia de uso del espacio público
+  r_p24: varchar("r_p24", { length: 64 }),
+  // P10b. Frecuencia de uso en verano
+  r_p25: varchar("r_p25", { length: 64 }),
+  // P10c. Frecuencia de uso en invierno
+  r_p26: varchar("r_p26", { length: 64 }),
+  // P10d. Frecuencia de uso en fines de semana
+  r_p27: varchar("r_p27", { length: 64 }),
+  // P10e. Motivo de reducción de uso
+  r_p28: varchar("r_p28", { length: 64 }),
+  // P10f. Problemas percibidos en el espacio público
+  r_p29: varchar("r_p29", { length: 255 }),
+  // P10g. Valoración del espacio público (1-5)
+  r_p30: varchar("r_p30", { length: 8 }),
+  // P10h. Valoración de la limpieza (1-5)
+  r_p31: varchar("r_p31", { length: 8 }),
+  // P10i. Valoración de la seguridad (1-5)
+  r_p32: varchar("r_p32", { length: 8 }),
+  // P11. ¿Cómo le afecta personalmente el turismo? (1-5)
+  r_p33: varchar("r_p33", { length: 8 }),
+  // P12. ¿Cómo afecta el turismo a su comunidad? (1-5)
+  r_p34: varchar("r_p34", { length: 8 }),
+  // P13. Medidas prioritarias (múltiple, hasta 3) → hasta 3 valores separados
+  r_p35a: varchar("r_p35a", { length: 64 }),
+  r_p35b: varchar("r_p35b", { length: 64 }),
+  r_p35c: varchar("r_p35c", { length: 64 }),
+  // P14. Observaciones finales
+  r_p36: text("r_p36"),
 
   // Status
   status: mysqlEnum("status", ["completa", "incompleta", "rechazada", "sustitucion"]).default("completa").notNull(),
@@ -246,9 +370,12 @@ export const pedestrianPasses = mysqlTable("pedestrian_passes", {
   encuestadorIdentifier: varchar("encuestadorIdentifier", { length: 32 }),
 
   // Ubicación y contexto
-  surveyPoint: varchar("surveyPoint", { length: 255 }).notNull(),
+  surveyPoint: varchar("surveyPoint", { length: 255 }).notNull(),     // nombre completo (ej: "01 Virgen de los Reyes")
+  surveyPointCode: varchar("surveyPointCode", { length: 16 }),         // solo código (ej: "01")
   directionId: int("directionId"),           // FK a pedestrian_directions
   directionLabel: varchar("directionLabel", { length: 128 }), // desnormalizado para consultas rápidas
+  flowOrigin: varchar("flowOrigin", { length: 128 }),          // origen del flujo (ej: "01 Virgen de los Reyes")
+  flowDestination: varchar("flowDestination", { length: 128 }), // destino del flujo (ej: "01.01 Alemanes")
 
   // El dato principal
   count: int("count").notNull(),             // número de personas en este pase

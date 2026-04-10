@@ -204,3 +204,20 @@
 - [x] Añadida barra de navegación inferior (bottom nav) al Home del encuestador: Inicio, Cuotas, Horarios, Cierre
 - [x] Creado componente EncuestadorLayout con bottom nav para páginas secundarias (Cuotas, Mis Horarios, Cierre de Turno)
 - [x] Cuotas.tsx usa EncuestadorLayout cuando el usuario es encuestador, DashboardLayout para admin/revisor
+
+## Bugs (10 abril - noche 4)
+- [x] Mis Horarios: reescrito con EncuestadorLayout (barra inferior)
+- [ ] Exportación CSV: añadir botón CSV Plano (survey_responses_flat, columnas separadas)
+
+## Pendientes críticos (11 abril)
+- [x] Corregir error JSX en Cuotas.tsx: reescrito completo, compila sin errores
+- [x] Conteos: surveyPointCode (solo código) añadido a pedestrianPasses
+- [x] Flujos de conteo: flowOrigin y flowDestination en campos separados en BD
+
+## Reestructuración BD final (11 abril)
+- [x] BD survey_responses: columnas v_p01..v_p20 (visitantes) y r_p01..r_p36 (residentes, con r_p35a/b/c para múltiple)
+- [x] Migrado BD (pnpm db:push)
+- [x] Router responses.submit: rellena columnas separadas al guardar encuesta
+- [x] Exportación CSV: usa columnas separadas (una por pregunta) en vez de JSON
+- [x] ConteoPeatonal.tsx: envía surveyPointCode, flowOrigin y flowDestination al servidor
+- [x] 21 tests pasando

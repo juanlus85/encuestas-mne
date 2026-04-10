@@ -14,7 +14,7 @@ export default function ConteoPeatonal() {
   const [step, setStep] = useState<"punto" | "conteo">("punto");
   const [selectedPoint, setSelectedPoint] = useState<SurveyPoint | null>(null);
   const [selectedCount, setSelectedCount] = useState<number | null>(null);
-  const [selectedFlow, setSelectedFlow] = useState<string | null>(null);
+  const [selectedFlow, setSelectedFlow] = useState<{ label: string; from: string; to: string } | null>(null);
   const [groupDialogOpen, setGroupDialogOpen] = useState(false);
   const [groupCount, setGroupCount] = useState("");
   const [gps, setGps] = useState<{ lat: number; lng: number; acc: number } | null>(null);
@@ -31,14 +31,14 @@ export default function ConteoPeatonal() {
       if (selectedCount !== null && selectedFlow) {
         const newPass = {
           count: selectedCount,
-          direction: selectedFlow,
+          direction: selectedFlow?.label ?? "",
           time: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
         };
         setRecentPasses((prev) => [newPass, ...prev.slice(0, 9)]);
         setTotalToday((prev) => prev + (selectedCount ?? 0));
-        toast.success(`+${selectedCount} persona${selectedCount !== 1 ? "s" : ""} · ${selectedFlow}`, { duration: 1500 });
+        toast.success(`+${selectedCount} persona${selectedCount !== 1 ? "s" : ""} · ${selectedFlow?.label}`, { duration: 1500 });
         setSelectedCount(null);
-        setSelectedFlow(null);
+        setSelectedFlow(null as any);
       }
     },
     onError: (err) => toast.error("Error al guardar: " + err.message),
@@ -60,8 +60,11 @@ export default function ConteoPeatonal() {
       return;
     }
     addPass.mutate({
-      surveyPoint: selectedPoint.fullName,
-      directionLabel: selectedFlow,
+      surveyPoint: selectedPoint.fullName,       // nombre completo para mostrar
+      surveyPointCode: selectedPoint.code,        // solo código para BD
+      directionLabel: selectedFlow.label,
+      flowOrigin: selectedFlow.from,              // origen del flujo
+      flowDestination: selectedFlow.to,           // destino del flujo
       count: selectedCount,
       latitude: gps?.lat,
       longitude: gps?.lng,
@@ -195,9 +198,9 @@ export default function ConteoPeatonal() {
             {flows.map((flow) => (
               <button
                 key={flow.label}
-                onClick={() => setSelectedFlow(flow.label)}
+                onClick={() => setSelectedFlow(flow)}
                 className={`w-full text-left px-4 py-3.5 rounded-xl border-2 font-medium text-sm transition-all duration-100 ${
-                  selectedFlow === flow.label
+                  selectedFlow?.label === flow.label
                     ? "bg-blue-700 border-blue-700 text-white shadow-md"
                     : "bg-white border-gray-200 text-gray-800 hover:border-blue-400 hover:bg-blue-50"
                 }`}
@@ -218,7 +221,7 @@ export default function ConteoPeatonal() {
           }`}
         >
           {addPass.isPending ? "Guardando..." : canAdd ? (
-            <><CheckCircle2 className="h-6 w-6 mr-2" />Añadir · {selectedCount} persona{selectedCount !== 1 ? "s" : ""}</>
+            <><CheckCircle2 className="h-6 w-6 mr-2" />Añadir · {selectedCount} persona{selectedCount !== 1 ? "s" : ""} · {selectedFlow?.label}</>
           ) : "Selecciona personas y flujo"}
         </Button>
 

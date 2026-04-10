@@ -1,4 +1,4 @@
-import DashboardLayout from "@/components/DashboardLayout";
+import EncuestadorLayout from "@/components/EncuestadorLayout";
 import { trpc } from "@/lib/trpc";
 import { Calendar, Clock, MapPin, ClipboardList, AlertCircle, CheckCircle2 } from "lucide-react";
 
@@ -38,14 +38,14 @@ export default function MisHorarios() {
 
   if (isLoading) {
     return (
-      <DashboardLayout>
-        <div className="p-6 flex items-center justify-center min-h-64">
+      <EncuestadorLayout title="Mis Horarios">
+        <div className="flex items-center justify-center min-h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-3" />
             <p className="text-muted-foreground text-sm">Cargando horarios...</p>
           </div>
         </div>
-      </DashboardLayout>
+      </EncuestadorLayout>
     );
   }
 
@@ -57,8 +57,8 @@ export default function MisHorarios() {
   const past = sortedShifts.filter((s) => isPast(s.shiftDate) && !isToday(s.shiftDate));
 
   return (
-    <DashboardLayout>
-      <div className="p-4 md:p-6 max-w-2xl mx-auto space-y-6">
+    <EncuestadorLayout title="Mis Horarios">
+      <div className="max-w-2xl mx-auto space-y-6">
         {/* Header */}
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
@@ -193,6 +193,6 @@ export default function MisHorarios() {
           </section>
         )}
       </div>
-    </DashboardLayout>
+    </EncuestadorLayout>
   );
 }

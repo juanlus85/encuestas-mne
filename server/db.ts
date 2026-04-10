@@ -752,3 +752,25 @@ export async function getLatestEncuestadorLocations() {
     surveyPoint: row.surveyPoint,
   }));
 }
+
+/**
+ * Obtiene todas las filas de survey_responses_flat con filtros opcionales.
+ * Usada para la exportación CSV plana (una fila por encuesta, columna por pregunta).
+ */
+export async function getSurveyResponsesFlat(filters?: {
+  encuestadorId?: number;
+  surveyType?: string;
+  dateFrom?: Date;
+  dateTo?: Date;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select().from(surveyResponsesFlat).orderBy(surveyResponsesFlat.startedAt);
+  return rows.filter((r) => {
+    if (filters?.encuestadorId && r.encuestadorId !== filters.encuestadorId) return false;
+    if (filters?.surveyType && r.surveyType !== filters.surveyType) return false;
+    if (filters?.dateFrom && r.startedAt < filters.dateFrom) return false;
+    if (filters?.dateTo && r.startedAt > filters.dateTo) return false;
+    return true;
+  });
+}
