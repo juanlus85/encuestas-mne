@@ -1,22 +1,20 @@
 import { trpc } from "@/lib/trpc";
-import { useAuth } from "@/_core/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   CheckCircle2,
   ClipboardList,
   Clock,
-  MapPin,
   Star,
   AlertTriangle,
   ChevronDown,
   ChevronUp,
   Calendar,
+  RefreshCw,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import DashboardLayout from "@/components/DashboardLayout";
+import EncuestadorLayout from "@/components/EncuestadorLayout";
 
 // ─── Componente de estrella de valoración ─────────────────────────────────────
 
@@ -74,9 +72,6 @@ function HistorialCierres() {
                 </p>
               </div>
               <div className="flex flex-col items-end gap-1 shrink-0">
-                {c.surveyType && (
-                  <Badge variant="outline" className="text-xs capitalize">{c.surveyType}</Badge>
-                )}
                 {c.valoracion && (
                   <div className="flex gap-0.5">
                     {[1, 2, 3, 4, 5].map((s) => (
@@ -124,59 +119,49 @@ function HistorialCierres() {
 // ─── Página principal ─────────────────────────────────────────────────────────
 
 export default function CierreTurno() {
-  const { user } = useAuth();
   const utils = trpc.useUtils();
 
-  // Datos del turno actual (encuestas y rechazos del día)
+  // Resumen automático del día desde la BD
+  const { data: summary, isLoading: summaryLoading, refetch: refetchSummary } = trpc.shiftClosures.todaySummary.useQuery();
+
+  // Turno asignado hoy
   const { data: myShifts } = trpc.shifts.getMine.useQuery();
 
   const closeMutation = trpc.shiftClosures.close.useMutation({
     onSuccess: () => {
       toast.success("Turno cerrado correctamente. ¡Buen trabajo!");
       utils.shiftClosures.getMine.invalidate();
+      utils.shiftClosures.todaySummary.invalidate();
       setSubmitted(true);
     },
     onError: (e) => toast.error(`Error al cerrar turno: ${e.message}`),
   });
 
   // Estado del formulario
-  const [surveyPoint, setSurveyPoint] = useState("");
-  const [surveyType, setSurveyType] = useState<"visitantes" | "residentes" | "conteo" | "">("")
   const [incidencias, setIncidencias] = useState("");
   const [valoracion, setValoracion] = useState(0);
   const [submitted, setSubmitted] = useState(false);
-  const [totalEncuestasManual, setTotalEncuestasManual] = useState(0);
-  const [totalConteosManual, setTotalConteosManual] = useState(0);
-  const [totalRechazosManual, setTotalRechazosManual] = useState(0);
-
-  // Calcular estadísticas del día
-  const today = new Date().toISOString().split("T")[0];
-  const totalEncuestas = totalEncuestasManual;
-  const totalRechazos = totalRechazosManual;
 
   // Turno de hoy
+  const today = new Date().toISOString().split("T")[0];
   const todayShift = (myShifts ?? []).find((s) => s.shiftDate === today);
 
   const handleClose = () => {
-    if (!surveyType) {
-      toast.error("Selecciona el tipo de encuesta realizada");
-      return;
-    }
     closeMutation.mutate({
       shiftId: todayShift?.id,
-      totalEncuestas: totalEncuestasManual,
-      totalConteos: totalConteosManual,
-      totalRechazos: totalRechazosManual,
-      surveyPoint: surveyPoint || todayShift?.surveyPoint || undefined,
-      surveyType: surveyType as "visitantes" | "residentes" | "conteo",
+      totalEncuestas: summary?.totalEncuestas ?? 0,
+      totalConteos: summary?.totalConteos ?? 0,
+      totalRechazos: summary?.totalRechazos ?? 0,
+      surveyPoint: todayShift?.surveyPoint || undefined,
+      surveyType: todayShift?.surveyType as "visitantes" | "residentes" | "conteo" | undefined,
       incidencias: incidencias || undefined,
       valoracion: valoracion || undefined,
     });
   };
 
   return (
-    <DashboardLayout>
-      <div className="p-4 md:p-6 max-w-2xl mx-auto space-y-6">
+    <EncuestadorLayout>
+      <div className="p-4 max-w-2xl mx-auto space-y-5 pb-24">
         {/* Cabecera */}
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Cierre de Turno</h1>
@@ -207,50 +192,48 @@ export default function CierreTurno() {
           </Card>
         )}
 
-        {/* Resumen del día */}
+        {/* Resumen automático del día */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <ClipboardList className="h-4 w-4 text-blue-600" />
               Resumen de hoy
+              <button
+                type="button"
+                onClick={() => refetchSummary()}
+                className="ml-auto text-gray-400 hover:text-blue-600 transition-colors"
+                title="Actualizar resumen"
+              >
+                <RefreshCw className={`h-4 w-4 ${summaryLoading ? "animate-spin" : ""}`} />
+              </button>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="text-center bg-blue-50 rounded-xl py-4 border border-blue-100">
-                <input
-                  type="number"
-                  min={0}
-                  value={totalEncuestasManual}
-                  onChange={(e) => setTotalEncuestasManual(Number(e.target.value))}
-                  className="text-3xl font-bold text-blue-700 bg-transparent text-center w-full focus:outline-none"
-                />
-                <p className="text-xs text-blue-600 font-medium mt-1">Encuestas</p>
+            {summaryLoading ? (
+              <div className="flex items-center justify-center py-6">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600" />
               </div>
-              <div className="text-center bg-green-50 rounded-xl py-4 border border-green-100">
-                <input
-                  type="number"
-                  min={0}
-                  value={totalConteosManual}
-                  onChange={(e) => setTotalConteosManual(Number(e.target.value))}
-                  className="text-3xl font-bold text-green-700 bg-transparent text-center w-full focus:outline-none"
-                />
-                <p className="text-xs text-green-600 font-medium mt-1">Conteos</p>
-              </div>
-              <div className="text-center bg-red-50 rounded-xl py-4 border border-red-100">
-                <input
-                  type="number"
-                  min={0}
-                  value={totalRechazosManual}
-                  onChange={(e) => setTotalRechazosManual(Number(e.target.value))}
-                  className="text-3xl font-bold text-red-600 bg-transparent text-center w-full focus:outline-none"
-                />
-                <p className="text-xs text-red-600 font-medium mt-1">Rechazos</p>
-              </div>
-            </div>
-            <p className="text-xs text-gray-400 text-center mt-3">
-              Introduce los totales del turno de hoy
-            </p>
+            ) : (
+              <>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="text-center bg-blue-50 rounded-xl py-4 border border-blue-100">
+                    <p className="text-3xl font-bold text-blue-700">{summary?.totalEncuestas ?? 0}</p>
+                    <p className="text-xs text-blue-600 font-medium mt-1">Encuestas</p>
+                  </div>
+                  <div className="text-center bg-green-50 rounded-xl py-4 border border-green-100">
+                    <p className="text-3xl font-bold text-green-700">{summary?.totalConteos ?? 0}</p>
+                    <p className="text-xs text-green-600 font-medium mt-1">Conteos</p>
+                  </div>
+                  <div className="text-center bg-red-50 rounded-xl py-4 border border-red-100">
+                    <p className="text-3xl font-bold text-red-600">{summary?.totalRechazos ?? 0}</p>
+                    <p className="text-xs text-red-600 font-medium mt-1">Rechazos</p>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-400 text-center mt-3">
+                  Datos calculados automáticamente desde la base de datos
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -264,54 +247,6 @@ export default function CierreTurno() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
-              {/* Punto de encuesta */}
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-2">
-                  <MapPin className="h-4 w-4 inline mr-1 text-gray-500" />
-                  Punto de trabajo
-                </label>
-                <select
-                  value={surveyPoint}
-                  onChange={(e) => setSurveyPoint(e.target.value)}
-                  className="w-full border border-border rounded-lg px-4 py-3 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="">Seleccionar punto...</option>
-                  <option value="01 Virgen de los Reyes">01 Virgen de los Reyes</option>
-                  <option value="02 Mateos Gago">02 Mateos Gago</option>
-                  <option value="03 Patio de Banderas">03 Patio de Banderas</option>
-                  <option value="04 Agua / Vida">04 Agua / Vida</option>
-                  <option value="05 Plaza Alfaro">05 Plaza Alfaro</option>
-                  <option value="Otro">Otro</option>
-                </select>
-              </div>
-
-              {/* Tipo de encuesta */}
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-2">
-                  Tipo de trabajo realizado <span className="text-red-500">*</span>
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { val: "visitantes", label: "Visitantes" },
-                    { val: "residentes", label: "Residentes" },
-                    { val: "conteo", label: "Conteo" },
-                  ].map(({ val, label }) => (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => setSurveyType(val as any)}
-                      className={`py-3 rounded-xl border-2 font-medium text-sm transition-all ${
-                        surveyType === val
-                          ? "border-blue-600 bg-blue-600 text-white"
-                          : "border-gray-200 hover:border-blue-300 text-gray-700"
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* Incidencias */}
               <div>
                 <label className="text-sm font-medium text-gray-700 block mb-2">
@@ -344,7 +279,7 @@ export default function CierreTurno() {
               {/* Botón de cierre */}
               <Button
                 onClick={handleClose}
-                disabled={closeMutation.isPending || !surveyType}
+                disabled={closeMutation.isPending}
                 className="w-full h-12 text-base font-semibold bg-blue-700 hover:bg-blue-800"
               >
                 {closeMutation.isPending ? (
@@ -388,6 +323,6 @@ export default function CierreTurno() {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
+    </EncuestadorLayout>
   );
 }

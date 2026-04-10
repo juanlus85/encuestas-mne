@@ -825,10 +825,10 @@ export const appRouter = router({
         const passes = await getPedestrianPasses(input ?? {});
         const headers = [
           "ID", "Fecha", "Hora", "Tramo30min",
-          "Punto de Conteo", "Sentido",
+          "Punto_Nombre", "Punto_Codigo", "Sentido", "Origen_Codigo", "Destino_Codigo",
           "Encuestador", "Identificador",
           "Personas",
-          "Latitud", "Longitud", "Precisión GPS (m)",
+          "Latitud", "Longitud", "Precision_GPS_m",
         ];
         const getSlot30 = (dt: Date) => {
           const h = dt.getHours().toString().padStart(2, "0");
@@ -845,7 +845,10 @@ export const appRouter = router({
             dt.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
             getSlot30(dt),
             p.surveyPoint,
+            (p as any).surveyPointCode ?? "",
             p.directionLabel ?? "",
+            (p as any).flowOrigin ?? "",
+            (p as any).flowDestination ?? "",
             p.encuestadorName ?? "",
             p.encuestadorIdentifier ?? "",
             p.count,
@@ -1107,6 +1110,29 @@ export const appRouter = router({
     ),
     // Admin/Revisor: ver todos los cierres
     getAll: adminOrRevisorProcedure.query(() => getAllShiftClosures()),
+    // Encuestador: resumen del día actual (encuestas, conteos, rechazos)
+    todaySummary: protectedProcedure.query(async ({ ctx }) => {
+      const today = new Date();
+      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
+      const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+      const todayStr = today.toISOString().split("T")[0];
+      // Encuestas del día
+      const allResponses = await getSurveyResponsesByEncuestador(ctx.user.id);
+      const todayEncuestas = allResponses.filter((r) => {
+        const d = new Date(r.startedAt);
+        return d >= todayStart && d <= todayEnd;
+      });
+      // Rechazos del día
+      const allRejections = await getSurveyRejections({ encuestadorId: ctx.user.id, dateFrom: todayStr, dateTo: todayStr });
+      // Conteos del día
+      const allPasses = await getPedestrianPasses({ encuestadorId: ctx.user.id, dateFrom: todayStr, dateTo: todayStr });
+      const totalConteos = allPasses.reduce((sum, p) => sum + (p.count ?? 1), 0);
+      return {
+        totalEncuestas: todayEncuestas.length,
+        totalRechazos: allRejections.length,
+        totalConteos,
+      };
+    }),
   }),
 
   // ─── Cuotas ────────────────────────────────────────────────────────────────

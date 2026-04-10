@@ -374,8 +374,8 @@ export const pedestrianPasses = mysqlTable("pedestrian_passes", {
   surveyPointCode: varchar("surveyPointCode", { length: 16 }),         // solo código (ej: "01")
   directionId: int("directionId"),           // FK a pedestrian_directions
   directionLabel: varchar("directionLabel", { length: 128 }), // desnormalizado para consultas rápidas
-  flowOrigin: varchar("flowOrigin", { length: 128 }),          // origen del flujo (ej: "01 Virgen de los Reyes")
-  flowDestination: varchar("flowDestination", { length: 128 }), // destino del flujo (ej: "01.01 Alemanes")
+  flowOrigin: varchar("flowOrigin", { length: 128 }),          // código origen del flujo (ej: "01")
+  flowDestination: varchar("flowDestination", { length: 128 }), // código destino del flujo (ej: "01.01")
 
   // El dato principal
   count: int("count").notNull(),             // número de personas en este pase

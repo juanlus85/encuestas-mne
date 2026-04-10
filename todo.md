@@ -225,3 +225,15 @@
 ## Bug: Conteos sin corregir (11 abril - tarde)
 - [ ] ConteoPeatonal: guardar solo código del punto en BD (no "01 Virgen de los Reyes")
 - [ ] ConteoPeatonal: separar flowOrigin y flowDestination en campos distintos (no concatenados)
+
+## Bugs perfil encuestador (11 abril)
+- [ ] Home encuestador: quitar selector de punto de encuesta (dropdown)
+- [ ] Cierre de Turno: usar EncuestadorLayout (barra inferior) en vez de DashboardLayout (sidebar)
+- [ ] Cierre de Turno: quitar campo "Tipo de trabajo realizado"
+- [ ] Cierre de Turno: resumen (encuestas, conteos, rechazos) cargado automáticamente desde BD
+
+## Mejoras exportación y CierreTurno (11 abril - tarde)
+- [ ] CierreTurno: usar EncuestadorLayout (barra inferior)
+- [ ] CierreTurno: quitar campo "Tipo de trabajo realizado"
+- [ ] CierreTurno: resumen (encuestas, conteos, rechazos) cargado automáticamente desde BD
+- [ ] Exportación: pantalla con selección de campos por categoría (metadatos, preguntas V, preguntas R, conteos, flujos)
