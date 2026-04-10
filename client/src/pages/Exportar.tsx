@@ -299,7 +299,7 @@ function ExportEncuestasSection() {
       });
 
       const dateStr = new Date().toISOString().split("T")[0];
-      downloadCsv(filteredLines.join("\n"), `IATUR_Encuestas_${dateStr}.csv`, separator);
+      downloadCsv(filteredLines.join("\n"), `Encuestas_Sevilla_${dateStr}.csv`, separator);
       toast.success(`Exportadas ${result.data.count} encuestas (${keepIndices.length} columnas)`);
     } catch {
       toast.error("Error al exportar. Inténtelo de nuevo.");
@@ -484,7 +484,7 @@ function ExportConteosSection() {
       });
 
       const dateStr = new Date().toISOString().split("T")[0];
-      downloadCsv(filteredLines.join("\n"), `IATUR_Conteos_${dateStr}.csv`, separator);
+      downloadCsv(filteredLines.join("\n"), `Conteos_Sevilla_${dateStr}.csv`, separator);
       toast.success(`Exportados ${result.data.count} registros (${keepIndices.length} columnas)`);
     } catch {
       toast.error("Error al exportar. Inténtelo de nuevo.");

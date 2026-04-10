@@ -83,7 +83,7 @@ function EncuestadorHome() {
       <div className="bg-primary text-primary-foreground px-4 py-6 md:px-8">
         <div className="max-w-2xl mx-auto">
           <p className="text-primary-foreground/70 text-sm font-medium uppercase tracking-wider mb-1">
-            IATUR · Trabajo de Campo
+            Encuestas Sevilla FeelingLAND
           </p>
           <h1 className="text-2xl font-bold">{greeting}, {user?.name?.split(" ")[0]}</h1>
           <div className="flex items-center justify-between mt-1">
@@ -223,7 +223,7 @@ function EncuestadorHome() {
         {/* Footer version */}
         <div className="text-center pt-4 pb-2">
           <p className="text-xs text-muted-foreground">
-            IATUR Encuestas · Universidad de Sevilla · Versión v1.0
+            Estudio IATUR · <a href="https://organizus.es" target="_blank" rel="noopener noreferrer" className="hover:underline text-muted-foreground">Organizus.es</a> · v1.0
           </p>
         </div>
       </div>
@@ -401,7 +401,7 @@ function AdminHome() {
         {/* Footer version */}
         <div className="text-right pt-2">
           <p className="text-xs text-muted-foreground">
-            IATUR Encuestas · Versión v1.0 · {new Date().toLocaleDateString("es-ES")}
+            Estudio IATUR · <a href="https://organizus.es" target="_blank" rel="noopener noreferrer" className="hover:underline">Organizus.es</a> · v1.0 · {new Date().toLocaleDateString("es-ES")}
           </p>
         </div>
       </div>

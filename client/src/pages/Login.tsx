@@ -62,7 +62,7 @@ export default function Login() {
             className="h-16 w-auto object-contain"
           />
           <div>
-            <h1 className="text-2xl font-bold text-foreground tracking-tight">IATUR Encuestas</h1>
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">Encuestas Sevilla FeelingLAND</h1>
             <p className="text-sm text-muted-foreground mt-1">Sistema de Trabajo de Campo · Sevilla</p>
           </div>
         </div>
@@ -146,7 +146,7 @@ export default function Login() {
 
         <div className="flex flex-col items-center gap-3">
           <p className="text-center text-xs text-muted-foreground">
-            Universidad de Sevilla · IATUR · Barrio de Santa Cruz
+            Estudio IATUR · <a href="https://organizus.es" target="_blank" rel="noopener noreferrer" className="hover:underline">Organizus.es</a>
           </p>
           <img
             src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031419078/nHD7C8PRaURA7Ubm8Aop3k/logos-institucionales_1f505402.jpg"

@@ -237,3 +237,8 @@
 - [ ] CierreTurno: quitar campo "Tipo de trabajo realizado"
 - [ ] CierreTurno: resumen (encuestas, conteos, rechazos) cargado automáticamente desde BD
 - [ ] Exportación: pantalla con selección de campos por categoría (metadatos, preguntas V, preguntas R, conteos, flujos)
+
+## Cambios de branding y SQL (11 abril - tarde)
+- [x] Renombrar app a "Encuestas Sevilla FeelingLAND"
+- [x] Pie de firma discreto con referencia a IATUR y Organizus.es
+- [x] Regenerar SQL encuestadores con usernames y tipos correctos

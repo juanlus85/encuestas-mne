@@ -1,7 +1,7 @@
 {
-  "name": "IATUR Encuestas de Campo",
-  "short_name": "IATUR",
-  "description": "Aplicación de trabajo de campo para encuestas y conteos peatonales IATUR",
+  "name": "Encuestas Sevilla FeelingLAND",
+  "short_name": "Enc. Sevilla",
+  "description": "Encuestas de campo · Sevilla FeelingLAND",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
