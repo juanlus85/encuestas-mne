@@ -89,8 +89,8 @@ export const surveyResponses = mysqlTable("survey_responses", {
   gpsAccuracy: decimal("gpsAccuracy", { precision: 8, scale: 2 }),
 
   // Timestamps
-  startedAt: timestamp("startedAt").notNull(),
-  finishedAt: timestamp("finishedAt"),
+  startedAt: timestamp("startedAt").defaultNow().notNull(),
+  finishedAt: timestamp("finishedAt").defaultNow(),
 
   // Language
   language: mysqlEnum("language", ["es", "en"]).default("es").notNull(),
@@ -292,8 +292,8 @@ export const pedestrianSessions = mysqlTable("pedestrian_sessions", {
   gpsAccuracy: decimal("gpsAccuracy", { precision: 8, scale: 2 }),
 
   // Timestamps
-  startedAt: timestamp("startedAt").notNull(),
-  finishedAt: timestamp("finishedAt"),
+  startedAt: timestamp("startedAt").defaultNow().notNull(),
+  finishedAt: timestamp("finishedAt").defaultNow(),
 
   // Totales calculados (suma de todos los intervalos)
   totalIn: int("totalIn").default(0).notNull(),
@@ -573,8 +573,8 @@ export const surveyResponsesFlat = mysqlTable("survey_responses_flat", {
   encuestadorId: int("encuestadorId").notNull(),
   encuestadorName: varchar("encuestadorName", { length: 255 }),
   encuestadorCode: varchar("encuestadorCode", { length: 32 }),
-  startedAt: timestamp("startedAt").notNull(),
-  finishedAt: timestamp("finishedAt"),
+  startedAt: timestamp("startedAt").defaultNow().notNull(),
+  finishedAt: timestamp("finishedAt").defaultNow(),
   latitude: decimal("latitude", { precision: 10, scale: 7 }),
   longitude: decimal("longitude", { precision: 10, scale: 7 }),
   gpsAccuracy: decimal("gpsAccuracy", { precision: 8, scale: 2 }),

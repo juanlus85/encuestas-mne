@@ -342,7 +342,6 @@ export const appRouter = router({
           console.error("[responses.submit] Error construyendo columnas planas:", err);
         }
 
-        const now = new Date();
         const result = await createSurveyResponse({
           ...input,
           ...flatCols,
@@ -353,8 +352,7 @@ export const appRouter = router({
           longitude: input.longitude?.toString(),
           gpsAccuracy: input.gpsAccuracy?.toString(),
           answers: input.answers,
-          startedAt: now,   // siempre hora del servidor (Europe/Madrid, UTC+2)
-          finishedAt: now,  // siempre hora del servidor (Europe/Madrid, UTC+2)
+          // startedAt y finishedAt usan DEFAULT NOW() de TiDB (igual que createdAt)
         });
         const surveyId = result?.insertId as number | undefined;
         // Si la encuesta se guardó correctamente y está completa, insertar en survey_answers
@@ -366,7 +364,7 @@ export const appRouter = router({
             // Obtener el tipo de encuesta (visitantes/residentes)
             const template = await getSurveyTemplateById(input.templateId);
             const surveyType = (template?.type ?? "visitantes") as "visitantes" | "residentes";
-            const recordedAt = now; // siempre hora del servidor (Europe/Madrid, UTC+2)
+            const recordedAt = new Date(); // hora del servidor
             const answerRows = input.answers.map((a, idx) => {
               const q = qMap.get(a.questionId);
               const opts = (q?.options as Array<{ value: string; label: string; labelEn?: string }> | null) ?? [];
@@ -454,8 +452,7 @@ export const appRouter = router({
               encuestadorId: ctx.user.id,
               encuestadorName: ctx.user.name ?? "",
               encuestadorCode: ctx.user.identifier ?? "",
-              startedAt: now,   // siempre hora del servidor (Europe/Madrid, UTC+2)
-              finishedAt: now,  // siempre hora del servidor (Europe/Madrid, UTC+2)
+              // startedAt y finishedAt usan DEFAULT NOW() de TiDB
               latitude: input.latitude?.toString(),
               longitude: input.longitude?.toString(),
               gpsAccuracy: input.gpsAccuracy?.toString(),

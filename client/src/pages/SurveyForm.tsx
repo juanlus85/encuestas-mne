@@ -506,9 +506,7 @@ export default function SurveyForm() {
         answers,
         status: "completa",
         deviceInfo: navigator.userAgent.substring(0, 200),
-        ...(isVisitantes && {
-          windowCode: calcWindowCode(startedAt),
-        }),
+        windowCode: calcWindowCode(startedAt) || undefined,
       });
 
       const responseId = result.id as number;

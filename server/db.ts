@@ -24,6 +24,19 @@ import {
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
+/**
+ * Ajusta un Date para que MySQL lo almacene como hora española.
+ * MySQL/TiDB interpreta los valores Date como UTC al insertarlos.
+ * Esta función suma el offset de Europe/Madrid para que el valor almacenado
+ * coincida con la hora local española cuando se lee sin conversión.
+ */
+export function toSpainTime(date: Date): Date {
+  const madridStr = date.toLocaleString("en-US", { timeZone: "Europe/Madrid", hour12: false });
+  const utcStr = date.toLocaleString("en-US", { timeZone: "UTC", hour12: false });
+  const offsetMs = new Date(madridStr).getTime() - new Date(utcStr).getTime();
+  return new Date(date.getTime() + offsetMs);
+}
+
 let _db: ReturnType<typeof drizzle> | null = null;
 
 export async function getDb() {

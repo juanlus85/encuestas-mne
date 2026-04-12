@@ -248,3 +248,5 @@
 - [x] Modificar P1b en visitantes: mostrar "País" si seleccionó otro país, "Provincia/Ciudad" si seleccionó España
 - [x] Corregir calcTimeSlot: Mañana 9:30-12, Mediodía 12-14:30, Tarde 16-18:30, Noche 18:30-21, fuera de rango = vacío
 - [x] Corregir calcWindowCode: V1-V5 según minutos desde inicio de franja (0-30, 31-60, 61-90, 91-120, 121-150)
+- [ ] Corregir windowCode NULL en encuestas de residentes
+- [ ] Corregir startedAt/finishedAt que siguen almacenando UTC en lugar de UTC+2
