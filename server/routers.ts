@@ -1136,6 +1136,91 @@ export const appRouter = router({
         return { csv: csvLines.join("\n"), count: rows.length };
       }),
   }),
+  // ─── Export CSV Sesiones y Cierres ────────────────────────────────────────
+  exportExtra: router({
+    csvCountingSessions: adminOrRevisorProcedure
+      .input(z.object({
+        encuestadorId: z.number().optional(),
+        surveyPointCode: z.string().optional(),
+        dateFrom: z.string().optional(),
+        dateTo: z.string().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        const sessions = await getCountingSessions(input ?? {});
+        const fmtCS = (d: Date) => {
+          const tz = new Intl.DateTimeFormat("es-ES", { timeZone: "Europe/Madrid", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+          const parts = tz.formatToParts(d);
+          const p = Object.fromEntries(parts.filter(x => x.type !== "literal").map(x => [x.type, x.value]));
+          return `${p.day}/${p.month}/${p.year} ${p.hour}:${p.minute}:${p.second}`;
+        };
+        const headers = ["ID", "Encuestador", "Identificador", "Punto", "Nombre Punto", "Subpunto", "Nombre Subpunto", "Inicio", "Fin", "Duración (min)", "Total Personas", "Latitud", "Longitud", "Precisión GPS (m)"];
+        const rows = sessions.map((s) => {
+          const start = new Date(s.startedAt);
+          const end = s.finishedAt ? new Date(s.finishedAt) : null;
+          const durMin = end ? Math.round((end.getTime() - start.getTime()) / 60000) : "";
+          return [
+            s.id,
+            s.encuestadorName ?? "",
+            s.encuestadorIdentifier ?? "",
+            s.surveyPointCode,
+            s.surveyPointName ?? "",
+            s.subPointCode ?? "",
+            s.subPointName ?? "",
+            fmtCS(start),
+            end ? fmtCS(end) : "",
+            durMin,
+            s.totalPersons,
+            s.latitude ?? "",
+            s.longitude ?? "",
+            s.gpsAccuracy ?? "",
+          ];
+        });
+        const escape = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+        const csvLines = [headers.map(escape).join(","), ...rows.map((row) => row.map(escape).join(","))];
+        return { csv: csvLines.join("\n"), count: sessions.length };
+      }),
+    // ─── CSV Cierres de Turno ──────────────────────────────────────────────────
+    csvShiftClosures: adminOrRevisorProcedure
+      .input(z.object({
+        encuestadorId: z.number().optional(),
+        dateFrom: z.string().optional(),
+        dateTo: z.string().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        let closures = await getAllShiftClosures();
+        if (input?.encuestadorId) closures = closures.filter(c => c.encuestadorId === input.encuestadorId);
+        if (input?.dateFrom) {
+          const from = new Date(input.dateFrom);
+          closures = closures.filter(c => new Date(c.closedAt) >= from);
+        }
+        if (input?.dateTo) {
+          const to = new Date(input.dateTo + "T23:59:59");
+          closures = closures.filter(c => new Date(c.closedAt) <= to);
+        }
+        const fmtCL = (d: Date) => {
+          const tz = new Intl.DateTimeFormat("es-ES", { timeZone: "Europe/Madrid", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+          const parts = tz.formatToParts(d);
+          const p = Object.fromEntries(parts.filter(x => x.type !== "literal").map(x => [x.type, x.value]));
+          return `${p.day}/${p.month}/${p.year} ${p.hour}:${p.minute}:${p.second}`;
+        };
+        const headers = ["ID", "Encuestador", "Fecha/Hora Cierre", "Total Encuestas", "Total Conteos", "Total Rechazos", "Punto", "Tipo", "Valoración", "Incidencias"];
+        const rows = closures.map((c) => [
+          c.id,
+          c.encuestadorName ?? "",
+          fmtCL(new Date(c.closedAt)),
+          c.totalEncuestas,
+          c.totalConteos ?? 0,
+          c.totalRechazos ?? 0,
+          c.surveyPoint ?? "",
+          c.surveyType ?? "",
+          c.valoracion ?? "",
+          c.incidencias ?? "",
+        ]);
+        const escape = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+        const csvLines = [headers.map(escape).join(","), ...rows.map((row) => row.map(escape).join(","))];
+        return { csv: csvLines.join("\n"), count: closures.length };
+      }),
+  }),
   // ─── Turnos ────────────────────────────────────────────────────────────────
   shifts: router({
     // Admin: ver todos los turnos

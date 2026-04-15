@@ -14,6 +14,8 @@ import {
   PersonStanding,
   Plus,
   RefreshCw,
+  Timer,
+  LogOut,
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
@@ -752,11 +754,158 @@ function FieldMetricsSection() {
     </div>
   );
 }
+// ─── Sesiones de Conteo ────────────────────────────────────────────────────────────────────────────────
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
+function ExportCountingSessionsSection() {
+  const [filters, setFilters] = useState({ dateFrom: "", dateTo: "", encuestadorId: undefined as number | undefined });
+  const [separator, setSeparator] = useState<"," | ";" | "\t">(";" );
+  const [isExporting, setIsExporting] = useState(false);
+  const { data: encuestadores = [] } = trpc.users.encuestadores.useQuery();
+  const { refetch } = trpc.exportExtra.csvCountingSessions.useQuery(
+    { encuestadorId: filters.encuestadorId, dateFrom: filters.dateFrom || undefined, dateTo: filters.dateTo || undefined },
+    { enabled: false }
+  );
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const result = await refetch();
+      if (!result.data) { toast.error("No hay datos para exportar"); return; }
+      if (result.data.count === 0) { toast.error("No hay sesiones de conteo en el rango seleccionado"); return; }
+      const dateStr = new Date().toISOString().split("T")[0];
+      downloadCsv(result.data.csv, `SesionesConteo_${dateStr}.csv`, separator);
+      toast.success(`Exportadas ${result.data.count} sesiones de conteo`);
+    } catch { toast.error("Error al exportar. Inténtelo de nuevo."); }
+    finally { setIsExporting(false); }
+  };
+  return (
+    <div className="space-y-5">
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <Timer className="h-4 w-4 text-teal-600" />
+            Filtros — Sesiones de conteo
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-muted-foreground">Desde</label>
+              <input type="date" value={filters.dateFrom} onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
+                className="border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-muted-foreground">Hasta</label>
+              <input type="date" value={filters.dateTo} onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
+                className="border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-muted-foreground">Encuestador</label>
+              <select value={filters.encuestadorId ?? ""} onChange={(e) => setFilters({ ...filters, encuestadorId: e.target.value ? Number(e.target.value) : undefined })}
+                className="border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring">
+                <option value="">Todos los encuestadores</option>
+                {encuestadores.map((e) => <option key={e.id} value={e.id}>{e.name} {e.identifier ? `(${e.identifier})` : ""}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-muted-foreground">Separador de columnas</label>
+            <div className="flex gap-2 flex-wrap">
+              {(["," , ";", "\t"] as const).map((val) => (
+                <button key={val} onClick={() => setSeparator(val)}
+                  className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
+                    separator === val ? "bg-teal-600 text-white border-teal-600" : "bg-background border-border hover:bg-muted"
+                  }`}>{val === "," ? "Coma  ," : val === ";" ? "Punto y coma  ;" : "Tabulador  ⇥"}</button>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      <p className="text-xs text-muted-foreground">El CSV incluye: ID, encuestador, punto, subpunto, inicio, fin, duración, total personas y GPS.</p>
+      <Button onClick={handleExport} disabled={isExporting} variant="outline" className="w-full sm:w-auto border-teal-300 text-teal-700 hover:bg-teal-50">
+        {isExporting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Exportando...</> : <><Download className="h-4 w-4 mr-2" />Descargar CSV sesiones de conteo</>}
+      </Button>
+    </div>
+  );
+}
+
+// ─── Cierres de Turno ────────────────────────────────────────────────────────────────────────────────
+
+function ExportShiftClosuresSection() {
+  const [filters, setFilters] = useState({ dateFrom: "", dateTo: "", encuestadorId: undefined as number | undefined });
+  const [separator, setSeparator] = useState<"," | ";" | "\t">(";" );
+  const [isExporting, setIsExporting] = useState(false);
+  const { data: encuestadores = [] } = trpc.users.encuestadores.useQuery();
+  const { refetch } = trpc.exportExtra.csvShiftClosures.useQuery(
+    { encuestadorId: filters.encuestadorId, dateFrom: filters.dateFrom || undefined, dateTo: filters.dateTo || undefined },
+    { enabled: false }
+  );
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const result = await refetch();
+      if (!result.data) { toast.error("No hay datos para exportar"); return; }
+      if (result.data.count === 0) { toast.error("No hay cierres de turno en el rango seleccionado"); return; }
+      const dateStr = new Date().toISOString().split("T")[0];
+      downloadCsv(result.data.csv, `CierresTurno_${dateStr}.csv`, separator);
+      toast.success(`Exportados ${result.data.count} cierres de turno`);
+    } catch { toast.error("Error al exportar. Inténtelo de nuevo."); }
+    finally { setIsExporting(false); }
+  };
+  return (
+    <div className="space-y-5">
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <LogOut className="h-4 w-4 text-purple-600" />
+            Filtros — Cierres de turno
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-muted-foreground">Desde</label>
+              <input type="date" value={filters.dateFrom} onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
+                className="border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-muted-foreground">Hasta</label>
+              <input type="date" value={filters.dateTo} onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
+                className="border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-muted-foreground">Encuestador</label>
+              <select value={filters.encuestadorId ?? ""} onChange={(e) => setFilters({ ...filters, encuestadorId: e.target.value ? Number(e.target.value) : undefined })}
+                className="border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring">
+                <option value="">Todos los encuestadores</option>
+                {encuestadores.map((e) => <option key={e.id} value={e.id}>{e.name} {e.identifier ? `(${e.identifier})` : ""}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-muted-foreground">Separador de columnas</label>
+            <div className="flex gap-2 flex-wrap">
+              {(["," , ";", "\t"] as const).map((val) => (
+                <button key={val} onClick={() => setSeparator(val)}
+                  className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
+                    separator === val ? "bg-purple-600 text-white border-purple-600" : "bg-background border-border hover:bg-muted"
+                  }`}>{val === "," ? "Coma  ," : val === ";" ? "Punto y coma  ;" : "Tabulador  ⇥"}</button>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      <p className="text-xs text-muted-foreground">El CSV incluye: encuestador, fecha/hora de cierre, total encuestas, conteos, rechazos, punto, tipo, valoración e incidencias.</p>
+      <Button onClick={handleExport} disabled={isExporting} variant="outline" className="w-full sm:w-auto border-purple-300 text-purple-700 hover:bg-purple-50">
+        {isExporting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Exportando...</> : <><Download className="h-4 w-4 mr-2" />Descargar CSV cierres de turno</>}
+      </Button>
+    </div>
+  );
+}
+
+// ─── Main ────────────────────────────────────────────────────────────────────────────────
 
 export default function Exportar() {
-  const [tab, setTab] = useState<"export" | "conteos" | "metrics">("export");
+  const [tab, setTab] = useState<"export" | "conteos" | "sessions" | "closures" | "metrics">("export");
 
   return (
     <DashboardLayout>
@@ -767,21 +916,33 @@ export default function Exportar() {
         </div>
 
         {/* Tab switcher */}
-        <div className="flex rounded-lg border border-border overflow-hidden w-fit">
+        <div className="flex flex-wrap rounded-lg border border-border overflow-hidden w-fit">
           <button onClick={() => setTab("export")}
-            className={`flex items-center gap-2 px-5 py-2.5 text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors ${
               tab === "export" ? "bg-primary text-primary-foreground" : "bg-background text-foreground hover:bg-muted"
             }`}>
             <FileDown className="h-4 w-4" />Encuestas
           </button>
           <button onClick={() => setTab("conteos")}
-            className={`flex items-center gap-2 px-5 py-2.5 text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors ${
               tab === "conteos" ? "bg-primary text-primary-foreground" : "bg-background text-foreground hover:bg-muted"
             }`}>
             <PersonStanding className="h-4 w-4" />Conteos
           </button>
+          <button onClick={() => setTab("sessions")}
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors ${
+              tab === "sessions" ? "bg-teal-600 text-white" : "bg-background text-foreground hover:bg-muted"
+            }`}>
+            <Timer className="h-4 w-4" />Sesiones
+          </button>
+          <button onClick={() => setTab("closures")}
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors ${
+              tab === "closures" ? "bg-purple-600 text-white" : "bg-background text-foreground hover:bg-muted"
+            }`}>
+            <LogOut className="h-4 w-4" />Cierres de turno
+          </button>
           <button onClick={() => setTab("metrics")}
-            className={`flex items-center gap-2 px-5 py-2.5 text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors ${
               tab === "metrics" ? "bg-primary text-primary-foreground" : "bg-background text-foreground hover:bg-muted"
             }`}>
             <ClipboardList className="h-4 w-4" />Partes de campo
@@ -790,6 +951,8 @@ export default function Exportar() {
 
         {tab === "export" && <ExportEncuestasSection />}
         {tab === "conteos" && <ExportConteosSection />}
+        {tab === "sessions" && <ExportCountingSessionsSection />}
+        {tab === "closures" && <ExportShiftClosuresSection />}
         {tab === "metrics" && <FieldMetricsSection />}
       </div>
     </DashboardLayout>
