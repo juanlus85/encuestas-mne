@@ -207,12 +207,12 @@ export const surveyResponses = mysqlTable("survey_responses", {
   r_p28: varchar("r_p28", { length: 64 }),
   // P10f. Problemas percibidos en el espacio público
   r_p29: varchar("r_p29", { length: 255 }),
-  // P10g. Valoración del espacio público (1-5)
-  r_p30: varchar("r_p30", { length: 8 }),
-  // P10h. Valoración de la limpieza (1-5)
-  r_p31: varchar("r_p31", { length: 8 }),
-  // P10i. Valoración de la seguridad (1-5)
-  r_p32: varchar("r_p32", { length: 8 }),
+  // P10g. Frecuencia de uso en días laborables (v6 colIdx=30)
+  r_p30: varchar("r_p30", { length: 64 }),
+  // P10h. Frecuencia de uso en fines de semana (v6 colIdx=31)
+  r_p31: varchar("r_p31", { length: 64 }),
+  // P10i. Motivo de reducción de uso (v6 colIdx=32)
+  r_p32: varchar("r_p32", { length: 255 }),
   // P11. ¿Cómo le afecta personalmente el turismo? (1-5)
   r_p33: varchar("r_p33", { length: 8 }),
   // P12. ¿Cómo afecta el turismo a su comunidad? (1-5)
