@@ -243,8 +243,14 @@ function QuestionRenderer({
       {question.type === "text" && question.text.includes("P1.1") && (
         <div className="space-y-3">
           <select
-            value={answer ?? ""}
-            onChange={(e) => onAnswer(e.target.value)}
+            value={answer === undefined || answer === null || (!NOMBRES_BARRIO_TURISTICO.includes(answer as string) && !NOMBRES_OTRAS_CALLES.includes(answer as string) && answer !== "") ? "__otra__" : (answer ?? "")}
+            onChange={(e) => {
+              if (e.target.value === "__otra__") {
+                onAnswer(""); // limpia para que el usuario escriba
+              } else {
+                onAnswer(e.target.value);
+              }
+            }}
             className="w-full border border-border rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring bg-background"
           >
             <option value="">-- Seleccione una calle / Select a street --</option>
@@ -258,7 +264,19 @@ function QuestionRenderer({
                 <option key={c} value={c}>{c}</option>
               ))}
             </optgroup>
+            <option value="__otra__">Otra calle / Other street</option>
           </select>
+          {/* Campo libre si elige "Otra calle" */}
+          {(answer !== undefined && answer !== null && answer !== "" && !NOMBRES_BARRIO_TURISTICO.includes(answer as string) && !NOMBRES_OTRAS_CALLES.includes(answer as string)) && (
+            <input
+              type="text"
+              value={answer as string}
+              onChange={(e) => onAnswer(e.target.value)}
+              placeholder="Escriba el nombre de la calle / Enter street name..."
+              className="w-full border border-border rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring bg-background"
+              autoFocus
+            />
+          )}
           {onNotResident && (
             <button
               type="button"

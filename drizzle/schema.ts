@@ -146,16 +146,16 @@ export const surveyResponses = mysqlTable("survey_responses", {
   // P17. Nombre (opcional)
   v_p20: varchar("v_p20", { length: 255 }),
 
-  // ─── Respuestas RESIDENTES (orders 5-38 → r_p01..r_p34) ──────────────────
-  // P1. ¿Reside habitualmente en este barrio?
+  // ─── Respuestas RESIDENTES (orders 5-38 → r_p01..r_p34) ──────────────
+  // P1. ¿Vive en el centro histórico? (1=Sí, 2=No)
   r_p01: varchar("r_p01", { length: 16 }),
-  // P1.1. ¿En qué calle?
+  // P1.1. ¿En qué calle? (solo si vive en centro histórico)
   r_p02: varchar("r_p02", { length: 255 }),
-  // P1.1 (calculado). ¿Pertenece a la sección 037 (barrio turístico)?
-  seccion037: boolean("seccion037").default(false),
-  // P2. ¿Cuántos años lleva viviendo en el barrio?
+  // TERRITORIO (calculado): 1=Centro histórico, 2=Resto de Sevilla
+  seccion037: int("seccion037").default(0),
+  // P1.2. ¿Trabaja en el centro histórico? (1=Sí, 2=No)
   r_p03: varchar("r_p03", { length: 64 }),
-  // P3. ¿Percibe beneficios económicos del turismo?
+  // P2. ¿Cuántos años lleva viviendo en el barrio? (solo si vive en centro histórico)
   r_p04: varchar("r_p04", { length: 64 }),
   // P4. Género
   r_p05: varchar("r_p05", { length: 64 }),
@@ -647,12 +647,12 @@ export const surveyResponsesFlat = mysqlTable("survey_responses_flat", {
   v24: text("v24"),   // (reserva)
   v25: text("v25"),   // (reserva)
   v26: text("v26"),   // (reserva)
-  // ── Respuestas RESIDENTES (R01..R38) ─────────────────────────────────────
-  r01: text("r01"),   // P1. ¿Reside habitualmente en este barrio? (SI/NO → si NO: fin)
-  r02: text("r02"),   // P1.1. ¿En qué calle?
-  seccion037: boolean("seccion037").default(false),  // P1.1 calculado: barrio turístico (sección 037)
-  r03: text("r03"),   // P2. Años viviendo en el barrio
-  r04: text("r04"),   // P3. ¿Percibe beneficios económicos del turismo?
+  // ── Respuestas RESIDENTES (R01..R38) ────────────────────────────────────────────
+  r01: text("r01"),   // P1. ¿Vive en el centro histórico? (1=Sí, 2=No)
+  r02: text("r02"),   // P1.1. ¿En qué calle? (solo si vive en centro histórico)
+  seccion037: int("seccion037").default(0),  // TERRITORIO: 1=Centro histórico, 2=Resto de Sevilla
+  r03: text("r03"),   // P1.2. ¿Trabaja en el centro histórico? (1=Sí, 2=No)
+  r04: text("r04"),   // P2. Años viviendo en el barrio (solo si vive en centro histórico)
   r05: text("r05"),   // P4. Género
   r06: text("r06"),   // P5. Edad
   r07: text("r07"),   // P6.01. Turismo mejora economía local

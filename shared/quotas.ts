@@ -34,6 +34,7 @@ export const VISITANTES_QUOTAS = {
 
 // ─── RESIDENTES ───────────────────────────────────────────────────────────────
 // N = 300 encuestas totales
+// Ampliado a todos los sevillanos (no solo barrio)
 
 export const RESIDENTES_QUOTAS = {
   total: 300,
@@ -56,6 +57,12 @@ export const RESIDENTES_QUOTAS = {
     con_vinculo: { target: 90, label: "Con vínculo laboral turístico (30%)" },
     sin_vinculo: { target: 210, label: "Sin vínculo laboral turístico (70%)" },
   },
+
+  // Por territorio (nuevo: residentes del centro histórico vs. resto de Sevilla)
+  territorio: {
+    centro_historico: { target: 210, label: "Residentes del centro histórico", code: 1 },
+    resto_sevilla: { target: 90, label: "Resto de Sevilla", code: 2 },
+  },
 } as const;
 
 // ─── IDs de preguntas clave ───────────────────────────────────────────────────
@@ -69,6 +76,9 @@ export const VISITANTES_QUESTION_IDS = {
 
 // Residentes (templateId 60002)
 export const RESIDENTES_QUESTION_IDS = {
+  viveCentro: 60029,  // P1. ¿Vive en el centro histórico? (si=1, no=2)
+  calle: 60031,       // P1.1 ¿En qué calle? (solo si vive en centro histórico)
+  trabajaCentro: 60030, // P1.2 ¿Trabaja en el centro histórico? (si=1, no=2)
   vinculo: 60034,    // P3. ¿Percibe beneficios económicos del sector turístico?
   genero: 60035,     // P4. Género
   edad: 60036,       // P5. Edad
@@ -104,4 +114,17 @@ export function clasificarEdadResidente(edadValue: string): "18_44" | "45_65" | 
  */
 export function tieneVinculoTurismo(vinculoValue: string): boolean {
   return vinculoValue === "si_yo" || vinculoValue === "si_otro";
+}
+
+/**
+ * Clasifica el territorio de un residente.
+ * - "centro_historico": vive en el centro histórico (código 1)
+ * - "resto_sevilla": vive en el resto de Sevilla (código 2)
+ * Acepta tanto el valor de texto ("si"/"no") como el código numérico ("1"/"2").
+ */
+export function clasificarTerritorioResidente(viveCentroValue: string): "centro_historico" | "resto_sevilla" | null {
+  const v = viveCentroValue?.toLowerCase?.()?.trim?.() ?? "";
+  if (v === "1" || v === "si" || v === "sí") return "centro_historico";
+  if (v === "2" || v === "no") return "resto_sevilla";
+  return null;
 }

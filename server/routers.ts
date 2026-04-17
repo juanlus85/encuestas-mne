@@ -80,6 +80,36 @@ import {
 } from "@shared/quotas";
 import { getSeccion037 } from "@shared/calles";
 
+// ─── Codificación numérica de respuestas ────────────────────────────────────
+// Convierte valores de texto a códigos numéricos para almacenamiento en BD
+const ANSWER_CODES: Record<string, string> = {
+  // Sí/No
+  "si": "1",
+  "sí": "1",
+  "yes": "1",
+  "no": "2",
+  // Género
+  "hombre": "1",
+  "mujer": "2",
+  "otro": "3",
+  // NS/NC
+  "ns_nc": "99",
+  "ns/nc": "99",
+  "no_sabe": "99",
+  "no_contesta": "99",
+  "no_responde": "99",
+};
+
+/**
+ * Codifica una respuesta de texto a su código numérico si existe mapeo.
+ * Si no hay mapeo, devuelve el valor original.
+ */
+function encodeAnswer(val: string | null): string | null {
+  if (val === null || val === undefined) return null;
+  const lower = val.toLowerCase().trim();
+  return ANSWER_CODES[lower] ?? val;
+}
+
 // ─── Middleware helpers ───────────────────────────────────────────────────────
 
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -324,27 +354,34 @@ export const appRouter = router({
             const colIdx = q.order - metaCount;
             const rawVal = answerByOrder[q.order] ?? null;
             if (sType === "visitantes") {
-              // v_p01..v_p20
+              // v_p01..v_p20 — codificar Si/No, género, NS/NC
               const colName = `v_p${String(colIdx).padStart(2, "0")}`;
-              flatCols[colName] = rawVal;
+              flatCols[colName] = encodeAnswer(rawVal);
             } else {
               // r_p01..r_p34 (normales) + r_p35a/b/c (múltiple, order 37 = colIdx 33)
               if (colIdx === 33) {
                 // P13 múltiple: r_p35a, r_p35b, r_p35c
                 let vals: string[] = [];
                 try { vals = rawVal ? JSON.parse(rawVal) : []; } catch { vals = rawVal ? [rawVal] : []; }
-                flatCols["r_p35a"] = vals[0] ?? null;
-                flatCols["r_p35b"] = vals[1] ?? null;
-                flatCols["r_p35c"] = vals[2] ?? null;
+                flatCols["r_p35a"] = encodeAnswer(vals[0] ?? null);
+                flatCols["r_p35b"] = encodeAnswer(vals[1] ?? null);
+                flatCols["r_p35c"] = encodeAnswer(vals[2] ?? null);
               } else {
                 const colName = `r_p${String(colIdx).padStart(2, "0")}`;
-                flatCols[colName] = rawVal;
+                flatCols[colName] = encodeAnswer(rawVal);
               }
             }
           }
-          // Calcular seccion037 para residentes: r_p02 es la calle (colIdx=2)
-          if (sType === "residentes" && flatCols["r_p02"]) {
-            flatCols["seccion037"] = getSeccion037(flatCols["r_p02"] as string) ? "1" : "0";
+          // Calcular seccion037 para residentes: r_p01 = ¿Vive en centro histórico? (1=Sí, 2=No)
+          // Si r_p01 = "1" (Sí) → seccion037 = 1 (Centro histórico)
+          // Si r_p01 = "2" (No) → seccion037 = 2 (Resto de Sevilla)
+          if (sType === "residentes") {
+            const viveCentro = flatCols["r_p01"] as string | null;
+            if (viveCentro === "1" || viveCentro?.toLowerCase() === "si" || viveCentro?.toLowerCase() === "sí") {
+              flatCols["seccion037"] = "1";
+            } else if (viveCentro === "2" || viveCentro?.toLowerCase() === "no") {
+              flatCols["seccion037"] = "2";
+            }
           }
         } catch (err) {
           console.error("[responses.submit] Error construyendo columnas planas:", err);
@@ -468,16 +505,22 @@ export const appRouter = router({
               status: input.status,
               earlyExit: input.earlyExit ?? false,
             };
-            // Mapear respuestas a columnas vXX / rXX
+            // Mapear respuestas a columnas vXX / rXX — codificar Si/No, género, NS/NC
             const prefix2 = surveyType2 === "visitantes" ? "v" : "r";
             for (const q of realQuestions) {
               const colIdx = q.order - metaCount; // 1-based index of real question
               const colName = `${prefix2}${String(colIdx).padStart(2, "0")}`;
-              flatRow[colName] = answerByOrder[q.order] ?? null;
+              const rawAns = (answerByOrder[q.order] ?? null) as string | null;
+              flatRow[colName] = encodeAnswer(rawAns);
             }
-            // Calcular seccion037 para residentes (r02 = calle)
-            if (surveyType2 === "residentes" && flatRow["r02"]) {
-              flatRow["seccion037"] = getSeccion037(flatRow["r02"] as string);
+            // Calcular seccion037 para residentes: r01 = ¿Vive en centro histórico? (1=Sí, 2=No)
+            if (surveyType2 === "residentes") {
+              const viveCentro = flatRow["r01"] as string | null;
+              if (viveCentro === "1" || viveCentro?.toLowerCase() === "si" || viveCentro?.toLowerCase() === "sí") {
+                flatRow["seccion037"] = 1;
+              } else if (viveCentro === "2" || viveCentro?.toLowerCase() === "no") {
+                flatRow["seccion037"] = 2;
+              }
             }
             await insertSurveyResponseFlat(flatRow as any);
           } catch (err) {
@@ -998,7 +1041,7 @@ export const appRouter = router({
           const rCols = [
             ...Array.from({ length: 34 }, (_, i) => rAny[`r_p${String(i + 1).padStart(2, "0")}`] ?? ""),
             rAny.r_p35a ?? "", rAny.r_p35b ?? "", rAny.r_p35c ?? "", rAny.r_p36 ?? "",
-            rAny.seccion037 ? "SI" : (rAny.r_p02 ? "NO" : ""),  // SECCION037
+            rAny.seccion037 === 1 || rAny.seccion037 === true ? "1" : (rAny.seccion037 === 2 ? "2" : ""),  // SECCION037: 1=Centro histórico, 2=Resto de Sevilla
           ];
           return [...meta, ...vCols, ...rCols];
         });
@@ -1047,7 +1090,8 @@ export const appRouter = router({
           ];
           const vCols = Array.from({ length: 26 }, (_, i) => (r as any)[`v${String(i + 1).padStart(2, "0")}`] ?? "");
           const rCols = Array.from({ length: 38 }, (_, i) => (r as any)[`r${String(i + 1).padStart(2, "0")}`] ?? "");
-          const seccion037Col = (r as any).seccion037 ? "SI" : ((r as any).r02 ? "NO" : "");
+          const s037 = (r as any).seccion037;
+          const seccion037Col = s037 === 1 || s037 === true ? "1" : (s037 === 2 ? "2" : "");
           return [...meta, ...vCols, ...rCols, seccion037Col];
         });
         const csvLines = [headers.map(escape).join(","), ...csvRows.map((row) => row.map(escape).join(","))];
