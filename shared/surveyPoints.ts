@@ -9,7 +9,7 @@
  *
  * Puntos y subpuntos extraídos del PPTX:
  *  01. Virgen de los Reyes → 01.01 Alemanes, 01.02 D.Remondo, 01.03 Mateos Gago, 01.04 Plaza Triunfo  (8 flujos)
- *  02. Mateos Gago         → 02.01 Rodrigo Caro, 02.02 Abades, 02.03 Ángeles, 02.04 Mesón del Moro, 02.05 Mariola   (10 flujos)
+ *  02. Mateos Gago         → 02.01 Rodrigo Caro, 02.02 Abades, 02.03 Ángeles, 02.04 Mesón del Moro, 02.05 Fabiola   (10 flujos)
  *  03. Patio de Banderas   → 03.01 Plaza del Triunfo, 03.02 Judería                                   (4 flujos)
  *  04. Agua / Vida         → 04.01 Vida, 04.02 Callejón Susona, 04.03 Pimienta, 04.04 Justino de Neve (8 flujos)
  *  05. Plaza de Alfaro     → 05.01 López de Rueda, 05.02 Plaza Sta. Cruz, 05.03 Antonio el Bailarín, 05.04 Agua (8 flujos)
@@ -49,7 +49,7 @@ export const SURVEY_POINTS: SurveyPoint[] = [
       { code: "02.02", name: "Abades",         fullName: "02.02 Abades" },
       { code: "02.03", name: "Ángeles",        fullName: "02.03 Ángeles" },
       { code: "02.04", name: "Mesón del Moro", fullName: "02.04 Mesón del Moro" },
-      { code: "02.05", name: "Mariola",         fullName: "02.05 Mariola" },
+      { code: "02.05", name: "Fabiola",         fullName: "02.05 Fabiola" },
     ],
   },
   {

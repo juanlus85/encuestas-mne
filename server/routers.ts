@@ -93,6 +93,8 @@ const ANSWER_CODES: Record<string, string> = {
   "mujer": "2",
   "otro": "3",
   // NS/NC
+  "ns": "99",
+  "nc": "99",
   "ns_nc": "99",
   "ns/nc": "99",
   "no_sabe": "99",
