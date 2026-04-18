@@ -792,20 +792,44 @@ function TabConteos({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
 
       {/* Por punto */}
       <Card className="border-0 shadow-sm">
-        <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Personas por punto de conteo</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Personas por punto de conteo (suma de todos los flujos)</CardTitle></CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={d.byPunto} margin={{ top: 5, right: 10, left: 0, bottom: 40 }}>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart
+              data={d.byPunto.map(p => ({ ...p, shortName: p.name.substring(0, 2) }))}
+              margin={{ top: 20, right: 10, left: 0, bottom: 5 }}
+            >
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="name" tick={{ fontSize: 10 }} angle={-20} textAnchor="end" interval={0} />
+              <XAxis dataKey="shortName" tick={{ fontSize: 12, fontWeight: 600 }} interval={0} />
               <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip
+                content={({ active, payload }) => {
+                  if (!active || !payload?.length) return null;
+                  const item = payload[0].payload;
+                  return (
+                    <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-lg text-sm">
+                      <p className="font-semibold text-gray-800">{item.name}</p>
+                      <p className="text-blue-600 font-bold">{Number(item.value).toLocaleString("es-ES")} personas</p>
+                      {item.registros > 0 && <p className="text-gray-500">{item.registros} registros</p>}
+                    </div>
+                  );
+                }}
+              />
               <Bar dataKey="value" name="Personas" fill={C.primary} radius={[4, 4, 0, 0]}>
                 {d.byPunto.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
-                <LabelList dataKey="value" position="top" style={{ fontSize: 10, fontWeight: 600 }} formatter={(v: any) => v.toLocaleString("es-ES")} />
+                <LabelList dataKey="value" position="top" style={{ fontSize: 11, fontWeight: 700 }} formatter={(v: any) => v > 0 ? v.toLocaleString("es-ES") : ""} />
               </Bar>
             </BarChart>
           </ResponsiveContainer>
+          {/* Leyenda de puntos */}
+          <div className="mt-3 grid grid-cols-3 gap-1">
+            {d.byPunto.map((p, i) => (
+              <div key={i} className="flex items-center gap-1 text-xs text-gray-600">
+                <span className="w-3 h-3 rounded-sm flex-shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
+                <span className="truncate" title={p.name}>{p.name}</span>
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
 

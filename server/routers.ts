@@ -990,12 +990,37 @@ export const appRouter = router({
         if (input?.dateTo) conditions.push(lte(pedestrianPasses.recordedAt, input.dateTo));
         const where = conditions.length > 0 ? and(...conditions) : undefined;
 
-        // Total y por punto
+        // Total y por punto principal (agrupado por surveyPointCode)
         const byPuntoRows = await db
-          .select({ punto: pedestrianPasses.surveyPoint, total: sql<number>`sum(${pedestrianPasses.count})`, registros: sql<number>`count(*)` })
+          .select({
+            puntoCode: pedestrianPasses.surveyPointCode,
+            puntoName: pedestrianPasses.surveyPoint,
+            total: sql<number>`sum(${pedestrianPasses.count})`,
+            registros: sql<number>`count(*)`
+          })
           .from(pedestrianPasses)
           .where(where)
-          .groupBy(pedestrianPasses.surveyPoint);
+          .groupBy(pedestrianPasses.surveyPointCode, pedestrianPasses.surveyPoint);
+
+        // Consolidar por código de punto (sumar todos los flujos del mismo punto)
+        const { SURVEY_POINTS } = await import('../shared/surveyPoints');
+        const puntoMap = new Map<string, { name: string; value: number; registros: number }>();
+        // Inicializar todos los puntos con 0
+        for (const p of SURVEY_POINTS) {
+          puntoMap.set(p.code, { name: p.fullName, value: 0, registros: 0 });
+        }
+        // Acumular los conteos reales
+        for (const r of byPuntoRows) {
+          const code = r.puntoCode ?? (r.puntoName ?? "").substring(0, 2);
+          const existing = puntoMap.get(code);
+          if (existing) {
+            existing.value += Number(r.total ?? 0);
+            existing.registros += Number(r.registros ?? 0);
+          } else {
+            // Punto no registrado en SURVEY_POINTS, añadirlo igualmente
+            puntoMap.set(code, { name: r.puntoName ?? code, value: Number(r.total ?? 0), registros: Number(r.registros ?? 0) });
+          }
+        }
 
         // Por tramo de 30 min
         const allCounts = await db.select().from(pedestrianPasses).where(where);
@@ -1019,11 +1044,12 @@ export const appRouter = router({
         // Sesiones
         const sessionRows = await db.select().from(countingSessions);
 
-        const totalPersons = byPuntoRows.reduce((acc, r) => acc + Number(r.total ?? 0), 0);
+        const allPuntos = Array.from(puntoMap.values());
+        const totalPersons = allPuntos.reduce((acc, r) => acc + r.value, 0);
 
         return {
           total: totalPersons,
-          byPunto: byPuntoRows.map((r) => ({ name: r.punto ?? "Sin punto", value: Number(r.total ?? 0), registros: Number(r.registros ?? 0) })).sort((a, b) => b.value - a.value),
+          byPunto: allPuntos.sort((a, b) => a.name.localeCompare(b.name)),
           byTramo: Object.entries(byTramo).sort(([a], [b]) => a.localeCompare(b)).map(([name, value]) => ({ name, value })),
           bySentido: bySentidoRows.map((r) => ({ name: r.sentido ?? "Sin sentido", value: Number(r.total ?? 0) })).sort((a, b) => b.value - a.value).slice(0, 15),
           sessions: sessionRows.map((s) => ({
