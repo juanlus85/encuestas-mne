@@ -858,37 +858,38 @@ export const appRouter = router({
         const impactoItems: Record<string, number[]> = {};
 
         // Mapeo de questionIds del seed v6 (residentes template 90001)
-        // P4 (género) = order 9 → qId 90013
-        // P5 (edad) = order 10 → qId 90014
-        // P3 (vínculo) = order 8 → qId 90012
+        // P4 (género) = order 12 → qId 90012
+        // P5 (edad) = order 13 → qId 90013
+        // P3 (beneficios) = order 11 → qId 90011
         // P1.0 (vive centro) = order 6 → qId 90006
-        // P2 (años residencia) = order 11 → qId 90015
-        // Satisfacción P6.01..P6.14 = orders 14..27 → qIds 90018..90031
-        // Frecuencia P7.01..P7.06 = orders 28..33 → qIds 90032..90037 (aproximado)
-        // Comportamiento P8 = order 34 → qId 90038
-        // Problemas P9 = order 35 → qId 90039
-        // Impacto P10..P14 = orders 36..40 → qIds 90040..90044
+        // P2 (años residencia) = order 10 → qId 90010
+        // Satisfacción P6.01..P6.15 = orders 14..28 → qIds 90014..90028
+        // Frecuencia P7a..P7f = orders 29..34 → qIds 90029..90034
+        // Comportamiento P8 = order 35 → qId 90035
+        // Problemas P9 = order 36 → qId 90036 (múltiple)
+        // Impacto P10..P12 = orders 37..39 → qIds 90037..90039 (escala)
+        // Medidas P13 = order 40 → qId 90040 (múltiple)
 
         for (const r of res) {
           const raw = typeof r.answers === "string" ? JSON.parse(r.answers) : r.answers;
           const ans = (raw as any[]) ?? [];
 
-          const g = getA(ans, 90013);
+          const g = getA(ans, 90012);
           if (g) genero.push(g);
-          const e = getA(ans, 90014);
+          const e = getA(ans, 90013);
           if (e) edad.push(e);
-          const v = getA(ans, 90012);
+          const v = getA(ans, 90011);
           if (v) vinculo.push(v);
           const tc = getA(ans, 90006);
           if (tc) territorio.push(tc === "si" || tc === "1" ? "Centro histórico" : "Resto Sevilla");
 
-          // Satisfacción (P6.01..P6.14): qIds 90018..90031
+          // Satisfacción P6.01..P6.15 (escalas 1-5): qIds 90014..90028
           const satisfLabels: Record<number, string> = {
-            90018: "Calidad vida", 90019: "Tranquilidad", 90020: "Limpieza",
-            90021: "Seguridad", 90022: "Transporte", 90023: "Comercio local",
-            90024: "Zonas verdes", 90025: "Ruido", 90026: "Accesibilidad",
-            90027: "Masificación", 90028: "Identidad barrio", 90029: "Relación vecinos",
-            90030: "Precio vivienda", 90031: "Servicios públicos",
+            90014: "Economía local", 90015: "Congestión", 90016: "Nuevos inversores",
+            90017: "Precio vivienda", 90018: "Calidad de vida", 90019: "Desplazamiento vecinos",
+            90020: "Prestigio ciudad", 90021: "Pérdida identidad", 90022: "Conservación monumentos",
+            90023: "Tráfico", 90024: "Opciones ocio", 90025: "Mejora servicios",
+            90026: "Consumo recursos", 90027: "Contaminación", 90028: "Tolerancia",
           };
           for (const [qId, label] of Object.entries(satisfLabels)) {
             const val = Number(getA(ans, Number(qId)));
@@ -898,12 +899,11 @@ export const appRouter = router({
             }
           }
 
-          // Frecuencia uso espacios (P7.01..P7.06): qIds 90032..90037
+          // Frecuencia uso espacios P7a..P7f: qIds 90029..90034
           const frecLabels: Record<number, string> = {
-            90032: "Plazas/jardines", 90033: "Comercios locales", 90034: "Restaurantes/bares",
-            90035: "Monumentos", 90036: "Calles peatonales", 90037: "Mercados",
+            90029: "Comercios proximidad", 90030: "Acomp. escolar", 90031: "Ocio comunitario",
+            90032: "Trayectos trabajo", 90033: "Transporte público", 90034: "A pie/bicicleta",
           };
-          const FREC_ORDER = ["diario", "varias_semana", "1_semana", "menos_1_semana", "nunca"];
           for (const [qId, label] of Object.entries(frecLabels)) {
             const val = getA(ans, Number(qId));
             if (val) {
@@ -912,22 +912,21 @@ export const appRouter = router({
             }
           }
 
-          // Comportamiento P8 = qId 90038
-          const comp = getA(ans, 90038);
+          // Comportamiento P8 = qId 90035
+          const comp = getA(ans, 90035);
           if (comp) comportamiento.push(comp);
 
-          // Problemas P9 = qId 90039 (múltiple)
-          const prob = getA(ans, 90039);
+          // Problemas P9 = qId 90036 (múltiple)
+          const prob = getA(ans, 90036);
           if (prob) {
             let arr: string[] = [];
             try { arr = Array.isArray(prob) ? prob : JSON.parse(prob); } catch { arr = [prob]; }
             problemas.push(...arr);
           }
 
-          // Impacto P10..P14: qIds 90040..90044 (aproximado)
+          // Impacto P10..P12 (escala 1-5): qIds 90037..90039
           const impactoLabels: Record<number, string> = {
-            90040: "Actividad económica", 90041: "Empleo local", 90042: "Precios",
-            90043: "Cultura/patrimonio", 90044: "Convivencia",
+            90037: "Cambio uso espacio", 90038: "Impacto personal", 90039: "Impacto comunidad",
           };
           for (const [qId, label] of Object.entries(impactoLabels)) {
             const val = Number(getA(ans, Number(qId)));
@@ -943,15 +942,16 @@ export const appRouter = router({
           cambio_horario: "Cambia horario", otro: "Otro",
         };
         const PROB_LABELS: Record<string, string> = {
-          ruido: "Ruido", masificacion: "Masificación", suciedad: "Suciedad",
-          inseguridad_vial: "Inseg. vial", perdida_identidad: "Pérdida identidad",
-          aumento_precios: "Aumento precios", ninguna: "Ninguna", otro: "Otro",
+          dificultad_caminar: "Dif. caminar", inseguridad_vial: "Inseg. vial",
+          ruido: "Ruido", cambios_rutas: "Cambio rutas",
+          dificultad_acceso: "Dif. acceso", perdida_identidad: "Pérdida identidad",
+          ninguna: "Ninguna",
         };
         const EDAD_LABELS: Record<string, string> = {
           "18_29": "18-29", "30_44": "30-44", "45_64": "45-64", "65_75": "65-75", "76_mas": ">75",
         };
         const VINCULO_LABELS: Record<string, string> = {
-          si_yo: "Sí (yo)", si_otro: "Sí (familiar)", no: "No",
+          si_yo: "Sí, yo", si_otro: "Sí, familiar", no: "No",
         };
 
         const relabel = (arr: string[], labels: Record<string, string>) =>
