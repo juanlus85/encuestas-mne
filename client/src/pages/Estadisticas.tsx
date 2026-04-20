@@ -122,10 +122,12 @@ function TabGeneral({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
   const total = Number(stats?.total ?? 0);
 
   const encuestadorData = (byEncuestador as any[]).map((e) => ({
-    name: (e.name ?? "—").split(" ")[0],
-    fullName: e.name ?? "—",
+    name: e.encuestadorIdentifier ?? (e.name ?? "—").split(" ")[0],
+    fullName: e.encuestadorName ?? e.name ?? "—",
+    identifier: e.encuestadorIdentifier ?? "—",
     residentes: Number(e.residentes ?? 0),
     visitantes: Number(e.visitantes ?? 0),
+    total: Number(e.total ?? 0),
   }));
 
   const dayData = (byDay as any[]).map((d) => ({
@@ -211,17 +213,57 @@ function TabGeneral({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
           </CardHeader>
           <CardContent>
             {encuestadorData.length === 0 ? <EmptyState /> : (
-              <ResponsiveContainer width="100%" height={240}>
-                <BarChart data={encuestadorData} margin={{ top: 5, right: 10, left: -10, bottom: 40 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="name" tick={{ fontSize: 11 }} angle={-30} textAnchor="end" interval={0} />
-                  <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Bar dataKey="residentes" name="Residentes" fill={C.primary} radius={[3, 3, 0, 0]} stackId="a" />
-                  <Bar dataKey="visitantes" name="Visitantes" fill={C.warning} radius={[3, 3, 0, 0]} stackId="a" />
-                </BarChart>
-              </ResponsiveContainer>
+              <>
+                <ResponsiveContainer width="100%" height={240}>
+                  <BarChart data={encuestadorData} margin={{ top: 5, right: 10, left: -10, bottom: 40 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis dataKey="name" tick={{ fontSize: 11 }} angle={-30} textAnchor="end" interval={0} />
+                    <YAxis tick={{ fontSize: 11 }} />
+                    <Tooltip
+                      content={({ active, payload, label }) => {
+                        if (!active || !payload?.length) return null;
+                        const enc = encuestadorData.find(e => e.name === label);
+                        return (
+                          <div className="bg-white border border-gray-200 rounded shadow p-2 text-xs">
+                            <p className="font-semibold mb-1">{enc?.fullName ?? label}</p>
+                            <p className="text-muted-foreground mb-1">Código: {enc?.identifier}</p>
+                            {payload.map((p: any) => (
+                              <p key={p.dataKey} style={{ color: p.fill }}>{p.name}: {p.value}</p>
+                            ))}
+                          </div>
+                        );
+                      }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: 11 }} />
+                    <Bar dataKey="residentes" name="Residentes" fill={C.primary} radius={[3, 3, 0, 0]} stackId="a" />
+                    <Bar dataKey="visitantes" name="Visitantes" fill={C.warning} radius={[3, 3, 0, 0]} stackId="a" />
+                  </BarChart>
+                </ResponsiveContainer>
+                <div className="mt-3 overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b text-muted-foreground">
+                        <th className="text-left py-1 pr-2 font-medium">Código</th>
+                        <th className="text-left py-1 pr-2 font-medium">Nombre</th>
+                        <th className="text-right py-1 pr-2 font-medium">Res.</th>
+                        <th className="text-right py-1 pr-2 font-medium">Vis.</th>
+                        <th className="text-right py-1 font-medium">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {encuestadorData.map((e, i) => (
+                        <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
+                          <td className="py-1 pr-2 font-mono font-semibold text-primary">{e.identifier}</td>
+                          <td className="py-1 pr-2 text-muted-foreground">{e.fullName}</td>
+                          <td className="py-1 pr-2 text-right">{e.residentes}</td>
+                          <td className="py-1 pr-2 text-right">{e.visitantes}</td>
+                          <td className="py-1 text-right font-semibold">{e.total || e.residentes + e.visitantes}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
