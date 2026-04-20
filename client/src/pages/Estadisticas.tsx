@@ -97,6 +97,21 @@ function EmptyState() {
   return <div className="flex items-center justify-center h-40 text-muted-foreground text-sm">Sin datos suficientes</div>;
 }
 
+// Etiqueta de porcentaje dentro del segmento (solo si > 8%)
+const RADIAN = Math.PI / 180;
+function renderPieLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) {
+  if (percent < 0.08) return null;
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.55;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+  return (
+    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central"
+      style={{ fontSize: 11, fontWeight: 700, pointerEvents: 'none' }}>
+      {`${(percent * 100).toFixed(0)}%`}
+    </text>
+  );
+}
+
 // ─── Tab: General ─────────────────────────────────────────────────────────────
 function TabGeneral({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) {
   const { data: stats, isLoading } = trpc.dashboard.stats.useQuery();
@@ -377,10 +392,10 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
               <PieChart>
                 <Pie data={d.pais} cx="50%" cy="50%" innerRadius={50} outerRadius={80}
                   paddingAngle={3} dataKey="value"
-                  label={({ name, value }) => `${name}: ${value}`} labelLine={false}>
+                  label={renderPieLabel} labelLine={false}>
                   {d.pais.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                 </Pie>
-                <Tooltip formatter={(v: any) => [v, "Encuestas"]} />
+                <Tooltip formatter={(v: any, name: any, props: any) => [v, props.payload?.name ?? name]} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
               </PieChart>
             </ResponsiveContainer>
@@ -395,10 +410,11 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
                 <PieChart>
                   <Pie data={d.genero} cx="50%" cy="50%" outerRadius={65}
                     paddingAngle={3} dataKey="value"
-                    label={({ name, value }) => `${name}: ${value}`} labelLine={false}>
+                    label={renderPieLabel} labelLine={false}>
                     {d.genero.map((_, i) => <Cell key={i} fill={[C.secondary, C.accent, C.muted][i % 3]} />)}
                   </Pie>
-                  <Tooltip formatter={(v: any) => [v, "Encuestas"]} />
+                  <Tooltip formatter={(v: any, name: any, props: any) => [v, props.payload?.name ?? name]} />
+                  <Legend wrapperStyle={{ fontSize: 10 }} />
                 </PieChart>
               </ResponsiveContainer>
               <ResponsiveContainer width="100%" height={180}>
@@ -444,10 +460,10 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
                 <PieChart>
                   <Pie data={d.grupo} cx="50%" cy="50%" innerRadius={45} outerRadius={75}
                     paddingAngle={3} dataKey="value"
-                    label={({ name, value }) => `${name}: ${value}`} labelLine={false}>
+                    label={renderPieLabel} labelLine={false}>
                     {d.grupo.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                   </Pie>
-                  <Tooltip formatter={(v: any) => [v, "Encuestas"]} />
+                  <Tooltip formatter={(v: any, name: any, props: any) => [v, props.payload?.name ?? name]} />
                   <Legend wrapperStyle={{ fontSize: 10 }} />
                 </PieChart>
               </ResponsiveContainer>
@@ -571,13 +587,13 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
                 <PieChart>
                   <Pie data={d.masificacion} cx="50%" cy="50%" outerRadius={70}
                     paddingAngle={3} dataKey="value"
-                    label={({ name, value }) => `${name}: ${value}`} labelLine={false}>
+                    label={renderPieLabel} labelLine={false}>
                     {d.masificacion.map((entry, i) => {
                       const fill = entry.name === "No afecta" ? C.success : i === 0 ? C.success : PIE_COLORS[(i + 1) % PIE_COLORS.length];
                       return <Cell key={i} fill={fill} />;
                     })}
                   </Pie>
-                  <Tooltip formatter={(v: any) => [v, "Encuestas"]} />
+                  <Tooltip formatter={(v: any, name: any, props: any) => [v, props.payload?.name ?? name]} />
                   <Legend wrapperStyle={{ fontSize: 10 }} />
                 </PieChart>
               </ResponsiveContainer>
@@ -652,10 +668,10 @@ function TabResidentes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
                 <PieChart>
                   <Pie data={d.genero} cx="50%" cy="50%" innerRadius={50} outerRadius={80}
                     paddingAngle={3} dataKey="value"
-                    label={({ name, value }) => `${name}: ${value}`} labelLine={false}>
+                    label={renderPieLabel} labelLine={false}>
                     {d.genero.map((_, i) => <Cell key={i} fill={[C.secondary, C.accent, C.muted][i % 3]} />)}
                   </Pie>
-                  <Tooltip formatter={(v: any) => [v, "Encuestas"]} />
+                  <Tooltip formatter={(v: any, name: any, props: any) => [v, props.payload?.name ?? name]} />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
                 </PieChart>
               </ResponsiveContainer>
@@ -750,13 +766,13 @@ function TabResidentes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
                 <PieChart>
                   <Pie data={d.comportamiento} cx="50%" cy="50%" outerRadius={75}
                     paddingAngle={3} dataKey="value"
-                    label={({ name, value }) => `${name}: ${value}`} labelLine={false}>
+                    label={renderPieLabel} labelLine={false}>
                     {d.comportamiento.map((entry, i) => {
                       const fill = entry.name === "No cambia" ? C.success : PIE_COLORS[(i + 1) % PIE_COLORS.length];
                       return <Cell key={i} fill={fill} />;
                     })}
                   </Pie>
-                  <Tooltip formatter={(v: any) => [v, "Encuestas"]} />
+                  <Tooltip formatter={(v: any, name: any, props: any) => [v, props.payload?.name ?? name]} />
                   <Legend wrapperStyle={{ fontSize: 10 }} />
                 </PieChart>
               </ResponsiveContainer>
@@ -772,10 +788,10 @@ function TabResidentes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
                 <PieChart>
                   <Pie data={d.territorio} cx="50%" cy="50%" innerRadius={50} outerRadius={80}
                     paddingAngle={3} dataKey="value"
-                    label={({ name, value }) => `${name}: ${value}`} labelLine={false}>
+                    label={renderPieLabel} labelLine={false}>
                     {d.territorio.map((_, i) => <Cell key={i} fill={[C.primary, C.teal][i % 2]} />)}
                   </Pie>
-                  <Tooltip formatter={(v: any) => [v, "Encuestas"]} />
+                  <Tooltip formatter={(v: any, name: any, props: any) => [v, props.payload?.name ?? name]} />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
                 </PieChart>
               </ResponsiveContainer>
