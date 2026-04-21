@@ -20,9 +20,9 @@ function isPast(dateStr: string): boolean {
 }
 
 const SURVEY_TYPE_LABELS: Record<string, string> = {
-  visitantes: "Encuesta Visitantes",
-  residentes: "Encuesta Residentes",
-  conteo: "Conteo Peatonal",
+  visitantes: "Visitor Survey",
+  residentes: "Resident Survey",
+  conteo: "Pedestrian Count",
 };
 
 const SURVEY_TYPE_COLORS: Record<string, string> = {
@@ -38,11 +38,11 @@ export default function MisHorarios() {
 
   if (isLoading) {
     return (
-      <EncuestadorLayout title="Mis Horarios">
+      <EncuestadorLayout title="My Schedule">
         <div className="flex items-center justify-center min-h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-3" />
-            <p className="text-muted-foreground text-sm">Cargando horarios...</p>
+            <p className="text-muted-foreground text-sm">Loading schedules...</p>
           </div>
         </div>
       </EncuestadorLayout>
@@ -57,16 +57,16 @@ export default function MisHorarios() {
   const past = sortedShifts.filter((s) => isPast(s.shiftDate) && !isToday(s.shiftDate));
 
   return (
-    <EncuestadorLayout title="Mis Horarios">
+    <EncuestadorLayout title="My Schedule">
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Header */}
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Calendar className="h-6 w-6 text-primary" />
-            Mis Horarios
+            My Schedule
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Turnos asignados por el coordinador de campo.
+            Shifts assigned by the field coordinator.
           </p>
         </div>
 
@@ -74,9 +74,9 @@ export default function MisHorarios() {
         {sortedShifts.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <AlertCircle className="h-12 w-12 text-muted-foreground/40 mb-4" />
-            <p className="text-muted-foreground font-medium">No tienes turnos asignados</p>
+            <p className="text-muted-foreground font-medium">You do not have any assigned shifts</p>
             <p className="text-muted-foreground/60 text-sm mt-1">
-              El coordinador te asignará turnos próximamente.
+              The coordinator will assign shifts to you soon.
             </p>
           </div>
         )}
@@ -85,7 +85,7 @@ export default function MisHorarios() {
         {upcoming.length > 0 && (
           <section className="space-y-3">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-              Próximos turnos
+              Upcoming shifts
             </h2>
             {upcoming.map((shift) => {
               const today = isToday(shift.shiftDate);
@@ -108,7 +108,7 @@ export default function MisHorarios() {
                     </div>
                     {today && (
                       <span className="text-xs font-bold bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
-                        HOY
+                        TODAY
                       </span>
                     )}
                   </div>
@@ -159,7 +159,7 @@ export default function MisHorarios() {
         {past.length > 0 && (
           <section className="space-y-3">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-              Turnos anteriores
+              Previous shifts
             </h2>
             {past.map((shift) => (
               <div

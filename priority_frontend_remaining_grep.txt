@@ -1,0 +1,140 @@
+client/src/pages/Exportar.tsx:23:// ─── Definición de campos exportables ────────────────────────────────────────
+client/src/pages/Exportar.tsx:32:  { key: "PuntoEncuesta",    label: "Survey point",               group: "Metadata",    defaultOn: true },
+client/src/pages/Exportar.tsx:33:  { key: "FranjaHoraria",    label: "Time slot",                  group: "Metadata",    defaultOn: true },
+client/src/pages/Exportar.tsx:54:  ["v_p06", "V_P06 · P4b Género"],
+client/src/pages/Exportar.tsx:55:  ["v_p07", "V_P07 · P5 Motivo principal de la visita"],
+client/src/pages/Exportar.tsx:57:  ["v_p09", "V_P09 · P6b Nº personas en el grupo"],
+client/src/pages/Exportar.tsx:76:  ["r_p05", "R_P05 · P4 Género"],
+client/src/pages/Exportar.tsx:114:  { key: "Fecha",           label: "Date",                         group: "Counts",   defaultOn: true },
+client/src/pages/Exportar.tsx:115:  { key: "Hora",            label: "Time",                         group: "Counts",   defaultOn: true },
+client/src/pages/Exportar.tsx:117:  { key: "Punto_Nombre",    label: "Counting point (name)",        group: "Counts",   defaultOn: true },
+client/src/pages/Exportar.tsx:118:  { key: "Punto_Codigo",    label: "Counting point (code)",        group: "Counts",   defaultOn: true },
+client/src/pages/Exportar.tsx:218:// ─── Exportar Encuestas ───────────────────────────────────────────────────────
+client/src/pages/Exportar.tsx:220:function ExportEncuestasSection() {
+client/src/pages/Exportar.tsx:228:  const [isExporting, setIsExporting] = useState(false);
+client/src/pages/Exportar.tsx:262:  const handleExport = async () => {
+client/src/pages/Exportar.tsx:263:    setIsExporting(true);
+client/src/pages/Exportar.tsx:277:        "PuntoEncuesta": "PuntoEncuesta", "FranjaHoraria": "FranjaHoraria", "VentanaMedia": "VentanaMedia",
+client/src/pages/Exportar.tsx:306:      toast.success(`Exported ${result.data.count} surveys (${keepIndices.length} columns)`);
+client/src/pages/Exportar.tsx:308:      toast.error("Export failed. Please try again.");
+client/src/pages/Exportar.tsx:310:      setIsExporting(false);
+client/src/pages/Exportar.tsx:321:            Export filters
+client/src/pages/Exportar.tsx:378:      {/* Selección de campos */}
+client/src/pages/Exportar.tsx:423:      <Button onClick={handleExport} disabled={isExporting || selectedFields.size === 0} className="w-full sm:w-auto">
+client/src/pages/Exportar.tsx:424:        {isExporting ? (
+client/src/pages/Exportar.tsx:425:          <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Exporting...</>
+client/src/pages/Exportar.tsx:434:// ─── Exportar Conteos ─────────────────────────────────────────────────────────
+client/src/pages/Exportar.tsx:436:function ExportConteosSection() {
+client/src/pages/Exportar.tsx:444:  const [isExporting, setIsExporting] = useState(false);
+client/src/pages/Exportar.tsx:460:  const { refetch } = trpc.export.csvConteos.useQuery(
+client/src/pages/Exportar.tsx:470:  const handleExport = async () => {
+client/src/pages/Exportar.tsx:471:    setIsExporting(true);
+client/src/pages/Exportar.tsx:491:      toast.success(`Exported ${result.data.count} records (${keepIndices.length} columns)`);
+client/src/pages/Exportar.tsx:493:      toast.error("Export failed. Please try again.");
+client/src/pages/Exportar.tsx:495:      setIsExporting(false);
+client/src/pages/Exportar.tsx:549:      {/* Selección de campos */}
+client/src/pages/Exportar.tsx:574:      <Button onClick={handleExport} disabled={isExporting || selectedFields.size === 0}
+client/src/pages/Exportar.tsx:576:        {isExporting ? (
+client/src/pages/Exportar.tsx:577:          <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Exporting...</>
+client/src/pages/Exportar.tsx:586:// ─── Partes de campo ──────────────────────────────────────────────────────────
+client/src/pages/Exportar.tsx:606:      toast.success("Parte de campo guardado");
+client/src/pages/Exportar.tsx:634:            Registrar parte de campo
+client/src/pages/Exportar.tsx:650:                <option value="">Seleccionar...</option>
+client/src/pages/Exportar.tsx:688:              placeholder="Incidencias, condiciones del campo, observaciones..." />
+client/src/pages/Exportar.tsx:699:          <CardTitle className="text-base font-semibold">Partes de campo registrados</CardTitle>
+client/src/pages/Exportar.tsx:757:// ─── Sesiones de Conteo ────────────────────────────────────────────────────────────────────────────────
+client/src/pages/Exportar.tsx:759:function ExportCountingSessionsSection() {
+client/src/pages/Exportar.tsx:762:  const [isExporting, setIsExporting] = useState(false);
+client/src/pages/Exportar.tsx:768:  const handleExport = async () => {
+client/src/pages/Exportar.tsx:769:    setIsExporting(true);
+client/src/pages/Exportar.tsx:776:      toast.success(`Exported ${result.data.count} counting sessions`);
+client/src/pages/Exportar.tsx:777:    } catch { toast.error("Export failed. Please try again."); }
+client/src/pages/Exportar.tsx:778:    finally { setIsExporting(false); }
+client/src/pages/Exportar.tsx:824:      <Button onClick={handleExport} disabled={isExporting} variant="outline" className="w-full sm:w-auto border-teal-300 text-teal-700 hover:bg-teal-50">
+client/src/pages/Exportar.tsx:825:        {isExporting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Exporting...</> : <><Download className="h-4 w-4 mr-2" />Download counting sessions CSV</>}
+client/src/pages/Exportar.tsx:831:// ─── Cierres de Turno ────────────────────────────────────────────────────────────────────────────────
+client/src/pages/Exportar.tsx:833:function ExportShiftClosuresSection() {
+client/src/pages/Exportar.tsx:836:  const [isExporting, setIsExporting] = useState(false);
+client/src/pages/Exportar.tsx:842:  const handleExport = async () => {
+client/src/pages/Exportar.tsx:843:    setIsExporting(true);
+client/src/pages/Exportar.tsx:850:      toast.success(`Exported ${result.data.count} shift closures`);
+client/src/pages/Exportar.tsx:851:    } catch { toast.error("Export failed. Please try again."); }
+client/src/pages/Exportar.tsx:852:    finally { setIsExporting(false); }
+client/src/pages/Exportar.tsx:898:      <Button onClick={handleExport} disabled={isExporting} variant="outline" className="w-full sm:w-auto border-purple-300 text-purple-700 hover:bg-purple-50">
+client/src/pages/Exportar.tsx:899:        {isExporting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Exporting...</> : <><Download className="h-4 w-4 mr-2" />Download shift closures CSV</>}
+client/src/pages/Exportar.tsx:907:export default function Exportar() {
+client/src/pages/Exportar.tsx:914:          <h1 className="text-2xl font-bold text-foreground">Export and Metrics</h1>
+client/src/pages/Exportar.tsx:952:        {tab === "export" && <ExportEncuestasSection />}
+client/src/pages/Exportar.tsx:953:        {tab === "conteos" && <ExportConteosSection />}
+client/src/pages/Exportar.tsx:954:        {tab === "sessions" && <ExportCountingSessionsSection />}
+client/src/pages/Exportar.tsx:955:        {tab === "closures" && <ExportShiftClosuresSection />}
+client/src/pages/Usuarios.tsx:216:    if (password.length < 6) { toast.error("Mínimo 6 caracteres"); return; }
+client/src/pages/Usuarios.tsx:545:        {/* Encuestadores */}
+client/src/pages/Estadisticas.tsx:171:  const rejResidentes = Number((rejStats as any)?.byType?.residentes ?? 0);
+client/src/pages/Estadisticas.tsx:172:  const rejVisitantes = Number((rejStats as any)?.byType?.visitantes ?? 0);
+client/src/pages/Estadisticas.tsx:197:      {/* Rechazos */}
+client/src/pages/Estadisticas.tsx:207:            <StatBadge value={rejResidentes} label="Residents" color="text-blue-700" />
+client/src/pages/Estadisticas.tsx:208:            <StatBadge value={rejVisitantes} label="Visitors" color="text-amber-600" />
+client/src/pages/Estadisticas.tsx:352:// ─── Tab: Visitantes ──────────────────────────────────────────────────────────
+client/src/pages/Estadisticas.tsx:353:function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) {
+client/src/pages/Estadisticas.tsx:386:      {/* Procedencia + Género */}
+client/src/pages/Estadisticas.tsx:435:      {/* Motivo + Grupo */}
+client/src/pages/Estadisticas.tsx:458:            {d.grupo.length === 0 ? <EmptyState /> : (
+client/src/pages/Estadisticas.tsx:461:                  <Pie data={d.grupo} cx="50%" cy="50%" innerRadius={45} outerRadius={75}
+client/src/pages/Estadisticas.tsx:464:                    {d.grupo.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+client/src/pages/Estadisticas.tsx:556:      {/* Valoración + Masificación */}
+client/src/pages/Estadisticas.tsx:559:          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Valoración del espacio (1-5 ★)</CardTitle></CardHeader>
+client/src/pages/Estadisticas.tsx:607:        <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Encuestas por punto de encuesta</CardTitle></CardHeader>
+client/src/pages/Estadisticas.tsx:609:          {d.byPunto.length === 0 ? <EmptyState /> : (
+client/src/pages/Estadisticas.tsx:611:              <BarChart data={d.byPunto} margin={{ top: 5, right: 10, left: -10, bottom: 40 }}>
+client/src/pages/Estadisticas.tsx:617:                  {d.byPunto.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+client/src/pages/Estadisticas.tsx:629:// ─── Tab: Residentes ──────────────────────────────────────────────────────────
+client/src/pages/Estadisticas.tsx:630:function TabResidentes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) {
+client/src/pages/Estadisticas.tsx:661:      {/* Género + Edad */}
+client/src/pages/Estadisticas.tsx:664:          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Género</CardTitle></CardHeader>
+client/src/pages/Estadisticas.tsx:831:// ─── Tab: Conteos ─────────────────────────────────────────────────────────────
+client/src/pages/Estadisticas.tsx:832:function TabConteos({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) {
+client/src/pages/Estadisticas.tsx:850:          <p className="text-3xl font-bold text-teal-600">{d.byPunto.length}</p>
+client/src/pages/Estadisticas.tsx:851:          <p className="text-xs text-muted-foreground mt-1">Puntos con datos</p>
+client/src/pages/Estadisticas.tsx:855:          <p className="text-xs text-muted-foreground mt-1">Sesiones de conteo</p>
+client/src/pages/Estadisticas.tsx:865:              data={d.byPunto.map(p => ({ ...p, shortName: p.name.substring(0, 2) }))}
+client/src/pages/Estadisticas.tsx:885:                {d.byPunto.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+client/src/pages/Estadisticas.tsx:892:            {d.byPunto.map((p, i) => (
+client/src/pages/Estadisticas.tsx:953:          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Sesiones de conteo</CardTitle></CardHeader>
+client/src/pages/Estadisticas.tsx:959:                    <th className="text-left py-2 pr-3 font-semibold text-muted-foreground">Punto</th>
+client/src/pages/Estadisticas.tsx:991:  { id: "visitantes", label: "Visitantes", icon: Eye },
+client/src/pages/Estadisticas.tsx:992:  { id: "residentes", label: "Residentes", icon: Home },
+client/src/pages/Estadisticas.tsx:993:  { id: "conteos", label: "Conteos", icon: ArrowLeftRight },
+client/src/pages/Estadisticas.tsx:1008:            <p className="text-muted-foreground text-sm mt-1">Análisis del trabajo de campo en tiempo real</p>
+client/src/pages/Estadisticas.tsx:1047:        {activeTab === "visitantes" && <TabVisitantes dateFrom={dateFrom} dateTo={dateTo} />}
+client/src/pages/Estadisticas.tsx:1048:        {activeTab === "residentes" && <TabResidentes dateFrom={dateFrom} dateTo={dateTo} />}
+client/src/pages/Estadisticas.tsx:1049:        {activeTab === "conteos" && <TabConteos dateFrom={dateFrom} dateTo={dateTo} />}
+client/src/pages/Mapa.tsx:421:                  { label: "Residentes", value: validLocations.filter((l: any) => l.templateType === "residentes").length, color: "text-blue-600" },
+client/src/pages/Mapa.tsx:422:                  { label: "Visitantes", value: validLocations.filter((l: any) => l.templateType !== "residentes").length, color: "text-amber-600" },
+client/src/pages/Mapa.tsx:423:                  { label: "Encuestadores", value: new Set(validLocations.map((l: any) => l.encuestadorId)).size, color: "text-primary" },
+client/src/pages/CierreTurno.tsx:49:function HistorialCierres() {
+client/src/pages/CierreTurno.tsx:86:                <p className="text-lg font-bold text-blue-700">{c.totalEncuestas}</p>
+client/src/pages/CierreTurno.tsx:90:                <p className="text-lg font-bold text-green-700">{c.totalConteos ?? 0}</p>
+client/src/pages/CierreTurno.tsx:94:                <p className="text-lg font-bold text-red-600">{c.totalRechazos ?? 0}</p>
+client/src/pages/CierreTurno.tsx:121:export default function CierreTurno() {
+client/src/pages/CierreTurno.tsx:124:  // Resumen automático del día desde la BD
+client/src/pages/CierreTurno.tsx:141:  const [incidencias, setIncidencias] = useState("");
+client/src/pages/CierreTurno.tsx:152:      totalEncuestas: summary?.totalEncuestas ?? 0,
+client/src/pages/CierreTurno.tsx:153:      totalConteos: summary?.totalConteos ?? 0,
+client/src/pages/CierreTurno.tsx:154:      totalRechazos: summary?.totalRechazos ?? 0,
+client/src/pages/CierreTurno.tsx:195:        {/* Resumen automático del día */}
+client/src/pages/CierreTurno.tsx:220:                    <p className="text-3xl font-bold text-blue-700">{summary?.totalEncuestas ?? 0}</p>
+client/src/pages/CierreTurno.tsx:224:                    <p className="text-3xl font-bold text-green-700">{summary?.totalConteos ?? 0}</p>
+client/src/pages/CierreTurno.tsx:228:                    <p className="text-3xl font-bold text-red-600">{summary?.totalRechazos ?? 0}</p>
+client/src/pages/CierreTurno.tsx:233:                  Datos calculados automáticamente desde la base de datos
+client/src/pages/CierreTurno.tsx:250:              {/* Incidencias */}
+client/src/pages/CierreTurno.tsx:258:                  onChange={(e) => setIncidencias(e.target.value)}
+client/src/pages/CierreTurno.tsx:265:              {/* Valoración */}
+client/src/pages/CierreTurno.tsx:322:            <HistorialCierres />
+client/src/pages/ConteoPeatonal.tsx:181:  const handleBackToPunto = () => {
+client/src/pages/ConteoPeatonal.tsx:244:          <Button variant="ghost" size="icon" className="shrink-0" onClick={handleBackToPunto}>
+client/src/pages/ConteoPeatonal.tsx:251:            <p className="text-sm text-gray-500">Selecciona el subpunto</p>
+client/src/pages/ConteoPeatonal.tsx:432:          ) : "Selecciona personas y flujo"}
+client/src/pages/ConteoPeatonal.tsx:454:      {/* Dialog grupo grande */}
+client/src/pages/ConteoPeatonal.tsx:459:            <p className="text-sm text-gray-600 mb-3">Introduce el número exacto de personas del grupo:</p>
+client/src/pages/ConteoPeatonal.tsx:476:            <Button variant="outline" onClick={() => { setGroupDialogOpen(false); setGroupCount(""); }}>Cancelar</Button>

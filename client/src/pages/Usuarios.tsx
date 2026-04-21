@@ -18,10 +18,10 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 const ROLE_LABELS: Record<string, string> = {
-  admin: "Administrador",
-  encuestador: "Encuestador",
-  revisor: "Revisor",
-  user: "Usuario",
+  admin: "Administrator",
+  encuestador: "Interviewer",
+  revisor: "Reviewer",
+  user: "User",
 };
 
 const ROLE_ICONS: Record<string, any> = {
@@ -45,11 +45,11 @@ function TurnosSection({ encuestadores }: { encuestadores: { id: number; name: s
   const utils = trpc.useUtils();
   const { data: shifts, isLoading: shiftsLoading } = trpc.shifts.getAll.useQuery();
   const createMutation = trpc.shifts.create.useMutation({
-    onSuccess: () => { utils.shifts.getAll.invalidate(); toast.success("Turno creado"); setOpen(false); resetForm(); },
+    onSuccess: () => { utils.shifts.getAll.invalidate(); toast.success("Shift created"); setOpen(false); resetForm(); },
     onError: (e) => toast.error(e.message),
   });
   const deleteMutation = trpc.shifts.delete.useMutation({
-    onSuccess: () => { utils.shifts.getAll.invalidate(); toast.success("Turno eliminado"); },
+    onSuccess: () => { utils.shifts.getAll.invalidate(); toast.success("Shift deleted"); },
     onError: (e) => toast.error(e.message),
   });
 
@@ -68,7 +68,7 @@ function TurnosSection({ encuestadores }: { encuestadores: { id: number; name: s
   };
 
   const handleCreate = () => {
-    if (!encuestadorId || !shiftDate) { toast.error("Selecciona encuestador y fecha"); return; }
+    if (!encuestadorId || !shiftDate) { toast.error("Select interviewer and date"); return; }
     createMutation.mutate({
       encuestadorId: Number(encuestadorId),
       shiftDate, startTime, endTime,
@@ -92,58 +92,58 @@ function TurnosSection({ encuestadores }: { encuestadores: { id: number; name: s
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
             <Calendar className="h-4 w-4 text-primary" />
-            Turnos asignados
+            Assigned shifts
           </CardTitle>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button size="sm" variant="outline">
-                <Plus className="h-4 w-4 mr-1" /> Añadir turno
+                <Plus className="h-4 w-4 mr-1" /> Add shift
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-md">
-              <DialogHeader><DialogTitle>Nuevo turno</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>New shift</DialogTitle></DialogHeader>
               <div className="space-y-4 pt-2">
                 <div>
-                  <Label>Encuestador</Label>
+                  <Label>Interviewer</Label>
                   <select value={encuestadorId} onChange={(e) => setEncuestadorId(e.target.value)}
                     className="w-full border border-border rounded-lg px-3 py-2 text-sm mt-1 bg-background">
-                    <option value="">Seleccionar...</option>
+                    <option value="">Select...</option>
                     {encuestadores.map((e) => <option key={e.id} value={e.id}>{e.name ?? `ID ${e.id}`}</option>)}
                   </select>
                 </div>
                 <div>
-                  <Label>Fecha</Label>
+                  <Label>Date</Label>
                   <Input type="date" value={shiftDate} onChange={(e) => setShiftDate(e.target.value)} className="mt-1" />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div><Label>Hora inicio</Label><Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="mt-1" /></div>
-                  <div><Label>Hora fin</Label><Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className="mt-1" /></div>
+                  <div><Label>Start time</Label><Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="mt-1" /></div>
+                  <div><Label>End time</Label><Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className="mt-1" /></div>
                 </div>
                 <div>
-                  <Label>Punto de encuesta</Label>
+                  <Label>Survey point</Label>
                   <select value={surveyPoint} onChange={(e) => setSurveyPoint(e.target.value)}
                     className="w-full border border-border rounded-lg px-3 py-2 text-sm mt-1 bg-background">
-                    <option value="">Sin asignar</option>
+                    <option value="">Unassigned</option>
                     {SURVEY_POINTS_LABELS.map((p) => <option key={p} value={p}>{p}</option>)}
                   </select>
                 </div>
                 <div>
-                  <Label>Tipo de trabajo</Label>
+                  <Label>Work type</Label>
                   <select value={surveyType} onChange={(e) => setSurveyType(e.target.value)}
                     className="w-full border border-border rounded-lg px-3 py-2 text-sm mt-1 bg-background">
-                    <option value="">Sin asignar</option>
-                    <option value="visitantes">Visitantes</option>
-                    <option value="residentes">Residentes</option>
-                    <option value="conteo">Conteo peatonal</option>
+                    <option value="">Unassigned</option>
+                    <option value="visitantes">Visitors</option>
+                    <option value="residentes">Residents</option>
+                    <option value="conteo">Pedestrian counting</option>
                   </select>
                 </div>
                 <div>
-                  <Label>Notas / Instrucciones</Label>
+                  <Label>Notes / Instructions</Label>
                   <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2}
                     className="w-full border border-border rounded-lg px-3 py-2 text-sm mt-1 bg-background resize-none" />
                 </div>
                 <Button onClick={handleCreate} disabled={createMutation.isPending} className="w-full">
-                  {createMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Crear turno"}
+                  {createMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create shift"}
                 </Button>
               </div>
             </DialogContent>
@@ -153,13 +153,13 @@ function TurnosSection({ encuestadores }: { encuestadores: { id: number; name: s
       <CardContent>
         {shiftsLoading && <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin" /></div>}
         {!shiftsLoading && sortedDates.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-4">No hay turnos asignados. Crea el primero.</p>
+          <p className="text-sm text-muted-foreground text-center py-4">There are no assigned shifts yet. Create the first one.</p>
         )}
         <div className="space-y-4">
           {sortedDates.map((date) => (
             <div key={date}>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                {new Date(date + "T12:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" })}
+                {new Date(date + "T12:00:00").toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}
               </p>
               <div className="space-y-2">
                 {byDate[date]!.map((s) => {
@@ -206,15 +206,15 @@ function SetPasswordDialog({ userId, userName }: { userId: number; userName: str
       setOpen(false);
       setPassword("");
       setConfirm("");
-      toast.success(`Contraseña actualizada para ${userName}`);
+      toast.success(`Password updated for ${userName}`);
     },
-    onError: (e) => toast.error(e.message ?? "Error al cambiar contraseña"),
+    onError: (e) => toast.error(e.message ?? "Error changing password"),
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password.length < 6) { toast.error("Mínimo 6 caracteres"); return; }
-    if (password !== confirm) { toast.error("Las contraseñas no coinciden"); return; }
+    if (password.length < 6) { toast.error("Minimum 6 characters"); return; }
+    if (password !== confirm) { toast.error("Passwords do not match"); return; }
     setPasswordMutation.mutate({ id: userId, password });
   };
 
@@ -223,23 +223,23 @@ function SetPasswordDialog({ userId, userName }: { userId: number; userName: str
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="text-xs gap-1.5">
           <KeyRound className="h-3.5 w-3.5" />
-          Contraseña
+          Password
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Cambiar contraseña</DialogTitle>
+          <DialogTitle>Change password</DialogTitle>
         </DialogHeader>
-        <p className="text-sm text-muted-foreground -mt-2">Usuario: <strong>{userName}</strong></p>
+        <p className="text-sm text-muted-foreground -mt-2">User: <strong>{userName}</strong></p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <Label>Nueva contraseña</Label>
+            <Label>New password</Label>
             <div className="relative">
               <Input
                 type={showPw ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Mínimo 6 caracteres"
+                placeholder="Minimum 6 characters"
                 className="pr-10"
               />
               <button type="button" onClick={() => setShowPw(!showPw)}
@@ -249,18 +249,18 @@ function SetPasswordDialog({ userId, userName }: { userId: number; userName: str
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label>Confirmar contraseña</Label>
+            <Label>Confirm password</Label>
             <Input
               type={showPw ? "text" : "password"}
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
-              placeholder="Repita la contraseña"
+              placeholder="Repeat the password"
             />
           </div>
           <div className="flex gap-3 pt-1">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)} className="flex-1">Cancelar</Button>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} className="flex-1">Cancel</Button>
             <Button type="submit" className="flex-1" disabled={setPasswordMutation.isPending}>
-              {setPasswordMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Guardar"}
+              {setPasswordMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
             </Button>
           </div>
         </form>
@@ -273,8 +273,8 @@ function SetPasswordDialog({ userId, userName }: { userId: number; userName: str
 
 function UserCard({ user, onUpdate }: { user: any; onUpdate: () => void }) {
   const updateMutation = trpc.users.update.useMutation({
-    onSuccess: () => { onUpdate(); toast.success("Usuario actualizado"); },
-    onError: () => toast.error("Error al actualizar"),
+    onSuccess: () => { onUpdate(); toast.success("User updated"); },
+    onError: () => toast.error("Update failed"),
   });
 
   const Icon = ROLE_ICONS[user.role] ?? User;
@@ -286,7 +286,7 @@ function UserCard({ user, onUpdate }: { user: any; onUpdate: () => void }) {
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <p className="font-semibold text-foreground text-sm">{user.name || "Sin nombre"}</p>
+          <p className="font-semibold text-foreground text-sm">{user.name || "No name"}</p>
           {user.identifier && (
             <span className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded text-muted-foreground">{user.identifier}</span>
           )}
@@ -296,24 +296,24 @@ function UserCard({ user, onUpdate }: { user: any; onUpdate: () => void }) {
                 ? "bg-blue-100 text-blue-700"
                 : "bg-amber-100 text-amber-700"
             }`}>
-              {user.surveyTypeAssigned === "residentes" ? "Solo residentes" : "Solo visitantes"}
+              {user.surveyTypeAssigned === "residentes" ? "Residents only" : "Visitors only"}
             </span>
           )}
           {!user.isActive && (
-            <span className="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded">Inactivo</span>
+            <span className="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded">Inactive</span>
           )}
         </div>
         <p className="text-xs text-muted-foreground mt-0.5">{ROLE_LABELS[user.role] ?? user.role}</p>
         {user.username && (
           <p className="text-xs text-muted-foreground font-mono">
-            Usuario: <span className="text-foreground">{user.username}</span>
-            {user.passwordHash ? " · ✓ Contraseña configurada" : " · ⚠ Sin contraseña"}
+            Username: <span className="text-foreground">{user.username}</span>
+            {user.passwordHash ? " · ✓ Password set" : " · ⚠ No password"}
           </p>
         )}
         {user.email && <p className="text-xs text-muted-foreground">{user.email}</p>}
       </div>
       <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
-        <SetPasswordDialog userId={user.id} userName={user.name ?? user.username ?? "Usuario"} />
+        <SetPasswordDialog userId={user.id} userName={user.name ?? user.username ?? "User"} />
         <Button
           variant="outline"
           size="sm"
@@ -321,7 +321,7 @@ function UserCard({ user, onUpdate }: { user: any; onUpdate: () => void }) {
           disabled={updateMutation.isPending}
           className="text-xs"
         >
-          {user.isActive ? "Desactivar" : "Activar"}
+          {user.isActive ? "Deactivate" : "Activate"}
         </Button>
       </div>
     </div>
@@ -349,9 +349,9 @@ function CreateUserDialog({ onCreated }: { onCreated: () => void }) {
       setOpen(false);
       setForm({ name: "", email: "", role: "encuestador", identifier: "", surveyTypeAssigned: "ambos", openId: "", username: "", password: "" });
       onCreated();
-      toast.success("Usuario creado correctamente");
+      toast.success("User created successfully");
     },
-    onError: (e) => toast.error(e.message ?? "Error al crear usuario"),
+    onError: (e) => toast.error(e.message ?? "Error creating user"),
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -379,55 +379,55 @@ function CreateUserDialog({ onCreated }: { onCreated: () => void }) {
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Crear nuevo usuario</DialogTitle>
+          <DialogTitle>Create new user</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div>
-            <Label className="mb-1.5 block">Nombre completo *</Label>
+            <Label className="mb-1.5 block">Full name *</Label>
             <Input
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               required
-              placeholder="Ej: María García López"
+              placeholder="Example: Maria Garcia Lopez"
             />
           </div>
 
           <div>
-            <Label className="mb-1.5 block">Rol *</Label>
+            <Label className="mb-1.5 block">Role *</Label>
             <select
               value={form.role}
               onChange={(e) => setForm({ ...form, role: e.target.value as any })}
               className="w-full border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <option value="encuestador">Encuestador</option>
-              <option value="revisor">Revisor</option>
-              <option value="admin">Administrador</option>
+              <option value="encuestador">Interviewer</option>
+              <option value="revisor">Reviewer</option>
+              <option value="admin">Administrator</option>
             </select>
           </div>
 
           {form.role === "encuestador" && (
             <>
               <div>
-                <Label className="mb-1.5 block">Identificador de campo</Label>
+                <Label className="mb-1.5 block">Field identifier</Label>
                 <Input
                   value={form.identifier}
                   onChange={(e) => setForm({ ...form, identifier: e.target.value })}
                   className="font-mono"
-                  placeholder="Ej: ENC-01"
+                  placeholder="Example: INT-01"
                 />
               </div>
               <div>
-                <Label className="mb-1.5 block">Tipo de encuesta asignado</Label>
+                <Label className="mb-1.5 block">Assigned survey type</Label>
                 <select
                   value={form.surveyTypeAssigned}
                   onChange={(e) => setForm({ ...form, surveyTypeAssigned: e.target.value as any })}
                   className="w-full border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                 >
-                  <option value="ambos">Ambos tipos (residentes y visitantes)</option>
-                  <option value="residentes">Solo Residentes (Técnicos 1 y 3)</option>
-                  <option value="visitantes">Solo Visitantes (Técnicos 2, 4 y 5)</option>
+                  <option value="ambos">Both types (residents and visitors)</option>
+                  <option value="residentes">Residents only (Technicians 1 and 3)</option>
+                  <option value="visitantes">Visitors only (Technicians 2, 4 and 5)</option>
                 </select>
-                <p className="text-xs text-muted-foreground mt-1">El encuestador solo verá las encuestas de este tipo en su pantalla</p>
+                <p className="text-xs text-muted-foreground mt-1">The interviewer will only see surveys of this type on their screen</p>
               </div>
             </>
           )}
@@ -435,28 +435,28 @@ function CreateUserDialog({ onCreated }: { onCreated: () => void }) {
           {/* Separator for credentials */}
           <div className="border-t border-border pt-3">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-              Credenciales de acceso (opcional)
+              Access credentials (optional)
             </p>
             <div className="space-y-3">
               <div>
-                <Label className="mb-1.5 block">Nombre de usuario</Label>
+                <Label className="mb-1.5 block">Username</Label>
                 <Input
                   value={form.username}
                   onChange={(e) => setForm({ ...form, username: e.target.value })}
                   autoCapitalize="none"
                   autoCorrect="off"
-                  placeholder="Ej: maria.garcia"
+                  placeholder="Example: maria.garcia"
                 />
-                <p className="text-xs text-muted-foreground mt-1">El encuestador usará esto para iniciar sesión</p>
+                <p className="text-xs text-muted-foreground mt-1">The interviewer will use this to sign in</p>
               </div>
               <div>
-                <Label className="mb-1.5 block">Contraseña</Label>
+                <Label className="mb-1.5 block">Password</Label>
                 <div className="relative">
                   <Input
                     type={showPw ? "text" : "password"}
                     value={form.password}
                     onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    placeholder="Mínimo 6 caracteres"
+                    placeholder="Minimum 6 characters"
                     className="pr-10"
                   />
                   <button type="button" onClick={() => setShowPw(!showPw)}
@@ -474,16 +474,16 @@ function CreateUserDialog({ onCreated }: { onCreated: () => void }) {
               type="email"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              placeholder="correo@ejemplo.com"
+              placeholder="email@example.com"
             />
           </div>
 
           <div className="flex gap-3 pt-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)} className="flex-1">
-              Cancelar
+              Cancel
             </Button>
             <Button type="submit" className="flex-1" disabled={createMutation.isPending}>
-              {createMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Crear usuario"}
+              {createMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create user"}
             </Button>
           </div>
         </form>
@@ -503,7 +503,7 @@ export default function Usuarios() {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center py-16">
-          <p className="text-muted-foreground">Acceso restringido a administradores.</p>
+          <p className="text-muted-foreground">Restricted access for administrators only.</p>
         </div>
       </DashboardLayout>
     );
@@ -520,9 +520,9 @@ export default function Usuarios() {
       <div className="space-y-6 max-w-3xl">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Gestión de Usuarios</h1>
+            <h1 className="text-2xl font-bold text-foreground">User Management</h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Administre encuestadores, revisores y administradores del sistema.
+              Manage interviewers, reviewers, and system administrators.
             </p>
           </div>
           <CreateUserDialog onCreated={refresh} />
@@ -530,9 +530,9 @@ export default function Usuarios() {
 
         {/* Info box */}
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-          <p className="text-sm text-blue-800 font-medium">Acceso con usuario y contraseña</p>
+          <p className="text-sm text-blue-800 font-medium">Username and password access</p>
           <p className="text-xs text-blue-700 mt-1">
-            Al crear un usuario, puede asignarle un <strong>nombre de usuario</strong> y <strong>contraseña</strong> para que acceda directamente desde la pantalla de login sin necesidad de cuenta Manus. Puede cambiar la contraseña en cualquier momento con el botón <strong>Contraseña</strong>.
+            When creating a user, you can assign a <strong>username</strong> and <strong>password</strong> so they can access the app directly from the login screen without needing a Manus account. You can change the password at any time using the <strong>Password</strong> button.
           </p>
         </div>
 
@@ -548,7 +548,7 @@ export default function Usuarios() {
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <UserCheck className="h-4 w-4 text-primary" />
-                Encuestadores ({encuestadores.length})
+                Interviewers ({encuestadores.length})
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
@@ -565,7 +565,7 @@ export default function Usuarios() {
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <User className="h-4 w-4 text-primary" />
-                Revisores ({revisores.length})
+                Reviewers ({revisores.length})
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
@@ -582,7 +582,7 @@ export default function Usuarios() {
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <Shield className="h-4 w-4 text-primary" />
-                Administradores ({admins.length})
+                Administrators ({admins.length})
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
@@ -596,7 +596,7 @@ export default function Usuarios() {
         {!isLoading && users.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
             <User className="h-10 w-10 mx-auto mb-2 opacity-30" />
-            <p className="text-sm">No hay usuarios creados. Cree el primer encuestador.</p>
+            <p className="text-sm">There are no users yet. Create the first interviewer.</p>
           </div>
         )}
 

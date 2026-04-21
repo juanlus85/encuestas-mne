@@ -84,20 +84,20 @@ export default function ConteoPeatonal() {
         setSessionStartedAt(new Date());
         setSessionTotal(0);
         setElapsed(0);
-        toast.success("Conteo iniciado");
+        toast.success("Counting started");
       }
     },
-    onError: (err) => toast.error("Error al iniciar conteo: " + err.message),
+    onError: (err) => toast.error("Error starting count: " + err.message),
   });
 
   const finishSession = trpc.countingSessions.finish.useMutation({
     onSuccess: () => {
-      toast.success(`Conteo finalizado · ${sessionTotal} personas en total`);
+      toast.success(`Counting finished · ${sessionTotal} people in total`);
       setSessionId(null);
       setSessionStartedAt(null);
       setElapsed(0);
     },
-    onError: (err) => toast.error("Error al finalizar conteo: " + err.message),
+    onError: (err) => toast.error("Error finishing count: " + err.message),
   });
 
   const addPass = trpc.passes.add.useMutation({
@@ -106,24 +106,24 @@ export default function ConteoPeatonal() {
         const newPass = {
           count: selectedCount,
           direction: selectedFlow.label,
-          time: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+          time: new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
         };
         setRecentPasses((prev) => [newPass, ...prev.slice(0, 9)]);
         setTotalToday((prev) => prev + selectedCount);
         setSessionTotal((prev) => prev + selectedCount);
-        toast.success(`+${selectedCount} persona${selectedCount !== 1 ? "s" : ""} · ${selectedFlow.label}`, { duration: 1500 });
+        toast.success(`+${selectedCount} person${selectedCount !== 1 ? "s" : ""} · ${selectedFlow.label}`, { duration: 1500 });
         setSelectedCount(null);
         setSelectedFlow(null);
       }
     },
-    onError: (err) => toast.error("Error al guardar: " + err.message),
+    onError: (err) => toast.error("Error saving: " + err.message),
   });
 
   // ─── Handlers ───────────────────────────────────────────────────────────────
 
   const handleAddPass = () => {
     if (!selectedCount || !selectedFlow || !selectedPoint) {
-      toast.error("Selecciona el número de personas y el flujo");
+      toast.error("Select the number of people and the flow");
       return;
     }
     addPass.mutate({
@@ -201,14 +201,14 @@ export default function ConteoPeatonal() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-lg font-semibold text-gray-900">Conteo Peatonal</h1>
+            <h1 className="text-lg font-semibold text-gray-900">Pedestrian Counting</h1>
             <p className="text-sm text-gray-500">{user?.name}</p>
           </div>
         </div>
         <div className="flex-1 p-4 max-w-lg mx-auto w-full">
           <div className="mb-6 mt-4">
-            <h2 className="text-xl font-bold text-gray-800 mb-1">Selecciona el punto de conteo</h2>
-            <p className="text-sm text-gray-500">Elige el punto principal donde vas a realizar el conteo</p>
+            <h2 className="text-xl font-bold text-gray-800 mb-1">Select the counting point</h2>
+            <p className="text-sm text-gray-500">Choose the main point where you will perform the count</p>
           </div>
           <div className="space-y-3">
             {SURVEY_POINTS.map((point) => (
@@ -248,7 +248,7 @@ export default function ConteoPeatonal() {
             <h1 className="text-lg font-semibold text-gray-900">
               {selectedPoint.code} {selectedPoint.name}
             </h1>
-            <p className="text-sm text-gray-500">Selecciona el subpunto</p>
+            <p className="text-sm text-gray-500">Select the subpoint</p>
           </div>
         </div>
         <div className="flex-1 p-4 max-w-lg mx-auto w-full">
@@ -427,9 +427,9 @@ export default function ConteoPeatonal() {
               : "bg-gray-200 text-gray-400 cursor-not-allowed"
           }`}
         >
-          {addPass.isPending ? "Guardando..." : canAdd ? (
-            <><CheckCircle2 className="h-6 w-6 mr-2" />Añadir · {selectedCount} persona{selectedCount !== 1 ? "s" : ""} · {selectedFlow?.label}</>
-          ) : "Selecciona personas y flujo"}
+          {addPass.isPending ? "Saving..." : canAdd ? (
+            <><CheckCircle2 className="h-6 w-6 mr-2" />Add · {selectedCount} person{selectedCount !== 1 ? "s" : ""} · {selectedFlow?.label}</>
+          ) : "Select people and flow"}
         </Button>
 
         {/* ─── Últimos registros ─── */}
@@ -454,9 +454,9 @@ export default function ConteoPeatonal() {
       {/* Dialog grupo grande */}
       <Dialog open={groupDialogOpen} onOpenChange={setGroupDialogOpen}>
         <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>Grupo grande</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Large group</DialogTitle></DialogHeader>
           <div className="py-2">
-            <p className="text-sm text-gray-600 mb-3">Introduce el número exacto de personas del grupo:</p>
+            <p className="text-sm text-gray-600 mb-3">Enter the exact number of people in the group:</p>
             <Input
               ref={groupInputRef}
               type="number"
@@ -473,8 +473,8 @@ export default function ConteoPeatonal() {
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setGroupDialogOpen(false); setGroupCount(""); }}>Cancelar</Button>
-            <Button onClick={handleGroupConfirm} disabled={!groupCount || parseInt(groupCount) < 1}>Confirmar</Button>
+            <Button variant="outline" onClick={() => { setGroupDialogOpen(false); setGroupCount(""); }}>Cancel</Button>
+            <Button onClick={handleGroupConfirm} disabled={!groupCount || parseInt(groupCount) < 1}>Confirm</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -2,10 +2,10 @@ import { Calendar, Clock, Home as HomeIcon, PieChart } from "lucide-react";
 import { useLocation } from "wouter";
 
 const navItems = [
-  { label: "Inicio", icon: HomeIcon, path: "/" },
-  { label: "Cuotas", icon: PieChart, path: "/cuotas" },
-  { label: "Horarios", icon: Calendar, path: "/mis-horarios" },
-  { label: "Cierre", icon: Clock, path: "/cierre-turno" },
+  { label: "Home", icon: HomeIcon, path: "/" },
+  { label: "Quotas", icon: PieChart, path: "/cuotas" },
+  { label: "Schedules", icon: Calendar, path: "/mis-horarios" },
+  { label: "Shift Close", icon: Clock, path: "/cierre-turno" },
 ];
 
 interface EncuestadorLayoutProps {
@@ -18,14 +18,14 @@ export default function EncuestadorLayout({ children, title }: EncuestadorLayout
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Header compacto */}
+      {/* Compact header */}
       {title && (
         <div className="bg-primary text-primary-foreground px-4 py-4 md:px-8">
           <div className="max-w-2xl mx-auto flex items-center gap-3">
             <button
               onClick={() => setLocation("/")}
               className="text-primary-foreground/70 hover:text-primary-foreground transition-colors"
-              aria-label="Volver al inicio"
+              aria-label="Back to home"
             >
               <HomeIcon className="h-5 w-5" />
             </button>
@@ -34,7 +34,7 @@ export default function EncuestadorLayout({ children, title }: EncuestadorLayout
         </div>
       )}
 
-      {/* Contenido */}
+      {/* Content */}
       <div className="max-w-2xl mx-auto px-4 py-6">
         {children}
       </div>

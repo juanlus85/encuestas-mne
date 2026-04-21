@@ -35,16 +35,16 @@ export default function Login() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error ?? "Error al iniciar sesión");
+        setError(data.error ?? "Sign-in failed");
         return;
       }
 
       // Invalidate auth cache so useAuth() picks up the new session
       await utils.auth.me.invalidate();
-      toast.success(`Bienvenido, ${data.name ?? username}`);
+      toast.success(`Welcome, ${data.name ?? username}`);
       setLocation("/");
     } catch {
-      setError("Error de conexión. Inténtelo de nuevo.");
+      setError("Connection error. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -58,25 +58,25 @@ export default function Login() {
         <div className="flex flex-col items-center gap-3 text-center">
           <img
             src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031419078/nHD7C8PRaURA7Ubm8Aop3k/logos-institucionales_324d47d4.jpg"
-            alt="Logos institucionales"
+            alt="Institutional logos"
             className="h-16 w-auto object-contain"
           />
           <div>
-            <h1 className="text-2xl font-bold text-foreground tracking-tight">Encuestas Sevilla FeelingLAND</h1>
-            <p className="text-sm text-muted-foreground mt-1">Sistema de Trabajo de Campo · Sevilla</p>
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">Sevilla FeelingLAND Surveys</h1>
+            <p className="text-sm text-muted-foreground mt-1">Fieldwork System · Seville</p>
           </div>
         </div>
 
         {/* Local login form */}
         <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-5">
           <div>
-            <h2 className="text-base font-semibold text-foreground">Iniciar sesión</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">Introduzca sus credenciales de campo</p>
+            <h2 className="text-base font-semibold text-foreground">Sign in</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">Enter your fieldwork credentials</p>
           </div>
 
           <form onSubmit={handleLocalLogin} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="username" className="text-sm font-medium">Usuario</Label>
+              <Label htmlFor="username" className="text-sm font-medium">Username</Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -95,7 +95,7 @@ export default function Login() {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-sm font-medium">Contraseña</Label>
+              <Label htmlFor="password" className="text-sm font-medium">Password</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -133,10 +133,10 @@ export default function Login() {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Accediendo...
+                  Signing in...
                 </>
               ) : (
-                "Entrar"
+                "Sign in"
               )}
             </Button>
           </form>
@@ -146,11 +146,11 @@ export default function Login() {
 
         <div className="flex flex-col items-center gap-3">
           <p className="text-center text-xs text-muted-foreground">
-            Estudio IATUR · <a href="https://organizus.es" target="_blank" rel="noopener noreferrer" className="hover:underline">Organizus.es</a>
+            IATUR Study · <a href="https://organizus.es" target="_blank" rel="noopener noreferrer" className="hover:underline">Organizus.es</a>
           </p>
           <img
             src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031419078/nHD7C8PRaURA7Ubm8Aop3k/logos-institucionales_1f505402.jpg"
-            alt="Logos institucionales: Ayuntamiento de Sevilla y Sevilla FeelingLand"
+            alt="Institutional logos: Seville City Council and Sevilla FeelingLand"
             className="h-16 object-contain opacity-80"
           />
         </div>

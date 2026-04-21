@@ -1,0 +1,508 @@
+client/src/App.tsx:6: ./components/ErrorBoundary
+client/src/App.tsx:11: ./pages/Resultados
+client/src/App.tsx:13: ./pages/Mapa
+client/src/App.tsx:14: ./pages/Exportar
+client/src/App.tsx:15: ./pages/Usuarios
+client/src/App.tsx:18: ./pages/ConteoResultados
+client/src/App.tsx:20: ./pages/MapaConteos
+client/src/App.tsx:21: ./pages/Cuotas
+client/src/App.tsx:22: ./pages/CierreTurno
+client/src/App.tsx:23: ./pages/MisHorarios
+client/src/App.tsx:44: /encuesta
+client/src/App.tsx:45: /encuesta/:id
+client/src/App.tsx:52: /conteo
+client/src/App.tsx:53: /conteo-resultados
+client/src/App.tsx:54: /conteo-sentidos
+client/src/App.tsx:55: /mapa-conteos
+client/src/components/DashboardLayout.tsx:45: Inicio
+client/src/components/DashboardLayout.tsx:46: Estadísticas
+client/src/components/DashboardLayout.tsx:47: Mapa de Campo
+client/src/components/DashboardLayout.tsx:48: Mapa Conteos
+client/src/components/DashboardLayout.tsx:48: /mapa-conteos
+client/src/components/DashboardLayout.tsx:49: Resultados
+client/src/components/DashboardLayout.tsx:50: /conteo-resultados
+client/src/components/DashboardLayout.tsx:51: /conteo-sentidos
+client/src/components/DashboardLayout.tsx:52: Cuotas
+client/src/components/DashboardLayout.tsx:53: Exportar
+client/src/components/DashboardLayout.tsx:54: Usuarios
+client/src/components/DashboardLayout.tsx:55: Configuración
+client/src/components/DashboardLayout.tsx:59: Inicio
+client/src/components/DashboardLayout.tsx:60: Estadísticas
+client/src/components/DashboardLayout.tsx:61: Mapa de Campo
+client/src/components/DashboardLayout.tsx:62: Mapa Conteos
+client/src/components/DashboardLayout.tsx:62: /mapa-conteos
+client/src/components/DashboardLayout.tsx:63: Resultados
+client/src/components/DashboardLayout.tsx:64: /conteo-resultados
+client/src/components/DashboardLayout.tsx:65: Cuotas
+client/src/components/DashboardLayout.tsx:66: Exportar
+client/src/components/DashboardLayout.tsx:70: Inicio
+client/src/components/DashboardLayout.tsx:71: Nueva Encuesta
+client/src/components/DashboardLayout.tsx:71: /encuesta
+client/src/components/DashboardLayout.tsx:72: /conteo
+client/src/components/DashboardLayout.tsx:73: Cuotas
+client/src/components/DashboardLayout.tsx:74: Mis Horarios
+client/src/components/DashboardLayout.tsx:75: Cierre de Turno
+client/src/components/DashboardLayout.tsx:112: encuestador
+client/src/components/DashboardLayout.tsx:138: encuestador
+client/src/components/DashboardLayout.tsx:144: encuestador
+client/src/components/DashboardLayout.tsx:144: Encuestador
+client/src/components/DashboardLayout.tsx:145: Usuario
+client/src/components/DashboardLayout.tsx:242: Usuario
+client/src/components/DashboardLayout.tsx:279: Encuestas Sevilla
+client/src/components/EncuestadorLayout.tsx:5: Inicio
+client/src/components/EncuestadorLayout.tsx:6: Cuotas
+client/src/components/EncuestadorLayout.tsx:7: Horarios
+client/src/components/EncuestadorLayout.tsx:28: Volver al inicio
+client/src/components/OfflineIndicator.tsx:34: Error al sincronizar. Inténtalo de nuevo.
+client/src/components/OfflineIndicator.tsx:63: ${pendingSurveys} encuesta${pendingSurveys !== 1 ? "s" : ""}
+client/src/components/OfflineIndicator.tsx:65: ${pendingPasses} conteo${pendingPasses !== 1 ? "s" : ""}
+client/src/hooks/useOfflineSync.ts:117: Sincronización completada: ${syncedSurveys} encuesta${syncedSurveys !== 1 ? "s" : ""} y ${syncedPasses} conteo${syncedPasses !== 1 ? "s" : ""} enviados.
+client/src/main.tsx:28: [API Query Error]
+client/src/main.tsx:36: [API Mutation Error]
+client/src/pages/CierreTurno.tsx:17: @/components/EncuestadorLayout
+client/src/pages/CierreTurno.tsx:132: Turno cerrado correctamente. ¡Buen trabajo!
+client/src/pages/CierreTurno.tsx:137: Error al cerrar turno: ${e.message}
+client/src/pages/CierreTurno.tsx:156: visitantes
+client/src/pages/CierreTurno.tsx:156: residentes
+client/src/pages/CierreTurno.tsx:156: conteo
+client/src/pages/CierreTurno.tsx:260: Describe cualquier incidencia, problema técnico, situación especial, o comentario sobre el turno...
+client/src/pages/CierreTurno.tsx:274: Muy difícil
+client/src/pages/CierreTurno.tsx:274: Difícil
+client/src/pages/Configuracion.tsx:27: Opción única
+client/src/pages/Configuracion.tsx:28: Opción múltiple
+client/src/pages/Configuracion.tsx:29: Sí / No
+client/src/pages/Configuracion.tsx:32: Número
+client/src/pages/Configuracion.tsx:60: Pregunta añadida
+client/src/pages/Configuracion.tsx:62: Error al crear pregunta
+client/src/pages/Configuracion.tsx:102: ¿Cuántos años lleva viviendo en el barrio?
+client/src/pages/Configuracion.tsx:143: Opción ${i + 1} (ES)
+client/src/pages/Configuracion.tsx:201: Guardar pregunta
+client/src/pages/Configuracion.tsx:230: residentes
+client/src/pages/Configuracion.tsx:232: residentes
+client/src/pages/Configuracion.tsx:232: Residentes
+client/src/pages/Configuracion.tsx:232: Visitantes
+client/src/pages/Configuracion.tsx:304: visitantes
+client/src/pages/Configuracion.tsx:304: residentes
+client/src/pages/Configuracion.tsx:304: visitantes
+client/src/pages/Configuracion.tsx:308: Error al crear plantilla
+client/src/pages/Configuracion.tsx:323: Encuesta a Residentes - Barrio de Santa Cruz
+client/src/pages/Configuracion.tsx:335: residentes
+client/src/pages/Configuracion.tsx:336: visitantes
+client/src/pages/Configuracion.tsx:343: Descripción breve de la encuesta...
+client/src/pages/ConteoPeatonal.tsx:28: conteo
+client/src/pages/ConteoPeatonal.tsx:59: conteo
+client/src/pages/ConteoPeatonal.tsx:90: Error al iniciar conteo: 
+client/src/pages/ConteoPeatonal.tsx:100: Error al finalizar conteo: 
+client/src/pages/ConteoPeatonal.tsx:119: Error al guardar: 
+client/src/pages/ConteoPeatonal.tsx:126: Selecciona el número de personas y el flujo
+client/src/pages/ConteoPeatonal.tsx:265: conteo
+client/src/pages/ConteoResultados.tsx:16: Por día
+client/src/pages/ConteoResultados.tsx:375: #${p.encuestadorId}
+client/src/pages/Cuotas.tsx:8: @/components/EncuestadorLayout
+client/src/pages/Cuotas.tsx:105: visitantes
+client/src/pages/Cuotas.tsx:105: residentes
+client/src/pages/Cuotas.tsx:108: visitantes
+client/src/pages/Cuotas.tsx:109: residentes
+client/src/pages/Cuotas.tsx:166: Total visitantes
+client/src/pages/Cuotas.tsx:169: Por género
+client/src/pages/Cuotas.tsx:180: Por punto de encuesta (90 por punto)
+client/src/pages/Cuotas.tsx:208: Total residentes
+client/src/pages/Cuotas.tsx:211: Por género
+client/src/pages/Cuotas.tsx:222: Por vínculo laboral con turismo
+client/src/pages/Cuotas.tsx:241: encuestador
+client/src/pages/Cuotas.tsx:257: Cuotas
+client/src/pages/Cuotas.tsx:269: Cuotas
+client/src/pages/Estadisticas.tsx:155: Mañana
+client/src/pages/Estadisticas.tsx:156: Mediodía
+client/src/pages/Estadisticas.tsx:156: Mañana
+client/src/pages/Estadisticas.tsx:156: Mañana
+client/src/pages/Estadisticas.tsx:191: Residentes
+client/src/pages/Estadisticas.tsx:192: Visitantes
+client/src/pages/Estadisticas.tsx:206: Total rechazos
+client/src/pages/Estadisticas.tsx:207: Residentes
+client/src/pages/Estadisticas.tsx:208: Visitantes
+client/src/pages/Estadisticas.tsx:209: Tasa de rechazo
+client/src/pages/Estadisticas.tsx:261: residentes
+client/src/pages/Estadisticas.tsx:261: Residentes
+client/src/pages/Estadisticas.tsx:262: visitantes
+client/src/pages/Estadisticas.tsx:262: Visitantes
+client/src/pages/Estadisticas.tsx:305: Encuestas
+client/src/pages/Estadisticas.tsx:306: Encuestas
+client/src/pages/Estadisticas.tsx:341: residentes
+client/src/pages/Estadisticas.tsx:341: Residentes
+client/src/pages/Estadisticas.tsx:342: visitantes
+client/src/pages/Estadisticas.tsx:342: Visitantes
+client/src/pages/Estadisticas.tsx:424: Encuestas
+client/src/pages/Estadisticas.tsx:445: Encuestas
+client/src/pages/Estadisticas.tsx:486: Encuestas
+client/src/pages/Estadisticas.tsx:506: Encuestas
+client/src/pages/Estadisticas.tsx:527: Encuestas
+client/src/pages/Estadisticas.tsx:545: Encuestas
+client/src/pages/Estadisticas.tsx:567: Encuestas
+client/src/pages/Estadisticas.tsx:615: Encuestas
+client/src/pages/Estadisticas.tsx:648: Centro histórico
+client/src/pages/Estadisticas.tsx:691: Encuestas
+client/src/pages/Estadisticas.tsx:991: visitantes
+client/src/pages/Estadisticas.tsx:991: Visitantes
+client/src/pages/Estadisticas.tsx:992: residentes
+client/src/pages/Estadisticas.tsx:992: Residentes
+client/src/pages/Estadisticas.tsx:993: conteos
+client/src/pages/Estadisticas.tsx:1047: visitantes
+client/src/pages/Estadisticas.tsx:1048: residentes
+client/src/pages/Estadisticas.tsx:1049: conteos
+client/src/pages/Exportar.tsx:28: ID encuesta
+client/src/pages/Exportar.tsx:29: Tipo (visitantes/residentes)
+client/src/pages/Exportar.tsx:30: Encuestador
+client/src/pages/Exportar.tsx:30: Nombre encuestador
+client/src/pages/Exportar.tsx:31: CodEncuestador
+client/src/pages/Exportar.tsx:31: Código encuestador
+client/src/pages/Exportar.tsx:32: PuntoEncuesta
+client/src/pages/Exportar.tsx:32: Punto de encuesta
+client/src/pages/Exportar.tsx:33: Franja horaria
+client/src/pages/Exportar.tsx:35: MinutoInicio
+client/src/pages/Exportar.tsx:37: Inicio
+client/src/pages/Exportar.tsx:39: Duración (minutos)
+client/src/pages/Exportar.tsx:40: Idioma encuesta
+client/src/pages/Exportar.tsx:42: Salida anticipada (residentes)
+client/src/pages/Exportar.tsx:45: Precisión GPS (m)
+client/src/pages/Exportar.tsx:49: V_P01 · P1 País de residencia
+client/src/pages/Exportar.tsx:50: V_P02 · P1b Provincia/Ciudad (si España)
+client/src/pages/Exportar.tsx:51: V_P03 · P2 ¿Primera vez en Sevilla?
+client/src/pages/Exportar.tsx:52: V_P04 · P3 Días en la ciudad
+client/src/pages/Exportar.tsx:54: V_P06 · P4b Género
+client/src/pages/Exportar.tsx:56: V_P08 · P6 ¿Con quién viaja?
+client/src/pages/Exportar.tsx:58: V_P10 · P7 Cómo llegó al punto
+client/src/pages/Exportar.tsx:59: V_P11 · P8 ¿Qué le llevó a pasar por este punto?
+client/src/pages/Exportar.tsx:60: V_P12 · P9 ¿Modificó recorrido por la gente?
+client/src/pages/Exportar.tsx:62: V_P14 · P12 ¿La gente afecta su experiencia? (1-5)
+client/src/pages/Exportar.tsx:66: V_P18 · P16 ¿Qué le gusta más?
+client/src/pages/Exportar.tsx:67: V_P19 · P17 ¿Qué le molesta?
+client/src/pages/Exportar.tsx:68: V_P20 · P18 ¿Recomendaría este punto? (1-5)
+client/src/pages/Exportar.tsx:72: R_P01 · P1 ¿Reside habitualmente en este barrio?
+client/src/pages/Exportar.tsx:73: R_P02 · P1.1 ¿En qué calle?
+client/src/pages/Exportar.tsx:74: R_P03 · P2 Años viviendo en el barrio
+client/src/pages/Exportar.tsx:75: R_P04 · P3 ¿Percibe beneficios económicos del turismo?
+client/src/pages/Exportar.tsx:76: R_P05 · P4 Género
+client/src/pages/Exportar.tsx:78: R_P07 · P6.01 Turismo mejora economía local (1-5)
+client/src/pages/Exportar.tsx:79: R_P08 · P6.02 Turismo genera congestión (1-5)
+client/src/pages/Exportar.tsx:85: R_P14 · P6.08 Turismo pérdida de identidad (1-5)
+client/src/pages/Exportar.tsx:87: R_P16 · P6.10 Turismo trae tráfico y falta de aparcamiento (1-5)
+client/src/pages/Exportar.tsx:90: R_P19 · P6.13 Turismo consume recursos agua/energía (1-5)
+client/src/pages/Exportar.tsx:91: R_P20 · P6.14 Turismo aumenta contaminación/suciedad (1-5)
+client/src/pages/Exportar.tsx:94: R_P23 · P7b Frecuencia: acompañamiento escolar o familiar
+client/src/pages/Exportar.tsx:97: R_P26 · P7e Frecuencia: uso de transporte público
+client/src/pages/Exportar.tsx:98: R_P27 · P7f Frecuencia: circulación a pie o en bicicleta
+client/src/pages/Exportar.tsx:99: R_P28 · P8 ¿Ha modificado comportamiento por turistas?
+client/src/pages/Exportar.tsx:100: R_P29 · P9 Situaciones experimentadas último mes (múltiple)
+client/src/pages/Exportar.tsx:101: R_P30 · P10 Presencia turística cambia uso espacio público (1-5)
+client/src/pages/Exportar.tsx:102: R_P31 · P11 ¿Cómo le afecta personalmente el turismo? (1-5)
+client/src/pages/Exportar.tsx:103: R_P32 · P12 ¿Cómo afecta el turismo a su comunidad? (1-5)
+client/src/pages/Exportar.tsx:104: R_P33 · P13 Medidas prioritarias (múltiple, hasta 3)
+client/src/pages/Exportar.tsx:117: Punto de conteo (nombre)
+client/src/pages/Exportar.tsx:118: Punto de conteo (código)
+client/src/pages/Exportar.tsx:120: Código origen del flujo
+client/src/pages/Exportar.tsx:121: Código destino del flujo
+client/src/pages/Exportar.tsx:122: Encuestador
+client/src/pages/Exportar.tsx:122: Nombre encuestador
+client/src/pages/Exportar.tsx:123: Código encuestador
+client/src/pages/Exportar.tsx:124: Número de personas
+client/src/pages/Exportar.tsx:127: Precisión GPS (m)
+client/src/pages/Exportar.tsx:276: Encuestador
+client/src/pages/Exportar.tsx:276: Encuestador
+client/src/pages/Exportar.tsx:276: CodEncuestador
+client/src/pages/Exportar.tsx:276: CodEncuestador
+client/src/pages/Exportar.tsx:277: PuntoEncuesta
+client/src/pages/Exportar.tsx:277: PuntoEncuesta
+client/src/pages/Exportar.tsx:278: MinutoInicio
+client/src/pages/Exportar.tsx:278: MinutoInicio
+client/src/pages/Exportar.tsx:278: Inicio
+client/src/pages/Exportar.tsx:278: Inicio
+client/src/pages/Exportar.tsx:289: CSV vacío
+client/src/pages/Exportar.tsx:305: Encuestas_Sevilla_${dateStr}.csv
+client/src/pages/Exportar.tsx:306: Exportadas ${result.data.count} encuestas (${keepIndices.length} columnas)
+client/src/pages/Exportar.tsx:308: Error al exportar. Inténtelo de nuevo.
+client/src/pages/Exportar.tsx:403: Metadatos de la encuesta
+client/src/pages/Exportar.tsx:409: Preguntas Visitantes (V_P01 – V_P20)
+client/src/pages/Exportar.tsx:415: Preguntas Residentes (R_P01 – R_P36)
+client/src/pages/Exportar.tsx:477: CSV vacío
+client/src/pages/Exportar.tsx:493: Error al exportar. Inténtelo de nuevo.
+client/src/pages/Exportar.tsx:566: Campos de conteo peatonal
+client/src/pages/Exportar.tsx:609: Error al guardar
+client/src/pages/Exportar.tsx:613: Seleccione un encuestador
+client/src/pages/Exportar.tsx:773: No hay sesiones de conteo en el rango seleccionado
+client/src/pages/Exportar.tsx:776: Exportadas ${result.data.count} sesiones de conteo
+client/src/pages/Exportar.tsx:777: Error al exportar. Inténtelo de nuevo.
+client/src/pages/Exportar.tsx:849: CierresTurno_${dateStr}.csv
+client/src/pages/Exportar.tsx:851: Error al exportar. Inténtelo de nuevo.
+client/src/pages/Exportar.tsx:908: conteos
+client/src/pages/Exportar.tsx:926: conteos
+client/src/pages/Exportar.tsx:928: conteos
+client/src/pages/Exportar.tsx:953: conteos
+client/src/pages/Home.tsx:48: Rechazo ${vars.surveyType === "residentes" ? "residente" : "visitante"} registrado
+client/src/pages/Home.tsx:50: Error al registrar rechazo: 
+client/src/pages/Home.tsx:53: residentes
+client/src/pages/Home.tsx:53: visitantes
+client/src/pages/Home.tsx:71: Buenos días
+client/src/pages/Home.tsx:71: Buenas tardes
+client/src/pages/Home.tsx:71: Buenas noches
+client/src/pages/Home.tsx:75: Inicio
+client/src/pages/Home.tsx:76: Cuotas
+client/src/pages/Home.tsx:77: Horarios
+client/src/pages/Home.tsx:126: /conteo
+client/src/pages/Home.tsx:150: /encuesta/${t.id}
+client/src/pages/Home.tsx:157: residentes
+client/src/pages/Home.tsx:161: residentes
+client/src/pages/Home.tsx:161: Residentes
+client/src/pages/Home.tsx:161: Visitantes
+client/src/pages/Home.tsx:175: residentes
+client/src/pages/Home.tsx:175: visitantes
+client/src/pages/Home.tsx:177: Registrar rechazo ${t.type === "residentes" ? "residente" : "visitante"}
+client/src/pages/Home.tsx:179: residentes
+client/src/pages/Home.tsx:186: residentes
+client/src/pages/Home.tsx:324: ${pctResidentes}%
+client/src/pages/Home.tsx:343: ${pctVisitantes}%
+client/src/pages/Home.tsx:424: encuestador
+client/src/pages/Login.tsx:38: Error al iniciar sesión
+client/src/pages/Login.tsx:47: Error de conexión. Inténtelo de nuevo.
+client/src/pages/Mapa.tsx:117: Encuestador #${loc.encuestadorId}
+client/src/pages/Mapa.tsx:177: Encuestador #${loc.encuestadorId}
+client/src/pages/Mapa.tsx:193: Encuestador
+client/src/pages/Mapa.tsx:194: <p style="margin: 0; font-size: 12px; color: #666;">ID: ${loc.encuestadorIdentifier}</p>
+client/src/pages/Mapa.tsx:197: <p style="margin: 2px 0; font-size: 12px; color: #666;">Precisión: ±${Math.round(Number(loc.gpsAccuracy))} m</p>
+client/src/pages/Mapa.tsx:225: live-${validLive.map((l: any) => l.encuestadorId).join("-")}
+client/src/pages/Mapa.tsx:255: residentes
+client/src/pages/Mapa.tsx:259: #${loc.id} - ${loc.encuestadorName ?? "Encuestador"} (${new Date(loc.startedAt).toLocaleDateString("es-ES")})
+client/src/pages/Mapa.tsx:421: Residentes
+client/src/pages/Mapa.tsx:421: residentes
+client/src/pages/Mapa.tsx:422: Visitantes
+client/src/pages/Mapa.tsx:422: residentes
+client/src/pages/Mapa.tsx:423: Encuestadores
+client/src/pages/MapaConteos.tsx:14: Mesón del Moro
+client/src/pages/MapaConteos.tsx:184: No se pudo cargar el mapa. Comprueba la conexión.
+client/src/pages/MisHorarios.tsx:1: @/components/EncuestadorLayout
+client/src/pages/MisHorarios.tsx:23: Encuesta Visitantes
+client/src/pages/MisHorarios.tsx:24: Encuesta Residentes
+client/src/pages/MisHorarios.tsx:41: Mis Horarios
+client/src/pages/MisHorarios.tsx:60: Mis Horarios
+client/src/pages/Resultados.tsx:105: residentes
+client/src/pages/Resultados.tsx:107: residentes
+client/src/pages/Resultados.tsx:175: Foto encuesta
+client/src/pages/SurveyForm.tsx:238: Número / Number...
+client/src/pages/SurveyForm.tsx:381: Mañana (9:30–12:00)
+client/src/pages/SurveyForm.tsx:382: Mediodía (12:00–14:30)
+client/src/pages/SurveyForm.tsx:452: visitantes
+client/src/pages/SurveyForm.tsx:453: residentes
+client/src/pages/SurveyForm.tsx:570: Error al guardar. Inténtelo de nuevo.
+client/src/pages/SurveyForm.tsx:611: Error al enviar la encuesta. Inténtelo de nuevo.
+client/src/pages/SurveyForm.tsx:724: Ubicación capturada
+client/src/pages/SurveyForm.tsx:725: Obteniendo ubicación...
+client/src/pages/SurveyForm.tsx:726: Ubicación no disponible
+client/src/pages/SurveyForm.tsx:756: Otro
+client/src/pages/SurveyForm.tsx:756: Otro
+client/src/pages/SurveyForm.tsx:818: P1b. ¿Provincia/Ciudad de residencia?
+client/src/pages/SurveyForm.tsx:823: P1b. ¿Cuál es su país de origen?
+client/src/pages/Usuarios.tsx:22: Encuestador
+client/src/pages/Usuarios.tsx:24: Usuario
+client/src/pages/Usuarios.tsx:48: Turno creado
+client/src/pages/Usuarios.tsx:52: Turno eliminado
+client/src/pages/Usuarios.tsx:71: Selecciona encuestador y fecha
+client/src/pages/Usuarios.tsx:135: visitantes
+client/src/pages/Usuarios.tsx:136: residentes
+client/src/pages/Usuarios.tsx:137: conteo
+client/src/pages/Usuarios.tsx:170: ID ${s.encuestadorId}
+client/src/pages/Usuarios.tsx:209: Contraseña actualizada para ${userName}
+client/src/pages/Usuarios.tsx:211: Error al cambiar contraseña
+client/src/pages/Usuarios.tsx:216: Mínimo 6 caracteres
+client/src/pages/Usuarios.tsx:217: Las contraseñas no coinciden
+client/src/pages/Usuarios.tsx:242: Mínimo 6 caracteres
+client/src/pages/Usuarios.tsx:257: Repita la contraseña
+client/src/pages/Usuarios.tsx:263: Guardar
+client/src/pages/Usuarios.tsx:276: Usuario actualizado
+client/src/pages/Usuarios.tsx:277: Error al actualizar
+client/src/pages/Usuarios.tsx:293: encuestador
+client/src/pages/Usuarios.tsx:295: residentes
+client/src/pages/Usuarios.tsx:299: residentes
+client/src/pages/Usuarios.tsx:299: Solo residentes
+client/src/pages/Usuarios.tsx:299: Solo visitantes
+client/src/pages/Usuarios.tsx:310:  · ✓ Contraseña configurada
+client/src/pages/Usuarios.tsx:310:  · ⚠ Sin contraseña
+client/src/pages/Usuarios.tsx:316: Usuario
+client/src/pages/Usuarios.tsx:339: encuestador
+client/src/pages/Usuarios.tsx:339: encuestador
+client/src/pages/Usuarios.tsx:341: residentes
+client/src/pages/Usuarios.tsx:341: visitantes
+client/src/pages/Usuarios.tsx:350: encuestador
+client/src/pages/Usuarios.tsx:352: Usuario creado correctamente
+client/src/pages/Usuarios.tsx:354: Error al crear usuario
+client/src/pages/Usuarios.tsx:361: La contraseña debe tener al menos 6 caracteres
+client/src/pages/Usuarios.tsx:391: Ej: María García López
+client/src/pages/Usuarios.tsx:402: encuestador
+client/src/pages/Usuarios.tsx:408: encuestador
+client/src/pages/Usuarios.tsx:427: residentes
+client/src/pages/Usuarios.tsx:428: visitantes
+client/src/pages/Usuarios.tsx:459: Mínimo 6 caracteres
+client/src/pages/Usuarios.tsx:512: encuestador
+server/_core/localAuth.ts:37: Usuario y contraseña son obligatorios
+server/_core/localAuth.ts:51: Este usuario no tiene contraseña configurada. Use el acceso OAuth.
+server/_core/localAuth.ts:74: Error interno del servidor
+server/_core/notification.ts:111: [Notification] Error calling notification service:
+server/app.test.ts:5: encuestador
+server/app.test.ts:45: encuestador
+server/app.test.ts:56: encuestador cannot access users.list
+server/app.test.ts:57: encuestador
+server/counting.test.ts:24: Catedral → Alcázar
+server/counting.test.ts:39: Catedral → Alcázar
+server/counting.test.ts:50: Catedral → Alcázar (actualizado)
+server/counting.test.ts:53: Catedral → Alcázar (actualizado)
+server/counting.test.ts:61: Test Encuestador
+server/counting.test.ts:64: Catedral → Alcázar (actualizado)
+server/counting.test.ts:110: Test Encuestador
+server/counting.test.ts:112: visitantes
+server/counting.test.ts:125: visitantes
+server/counting.test.ts:129: visitantes
+server/counting.test.ts:133: visitantes
+server/counting.test.ts:135: visitantes
+server/counting.test.ts:142: visitantes
+server/db.ts:100: encuestador
+server/db.ts:366: SUM(CASE WHEN ${surveyTemplates.type} = 'residentes' THEN 1 ELSE 0 END)
+server/db.ts:367: SUM(CASE WHEN ${surveyTemplates.type} = 'visitantes' THEN 1 ELSE 0 END)
+server/db.ts:386: SUM(CASE WHEN ${surveyTemplates.type} = 'residentes' THEN 1 ELSE 0 END)
+server/db.ts:387: SUM(CASE WHEN ${surveyTemplates.type} = 'visitantes' THEN 1 ELSE 0 END)
+server/db.ts:410: SUM(CASE WHEN ${surveyTemplates.type} = 'residentes' THEN 1 ELSE 0 END)
+server/db.ts:411: SUM(CASE WHEN ${surveyTemplates.type} = 'visitantes' THEN 1 ELSE 0 END)
+server/db.ts:656: residentes
+server/db.ts:656: visitantes
+server/db.ts:680: residentes
+server/db.ts:680: visitantes
+server/db.ts:694: ID ${r.encuestadorId}
+server/routers.ts:128: encuestador
+server/routers.ts:128: Solo encuestadores
+server/routers.ts:156: encuestador
+server/routers.ts:158: residentes
+server/routers.ts:158: visitantes
+server/routers.ts:182: encuestador
+server/routers.ts:184: residentes
+server/routers.ts:184: visitantes
+server/routers.ts:200: La contraseña debe tener al menos 6 caracteres
+server/routers.ts:217: encuestador
+server/routers.ts:236: residentes
+server/routers.ts:236: visitantes
+server/routers.ts:251: residentes
+server/routers.ts:251: visitantes
+server/routers.ts:337: visitantes
+server/routers.ts:337: visitantes
+server/routers.ts:337: residentes
+server/routers.ts:338: visitantes
+server/routers.ts:353: visitantes
+server/routers.ts:358: visitantes
+server/routers.ts:380: residentes
+server/routers.ts:389: [responses.submit] Error construyendo columnas planas:
+server/routers.ts:430: visitantes
+server/routers.ts:430: visitantes
+server/routers.ts:430: residentes
+server/routers.ts:462: visitantes
+server/routers.ts:485: [survey_answers] Error al insertar respuestas normalizadas:
+server/routers.ts:490: visitantes
+server/routers.ts:490: visitantes
+server/routers.ts:490: residentes
+server/routers.ts:495: visitantes
+server/routers.ts:528: visitantes
+server/routers.ts:536: residentes
+server/routers.ts:546: [survey_responses_flat] Error al insertar fila plana:
+server/routers.ts:594: encuestas/photos/${input.responseId}/${suffix}.${ext}
+server/routers.ts:702: visitantes
+server/routers.ts:784: Otro
+server/routers.ts:788: Otro
+server/routers.ts:791: Bus/Tranvía
+server/routers.ts:792: Vehículo propio
+server/routers.ts:792: Otro
+server/routers.ts:796: Recomendación
+server/routers.ts:796: Otro
+server/routers.ts:799: Acorté visita
+server/routers.ts:799: Cambié horario
+server/routers.ts:800: Evité el lugar
+server/routers.ts:800: Otro
+server/routers.ts:812: Otro
+server/routers.ts:834: residentes
+server/routers.ts:856: residentes
+server/routers.ts:875: P1.¿
+server/routers.ts:895: Economía local
+server/routers.ts:895: Congestión
+server/routers.ts:897: Pérdida identidad
+server/routers.ts:897: Conservación monumentos
+server/routers.ts:898: Tráfico
+server/routers.ts:899: Contaminación
+server/routers.ts:904: Transporte público
+server/routers.ts:922: Centro histórico
+server/routers.ts:972: Otro
+server/routers.ts:977: Pérdida identidad
+server/routers.ts:984: Sí, yo
+server/routers.ts:984: Sí, familiar
+server/routers.ts:1019: Otro
+server/routers.ts:1178: encuestas/pedestrian/${input.sessionId}/${suffix}.${ext}
+server/routers.ts:1382: Encuestador
+server/routers.ts:1444: Encuestador
+server/routers.ts:1444: CodEncuestador
+server/routers.ts:1445: PuntoEncuesta
+server/routers.ts:1445: MinutoInicio
+server/routers.ts:1446: Inicio
+server/routers.ts:1510: MinutoInicio
+server/routers.ts:1511: Encuestador
+server/routers.ts:1511: CodEncuestador
+server/routers.ts:1511: Inicio
+server/routers.ts:1550: residentes
+server/routers.ts:1550: visitantes
+server/routers.ts:1575: residentes
+server/routers.ts:1575: visitantes
+server/routers.ts:1584: residentes
+server/routers.ts:1584: visitantes
+server/routers.ts:1592: residentes
+server/routers.ts:1592: visitantes
+server/routers.ts:1599: Encuestador
+server/routers.ts:1599: Precisión GPS (m)
+server/routers.ts:1645: Encuestador
+server/routers.ts:1645: Inicio
+server/routers.ts:1645: Duración (min)
+server/routers.ts:1645: Precisión GPS (m)
+server/routers.ts:1695: Encuestador
+server/routers.ts:1695: Total Encuestas
+server/routers.ts:1695: Valoración
+server/routers.ts:1727: visitantes
+server/routers.ts:1727: residentes
+server/routers.ts:1727: conteo
+server/routers.ts:1739: visitantes
+server/routers.ts:1739: residentes
+server/routers.ts:1739: conteo
+server/routers.ts:1762: visitantes
+server/routers.ts:1762: residentes
+server/routers.ts:1762: conteo
+server/routers.ts:1816: visitantes
+server/routers.ts:1848: residentes
+shared/_core/errors.ts:11: HttpError
+shared/calles.ts:26: López de Rueda
+shared/calles.ts:28: Mesón del Moro
+shared/calles.ts:41: Plaza Dña Elvira
+shared/calles.ts:44: Plazuela Marqués de Vega Inclán
+shared/calles.ts:58: Avda Constitución
+shared/calles.ts:65: Hernando Colón
+shared/calles.ts:66: Joaquin Hazañas
+shared/calles.ts:75: Santo Tomás
+shared/quotas.ts:21: Nacionales (resto España)
+shared/quotas.ts:50: 18–44 años
+shared/quotas.ts:51: 45–65 años
+shared/quotas.ts:52: +65 años
+shared/quotas.ts:57: Con vínculo laboral turístico (30%)
+shared/quotas.ts:58: Sin vínculo laboral turístico (70%)
+shared/quotas.ts:63: Residentes del centro histórico
+shared/surveyPoints.ts:54: Ángeles
+shared/surveyPoints.ts:54: 02.03 Ángeles
+shared/surveyPoints.ts:55: Mesón del Moro
+shared/surveyPoints.ts:55: 02.04 Mesón del Moro
+shared/surveyPoints.ts:65: Judería
+shared/surveyPoints.ts:65: 03.02 Judería
+shared/surveyPoints.ts:74: Callejón Susona
+shared/surveyPoints.ts:74: 04.02 Callejón Susona
+shared/surveyPoints.ts:84: López de Rueda
+shared/surveyPoints.ts:84: 05.01 López de Rueda
+shared/surveyPoints.ts:86: Antonio el Bailarín
+shared/surveyPoints.ts:86: 05.03 Antonio el Bailarín

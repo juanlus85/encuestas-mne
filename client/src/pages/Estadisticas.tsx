@@ -94,7 +94,7 @@ function SectionTitle({ icon: Icon, title, color = "text-primary" }: { icon: any
 }
 
 function EmptyState() {
-  return <div className="flex items-center justify-center h-40 text-muted-foreground text-sm">Sin datos suficientes</div>;
+  return <div className="flex items-center justify-center h-40 text-muted-foreground text-sm">Not enough data</div>;
 }
 
 // Etiqueta de porcentaje dentro del segmento (solo si > 8%)
@@ -146,14 +146,14 @@ function TabGeneral({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
   }));
 
   const dayData = (byDay as any[]).map((d) => ({
-    date: new Date(d.date).toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit" }),
+    date: new Date(d.date).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit" }),
     residentes: Number(d.residentes ?? 0),
     visitantes: Number(d.visitantes ?? 0),
   }));
 
   const timeSlotLabels: Record<string, string> = {
-    manana: "Mañana", tarde: "Tarde", noche: "Noche", fin_semana: "Fin semana",
-    mediodia: "Mediodía", mañana: "Mañana", Mañana: "Mañana", Tarde: "Tarde", Noche: "Noche",
+    manana: "Morning", tarde: "Afternoon", noche: "Evening", fin_semana: "Weekend",
+    mediodia: "Midday", mañana: "Morning", Mañana: "Morning", Tarde: "Afternoon", Noche: "Evening",
   };
   const timeSlotOrder = ["manana", "mediodia", "tarde", "noche", "fin_semana"];
   const timeSlotData = [...(byTimeSlot as any[])]
@@ -182,14 +182,14 @@ function TabGeneral({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-primary" /> Progreso del estudio
+            <TrendingUp className="h-4 w-4 text-primary" /> Study progress
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap justify-around gap-6 py-4">
-            <ProgressRing value={total} max={TARGET_T} color={C.primary} label="Total" sublabel="objetivo 750" />
-            <ProgressRing value={residentes} max={TARGET_R} color={C.secondary} label="Residentes" sublabel="objetivo 300" />
-            <ProgressRing value={visitantes} max={TARGET_V} color={C.warning} label="Visitantes" sublabel="objetivo 450" />
+            <ProgressRing value={total} max={TARGET_T} color={C.primary} label="Total" sublabel="target 750" />
+            <ProgressRing value={residentes} max={TARGET_R} color={C.secondary} label="Residents" sublabel="target 300" />
+            <ProgressRing value={visitantes} max={TARGET_V} color={C.warning} label="Visitors" sublabel="target 450" />
           </div>
         </CardContent>
       </Card>
@@ -198,19 +198,19 @@ function TabGeneral({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
       <Card className="border-0 shadow-sm border-l-4 border-l-red-400">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-red-500 inline-block" /> Rechazos
+            <span className="w-3 h-3 rounded-full bg-red-500 inline-block" /> Rejections
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 divide-x divide-border">
-            <StatBadge value={rejTotal} label="Total rechazos" color="text-red-600" />
-            <StatBadge value={rejResidentes} label="Residentes" color="text-blue-700" />
-            <StatBadge value={rejVisitantes} label="Visitantes" color="text-amber-600" />
-            <StatBadge value={tasaRechazo} label="Tasa de rechazo" color="text-muted-foreground" />
+            <StatBadge value={rejTotal} label="Total rejections" color="text-red-600" />
+            <StatBadge value={rejResidentes} label="Residents" color="text-blue-700" />
+            <StatBadge value={rejVisitantes} label="Visitors" color="text-amber-600" />
+            <StatBadge value={tasaRechazo} label="Rejection rate" color="text-muted-foreground" />
           </div>
           {(rejStats as any)?.byPoint && Object.keys((rejStats as any).byPoint).length > 0 && (
             <div className="mt-4 space-y-1.5">
-              <p className="text-xs font-medium text-muted-foreground mb-2">Por punto de encuesta</p>
+              <p className="text-xs font-medium text-muted-foreground mb-2">By survey point</p>
               {Object.entries((rejStats as any).byPoint as Record<string, number>)
                 .sort(([, a], [, b]) => b - a)
                 .map(([point, count]) => (
@@ -232,7 +232,7 @@ function TabGeneral({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
       <div className="grid md:grid-cols-2 gap-4">
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">Encuestas por encuestador</CardTitle>
+            <CardTitle className="text-sm font-semibold">Surveys by interviewer</CardTitle>
           </CardHeader>
           <CardContent>
             {encuestadorData.length === 0 ? <EmptyState /> : (
@@ -249,7 +249,7 @@ function TabGeneral({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
                         return (
                           <div className="bg-white border border-gray-200 rounded shadow p-2 text-xs">
                             <p className="font-semibold mb-1">{enc?.fullName ?? label}</p>
-                            <p className="text-muted-foreground mb-1">Código: {enc?.identifier}</p>
+                            <p className="text-muted-foreground mb-1">Code: {enc?.identifier}</p>
                             {payload.map((p: any) => (
                               <p key={p.dataKey} style={{ color: p.fill }}>{p.name}: {p.value}</p>
                             ))}
@@ -258,16 +258,16 @@ function TabGeneral({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
                       }}
                     />
                     <Legend wrapperStyle={{ fontSize: 11 }} />
-                    <Bar dataKey="residentes" name="Residentes" fill={C.primary} radius={[3, 3, 0, 0]} stackId="a" />
-                    <Bar dataKey="visitantes" name="Visitantes" fill={C.warning} radius={[3, 3, 0, 0]} stackId="a" />
+                    <Bar dataKey="residentes" name="Residents" fill={C.primary} radius={[3, 3, 0, 0]} stackId="a" />
+                    <Bar dataKey="visitantes" name="Visitors" fill={C.warning} radius={[3, 3, 0, 0]} stackId="a" />
                   </BarChart>
                 </ResponsiveContainer>
                 <div className="mt-3 overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="border-b text-muted-foreground">
-                        <th className="text-left py-1 pr-2 font-medium">Código</th>
-                        <th className="text-left py-1 pr-2 font-medium">Nombre</th>
+                        <th className="text-left py-1 pr-2 font-medium">Code</th>
+                        <th className="text-left py-1 pr-2 font-medium">Name</th>
                         <th className="text-right py-1 pr-2 font-medium">Res.</th>
                         <th className="text-right py-1 pr-2 font-medium">Vis.</th>
                         <th className="text-right py-1 font-medium">Total</th>
@@ -293,7 +293,7 @@ function TabGeneral({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
 
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">Distribución por franja horaria</CardTitle>
+            <CardTitle className="text-sm font-semibold">Distribution by time slot</CardTitle>
           </CardHeader>
           <CardContent>
             {timeSlotData.length === 0 ? <EmptyState /> : (
@@ -302,8 +302,8 @@ function TabGeneral({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} />
-                  <Tooltip formatter={(v: any) => [v, "Encuestas"]} />
-                  <Bar dataKey="value" name="Encuestas" radius={[4, 4, 0, 0]}>
+                  <Tooltip formatter={(v: any) => [v, "Surveys"]} />
+                  <Bar dataKey="value" name="Surveys" radius={[4, 4, 0, 0]}>
                     {timeSlotData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                     <LabelList dataKey="value" position="top" style={{ fontSize: 12, fontWeight: 600 }} />
                   </Bar>
@@ -317,7 +317,7 @@ function TabGeneral({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
       {/* Evolución diaria */}
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold">Evolución diaria de encuestas</CardTitle>
+          <CardTitle className="text-sm font-semibold">Daily survey trend</CardTitle>
         </CardHeader>
         <CardContent>
           {dayData.length === 0 ? <EmptyState /> : (
@@ -338,8 +338,8 @@ function TabGeneral({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
                 <YAxis tick={{ fontSize: 11 }} />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Area type="monotone" dataKey="residentes" name="Residentes" stroke={C.primary} fill="url(#gradR)" strokeWidth={2} />
-                <Area type="monotone" dataKey="visitantes" name="Visitantes" stroke={C.warning} fill="url(#gradV)" strokeWidth={2} />
+                <Area type="monotone" dataKey="residentes" name="Residents" stroke={C.primary} fill="url(#gradR)" strokeWidth={2} />
+                <Area type="monotone" dataKey="visitantes" name="Visitors" stroke={C.warning} fill="url(#gradV)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
           )}
@@ -365,28 +365,28 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="border-0 shadow-sm text-center p-4">
           <p className="text-3xl font-bold text-amber-600">{d.total}</p>
-          <p className="text-xs text-muted-foreground mt-1">Total visitantes</p>
+          <p className="text-xs text-muted-foreground mt-1">Total visitors</p>
         </Card>
         <Card className="border-0 shadow-sm text-center p-4">
           <p className="text-3xl font-bold text-primary">{d.avgValoracion}</p>
-          <p className="text-xs text-muted-foreground mt-1">Valoración espacio ★</p>
+          <p className="text-xs text-muted-foreground mt-1">Space rating ★</p>
         </Card>
         <Card className="border-0 shadow-sm text-center p-4">
           <p className="text-3xl font-bold text-teal-600">{d.avgSatisfaccion}</p>
-          <p className="text-xs text-muted-foreground mt-1">Satisfacción general ★</p>
+          <p className="text-xs text-muted-foreground mt-1">Overall satisfaction ★</p>
         </Card>
         <Card className="border-0 shadow-sm text-center p-4">
           <p className="text-3xl font-bold text-purple-600">
             {d.pais.find((p) => p.name === "Extranjero")?.value ?? 0}
           </p>
-          <p className="text-xs text-muted-foreground mt-1">Extranjeros</p>
+          <p className="text-xs text-muted-foreground mt-1">Foreign visitors</p>
         </Card>
       </div>
 
       {/* Procedencia + Género */}
       <div className="grid md:grid-cols-2 gap-4">
         <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Procedencia</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Origin</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
@@ -403,7 +403,7 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
         </Card>
 
         <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Género y Edad</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Gender and Age</CardTitle></CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
               <ResponsiveContainer width="100%" height={180}>
@@ -421,7 +421,7 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
                 <BarChart data={d.edad} layout="vertical" margin={{ top: 0, right: 20, left: 10, bottom: 0 }}>
                   <XAxis type="number" tick={{ fontSize: 10 }} />
                   <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={40} />
-                  <Tooltip formatter={(v: any) => [v, "Encuestas"]} />
+                  <Tooltip formatter={(v: any) => [v, "Surveys"]} />
                   <Bar dataKey="value" fill={C.primary} radius={[0, 3, 3, 0]}>
                     <LabelList dataKey="value" position="right" style={{ fontSize: 10 }} />
                   </Bar>
@@ -435,14 +435,14 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
       {/* Motivo + Grupo */}
       <div className="grid md:grid-cols-2 gap-4">
         <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Motivo de visita</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Reason for visit</CardTitle></CardHeader>
           <CardContent>
             {d.motivo.length === 0 ? <EmptyState /> : (
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={d.motivo} layout="vertical" margin={{ top: 0, right: 30, left: 10, bottom: 0 }}>
                   <XAxis type="number" tick={{ fontSize: 10 }} />
                   <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={90} />
-                  <Tooltip formatter={(v: any) => [v, "Encuestas"]} />
+                  <Tooltip formatter={(v: any) => [v, "Surveys"]} />
                   <Bar dataKey="value" fill={C.warning} radius={[0, 4, 4, 0]}>
                     <LabelList dataKey="value" position="right" style={{ fontSize: 11, fontWeight: 600 }} />
                   </Bar>
@@ -453,7 +453,7 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
         </Card>
 
         <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Tipo de grupo</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Group type</CardTitle></CardHeader>
           <CardContent>
             {d.grupo.length === 0 ? <EmptyState /> : (
               <ResponsiveContainer width="100%" height={200}>
@@ -483,7 +483,7 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip formatter={(v: any) => [v, "Encuestas"]} />
+                  <Tooltip formatter={(v: any) => [v, "Surveys"]} />
                   <Bar dataKey="value" fill={C.accent} radius={[4, 4, 0, 0]}>
                     {d.frecuencia.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                     <LabelList dataKey="value" position="top" style={{ fontSize: 11, fontWeight: 600 }} />
@@ -503,7 +503,7 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip formatter={(v: any) => [v, "Encuestas"]} />
+                  <Tooltip formatter={(v: any) => [v, "Surveys"]} />
                   <Bar dataKey="value" fill={C.teal} radius={[4, 4, 0, 0]}>
                     <LabelList dataKey="value" position="top" style={{ fontSize: 11, fontWeight: 600 }} />
                   </Bar>
@@ -524,7 +524,7 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
                 <BarChart data={d.transporte} layout="vertical" margin={{ top: 0, right: 30, left: 10, bottom: 0 }}>
                   <XAxis type="number" tick={{ fontSize: 10 }} />
                   <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={90} />
-                  <Tooltip formatter={(v: any) => [v, "Encuestas"]} />
+                  <Tooltip formatter={(v: any) => [v, "Surveys"]} />
                   <Bar dataKey="value" fill={C.success} radius={[0, 4, 4, 0]}>
                     <LabelList dataKey="value" position="right" style={{ fontSize: 11, fontWeight: 600 }} />
                   </Bar>
@@ -542,7 +542,7 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
                 <BarChart data={d.actividad} layout="vertical" margin={{ top: 0, right: 30, left: 10, bottom: 0 }}>
                   <XAxis type="number" tick={{ fontSize: 10 }} />
                   <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={100} />
-                  <Tooltip formatter={(v: any) => [v, "Encuestas"]} />
+                  <Tooltip formatter={(v: any) => [v, "Surveys"]} />
                   <Bar dataKey="value" fill={C.purple} radius={[0, 4, 4, 0]}>
                     <LabelList dataKey="value" position="right" style={{ fontSize: 11, fontWeight: 600 }} />
                   </Bar>
@@ -564,7 +564,7 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip formatter={(v: any) => [v, "Encuestas"]} />
+                  <Tooltip formatter={(v: any) => [v, "Surveys"]} />
                   <Bar dataKey="value" fill={C.warning} radius={[4, 4, 0, 0]}>
                     {d.valoracionDist.map((entry, i) => {
                       const n = parseInt(entry.name);
@@ -612,7 +612,7 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="name" tick={{ fontSize: 10 }} angle={-20} textAnchor="end" interval={0} />
                 <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip formatter={(v: any) => [v, "Encuestas"]} />
+                <Tooltip formatter={(v: any) => [v, "Surveys"]} />
                 <Bar dataKey="value" fill={C.warning} radius={[4, 4, 0, 0]}>
                   {d.byPunto.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                   <LabelList dataKey="value" position="top" style={{ fontSize: 11, fontWeight: 600 }} />
@@ -688,7 +688,7 @@ function TabResidentes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip formatter={(v: any) => [v, "Encuestas"]} />
+                  <Tooltip formatter={(v: any) => [v, "Surveys"]} />
                   <Bar dataKey="value" fill={C.primary} radius={[4, 4, 0, 0]}>
                     {d.edad.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                     <LabelList dataKey="value" position="top" style={{ fontSize: 11, fontWeight: 600 }} />
@@ -844,21 +844,21 @@ function TabConteos({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <Card className="border-0 shadow-sm text-center p-4">
           <p className="text-3xl font-bold text-primary">{d.total.toLocaleString("es-ES")}</p>
-          <p className="text-xs text-muted-foreground mt-1">Total personas contadas</p>
+          <p className="text-xs text-muted-foreground mt-1">Total people counted</p>
         </Card>
         <Card className="border-0 shadow-sm text-center p-4">
           <p className="text-3xl font-bold text-teal-600">{d.byPunto.length}</p>
-          <p className="text-xs text-muted-foreground mt-1">Puntos con datos</p>
+          <p className="text-xs text-muted-foreground mt-1">Points with data</p>
         </Card>
         <Card className="border-0 shadow-sm text-center p-4">
           <p className="text-3xl font-bold text-amber-600">{d.sessions.length}</p>
-          <p className="text-xs text-muted-foreground mt-1">Sesiones de conteo</p>
+          <p className="text-xs text-muted-foreground mt-1">Counting sessions</p>
         </Card>
       </div>
 
       {/* Por punto */}
       <Card className="border-0 shadow-sm">
-        <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Personas por punto de conteo (suma de todos los flujos)</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">People by counting point (sum of all flows)</CardTitle></CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart
@@ -875,15 +875,15 @@ function TabConteos({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
                   return (
                     <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-lg text-sm">
                       <p className="font-semibold text-gray-800">{item.name}</p>
-                      <p className="text-blue-600 font-bold">{Number(item.value).toLocaleString("es-ES")} personas</p>
-                      {item.registros > 0 && <p className="text-gray-500">{item.registros} registros</p>}
+                      <p className="text-blue-600 font-bold">{Number(item.value).toLocaleString("en-GB")} people</p>
+                      {item.registros > 0 && <p className="text-gray-500">{item.registros} records</p>}
                     </div>
                   );
                 }}
               />
-              <Bar dataKey="value" name="Personas" fill={C.primary} radius={[4, 4, 0, 0]}>
+              <Bar dataKey="value" name="People" fill={C.primary} radius={[4, 4, 0, 0]}>
                 {d.byPunto.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
-                <LabelList dataKey="value" position="top" style={{ fontSize: 11, fontWeight: 700 }} formatter={(v: any) => v > 0 ? v.toLocaleString("es-ES") : ""} />
+                <LabelList dataKey="value" position="top" style={{ fontSize: 11, fontWeight: 700 }} formatter={(v: any) => v > 0 ? v.toLocaleString("en-GB") : ""} />
               </Bar>
             </BarChart>
           </ResponsiveContainer>
@@ -902,7 +902,7 @@ function TabConteos({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
       {/* Evolución por tramo */}
       {d.byTramo.length > 0 && (
         <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Flujo peatonal por tramo de 30 min</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Pedestrian flow by 30-minute slot</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={d.byTramo} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
@@ -915,8 +915,8 @@ function TabConteos({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip formatter={(v: any) => [v.toLocaleString("es-ES"), "Personas"]} />
-                <Area type="monotone" dataKey="value" name="Personas" stroke={C.primary} fill="url(#gradPeat)" strokeWidth={2} />
+                <Tooltip formatter={(v: any) => [v.toLocaleString("en-GB"), "People"]} />
+                <Area type="monotone" dataKey="value" name="People" stroke={C.primary} fill="url(#gradPeat)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
@@ -926,7 +926,7 @@ function TabConteos({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
       {/* Top sentidos */}
       {d.bySentido.length > 0 && (
         <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Top sentidos de flujo (personas)</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Top flow directions (people)</CardTitle></CardHeader>
           <CardContent>
             <div className="space-y-1.5">
               {d.bySentido.slice(0, 12).map((s, i) => (
@@ -939,7 +939,7 @@ function TabConteos({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
                       background: PIE_COLORS[i % PIE_COLORS.length],
                     }} />
                   </div>
-                  <span className="text-xs font-bold w-14 text-right shrink-0">{s.value.toLocaleString("es-ES")}</span>
+                  <span className="text-xs font-bold w-14 text-right shrink-0">{s.value.toLocaleString("en-GB")}</span>
                 </div>
               ))}
             </div>
@@ -950,18 +950,18 @@ function TabConteos({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
       {/* Tabla de sesiones */}
       {d.sessions.length > 0 && (
         <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Sesiones de conteo</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Counting sessions</CardTitle></CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left py-2 pr-3 font-semibold text-muted-foreground">Punto</th>
-                    <th className="text-left py-2 pr-3 font-semibold text-muted-foreground">Subpunto</th>
-                    <th className="text-left py-2 pr-3 font-semibold text-muted-foreground">Encuestador</th>
-                    <th className="text-right py-2 pr-3 font-semibold text-muted-foreground">Inicio</th>
-                    <th className="text-right py-2 pr-3 font-semibold text-muted-foreground">Fin</th>
-                    <th className="text-right py-2 font-semibold text-muted-foreground">Personas</th>
+                    <th className="text-left py-2 pr-3 font-semibold text-muted-foreground">Point</th>
+                    <th className="text-left py-2 pr-3 font-semibold text-muted-foreground">Subpoint</th>
+                    <th className="text-left py-2 pr-3 font-semibold text-muted-foreground">Interviewer</th>
+                    <th className="text-right py-2 pr-3 font-semibold text-muted-foreground">Start</th>
+                    <th className="text-right py-2 pr-3 font-semibold text-muted-foreground">End</th>
+                    <th className="text-right py-2 font-semibold text-muted-foreground">People</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -988,9 +988,9 @@ function TabConteos({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 const TABS = [
   { id: "general", label: "General", icon: BarChart2 },
-  { id: "visitantes", label: "Visitantes", icon: Eye },
-  { id: "residentes", label: "Residentes", icon: Home },
-  { id: "conteos", label: "Conteos", icon: ArrowLeftRight },
+  { id: "visitantes", label: "Visitors", icon: Eye },
+  { id: "residentes", label: "Residents", icon: Home },
+  { id: "conteos", label: "Counts", icon: ArrowLeftRight },
 ];
 
 export default function Estadisticas() {
@@ -1004,17 +1004,17 @@ export default function Estadisticas() {
         {/* Header */}
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Estadísticas</h1>
-            <p className="text-muted-foreground text-sm mt-1">Análisis del trabajo de campo en tiempo real</p>
+            <h1 className="text-2xl font-bold text-foreground">Statistics</h1>
+            <p className="text-muted-foreground text-sm mt-1">Real-time fieldwork analysis</p>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-muted-foreground">Desde</label>
+              <label className="text-xs font-medium text-muted-foreground">From</label>
               <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
                 className="border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-muted-foreground">Hasta</label>
+              <label className="text-xs font-medium text-muted-foreground">To</label>
               <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
                 className="border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>

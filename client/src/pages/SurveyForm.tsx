@@ -94,7 +94,7 @@ function PhotoCapture({ onCapture, photos }: { onCapture: (data: PhotoData) => v
         onClick={() => inputRef.current?.click()}
       >
         <Camera className="h-4 w-4 mr-2" />
-        Tomar fotografía
+        Take photo
       </Button>
       {photos.length > 0 && (
         <div className="grid grid-cols-3 gap-2">
@@ -142,7 +142,7 @@ function QuestionRenderer({
           <p className="text-sm text-muted-foreground italic mt-1 leading-snug">{textEn}</p>
         )}
         {question.isRequired && (
-          <span className="text-xs text-destructive font-medium mt-1 inline-block">* Obligatorio / Required</span>
+          <span className="text-xs text-destructive font-medium mt-1 inline-block">* Required</span>
         )}
       </div>
 
@@ -235,7 +235,7 @@ function QuestionRenderer({
           value={answer ?? ""}
           onChange={(e) => onAnswer(e.target.value ? Number(e.target.value) : undefined)}
           className="w-full border border-border rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring bg-background"
-          placeholder="Número / Number..."
+          placeholder="Number..."
         />
       )}
 
@@ -253,11 +253,11 @@ function QuestionRenderer({
             }}
             className="w-full border border-border rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring bg-background"
           >
-            <option value="">-- Seleccione una calle / Select a street --</option>
+            <option value="">-- Select a street --</option>
             {NOMBRES_BARRIO_TURISTICO.map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
-            <option value="__otra__">Otra calle / Other street</option>
+            <option value="__otra__">Other street</option>
           </select>
 
         </div>
@@ -269,7 +269,7 @@ function QuestionRenderer({
           type="text"
           value={answer ?? ""}
           onChange={(e) => onAnswer(e.target.value)}
-          placeholder="Escriba el nombre de la calle / Enter street name..."
+          placeholder="Enter street name..."
           className="w-full border border-border rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring bg-background"
           autoFocus
         />
@@ -282,7 +282,7 @@ function QuestionRenderer({
           onChange={(e) => onAnswer(e.target.value)}
           rows={4}
           className="w-full border border-border rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring bg-background resize-none"
-          placeholder="Escriba su respuesta / Enter your answer..."
+          placeholder="Enter your answer..."
         />
       )}
 
@@ -324,7 +324,7 @@ function QuestionRenderer({
       {question.requiresPhoto && (
         <div className="mt-4 pt-4 border-t border-border">
           <p className="text-sm font-medium text-muted-foreground mb-2">
-            Fotografía requerida / Required photo
+            Required photo
           </p>
           <PhotoCapture
             onCapture={(d) => onPhoto({ ...d, questionId: question.id })}
@@ -374,14 +374,14 @@ function calcWindowCode(d: Date): string {
 }
 
 function fmtTime(d: Date): string {
-  return d.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+  return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 }
 
 const TIME_SLOT_LABELS: Record<string, string> = {
-  manana: "Mañana (9:30–12:00)",
-  mediodia: "Mediodía (12:00–14:30)",
-  tarde: "Tarde (16:00–18:30)",
-  noche: "Noche (18:30–21:00)",
+  manana: "Morning (9:30–12:00)",
+  mediodia: "Midday (12:00–14:30)",
+  tarde: "Afternoon (16:00–18:30)",
+  noche: "Evening (18:30–21:00)",
 };
 
 const SURVEY_POINTS = [
@@ -403,21 +403,19 @@ function EarlyExitScreen({ onRestart }: { onRestart: () => void }) {
           <AlertCircle className="h-10 w-10 text-amber-600" />
         </div>
         <div>
-          <h2 className="text-xl font-bold text-foreground">Encuesta finalizada</h2>
+          <h2 className="text-xl font-bold text-foreground">Survey finished</h2>
           <p className="text-muted-foreground text-sm mt-2">
-            La persona indicó que <strong>no reside habitualmente en este barrio</strong>.
-            La encuesta ha concluido anticipadamente.
+            The person indicated that they <strong>do not usually live in this neighbourhood</strong>.
+            The survey ended early.
           </p>
-          <p className="text-muted-foreground text-xs mt-1 italic">
-            The person indicated they do not usually reside in this neighbourhood. Survey ended early.
-          </p>
+          
         </div>
         <div className="flex flex-col gap-3">
           <Button onClick={onRestart} className="w-full" size="lg">
-            Nueva encuesta
+            New survey
           </Button>
           <Button onClick={() => setLocation("/")} variant="outline" className="w-full">
-            Volver al inicio
+            Back to home
           </Button>
         </div>
       </div>
@@ -438,7 +436,7 @@ export default function SurveyForm() {
   const uploadPhotoMutation = trpc.photos.upload.useMutation();
 
   const { gps, gpsStatus, retryGps } = useGPS();
-  const [lang] = useState<"es" | "en">("es");
+  const [lang] = useState<"es" | "en">("en");
   const [currentStep, setCurrentStep] = useState(0); // 0 = metadata, 1..n = real questions
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [photos, setPhotos] = useState<PhotoData[]>([]);
@@ -567,7 +565,7 @@ export default function SurveyForm() {
       setSubmittedId(result.id as number);
       setEarlyExit(true);
     } catch {
-      toast.error("Error al guardar. Inténtelo de nuevo.");
+      toast.error("Error while saving. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -608,7 +606,7 @@ export default function SurveyForm() {
 
       setSubmitted(true);
     } catch {
-      toast.error("Error al enviar la encuesta. Inténtelo de nuevo.");
+      toast.error("Error sending the survey. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -628,13 +626,13 @@ export default function SurveyForm() {
             <CheckCircle2 className="h-10 w-10 text-green-600" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-foreground">¡Encuesta enviada!</h2>
+            <h2 className="text-xl font-bold text-foreground">Survey submitted!</h2>
             <p className="text-muted-foreground text-sm mt-1">
-              Referencia #{submittedId} · {fmtTime(new Date())}
+              Reference #{submittedId} · {fmtTime(new Date())}
             </p>
           </div>
           <Button onClick={() => setLocation("/")} className="w-full" size="lg">
-            Nueva encuesta
+            New survey
           </Button>
         </div>
       </div>
@@ -653,8 +651,8 @@ export default function SurveyForm() {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="text-center">
-          <p className="text-muted-foreground">Encuesta no encontrada.</p>
-          <Button onClick={() => setLocation("/")} variant="outline" className="mt-4">Volver</Button>
+          <p className="text-muted-foreground">Survey not found.</p>
+          <Button onClick={() => setLocation("/")} variant="outline" className="mt-4">Back</Button>
         </div>
       </div>
     );
@@ -678,10 +676,10 @@ export default function SurveyForm() {
             )}
             <p className="text-xs text-primary-foreground/60">
               {currentStep === 0
-                ? "Datos de campo / Field data"
+                ? "Field data"
                 : currentStep <= totalSteps
-                  ? `Pregunta ${currentStep} de ${totalSteps}`
-                  : "Resumen"}
+                  ? `Question ${currentStep} of ${totalSteps}`
+                  : "Summary"}
             </p>
           </div>
           <div className="w-8" />
@@ -703,9 +701,9 @@ export default function SurveyForm() {
         {currentStep === 0 && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-lg font-bold text-foreground">Datos de campo</h2>
+              <h2 className="text-lg font-bold text-foreground">Field data</h2>
               <p className="text-sm text-muted-foreground mt-1">
-                Complete la información antes de iniciar la encuesta.
+                Complete the information before starting the survey.
               </p>
             </div>
 
@@ -721,9 +719,9 @@ export default function SurveyForm() {
               }`} />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium">
-                  {gpsStatus === "ok" ? "Ubicación capturada" :
-                   gpsStatus === "loading" ? "Obteniendo ubicación..." :
-                   gpsStatus === "error" ? "Ubicación no disponible" : "GPS inactivo"}
+                  {gpsStatus === "ok" ? "Location captured" :
+                   gpsStatus === "loading" ? "Getting location..." :
+                   gpsStatus === "error" ? "Location unavailable" : "GPS inactive"}
                 </p>
                 {gpsStatus === "ok" && gps && (
                   <p className="text-xs text-muted-foreground mt-0.5">
@@ -736,7 +734,7 @@ export default function SurveyForm() {
                   onClick={retryGps}
                   className="text-xs text-red-600 font-medium underline shrink-0"
                 >
-                  Reintentar
+                  Retry
                 </button>
               )}
               {gpsStatus === "loading" && (
@@ -744,16 +742,16 @@ export default function SurveyForm() {
               )}
             </div>
 
-            {/* Punto de encuesta */}
+            {/* Survey point */}
             <div>
               <label className="text-sm font-medium text-foreground block mb-2">
-                Punto de encuesta
+                Survey point
                 {isVisitantes && <span className="text-destructive ml-1">*</span>}
               </label>
               <div className="grid grid-cols-1 gap-2">
                 {[
                   ...SURVEY_POINTS,
-                  ...(!isVisitantes ? [{ val: "Otro", label: "Otro" }] : []),
+                  ...(!isVisitantes ? [{ val: "Other", label: "Other" }] : []),
                 ].map(({ val, label }) => (
                   <button
                     key={val}
@@ -773,25 +771,25 @@ export default function SurveyForm() {
 
             {/* Datos automáticos */}
             <div className="bg-muted/50 rounded-xl p-4 text-sm space-y-2">
-              <p className="text-muted-foreground font-medium mb-1">Datos asignados automáticamente:</p>
+              <p className="text-muted-foreground font-medium mb-1">Automatically assigned data:</p>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Franja horaria</span>
+                <span className="text-muted-foreground">Time slot</span>
                 <span className="font-medium">
                   {TIME_SLOT_LABELS[calcTimeSlot(startedAt)] ?? calcTimeSlot(startedAt)}
                 </span>
               </div>
               {isVisitantes && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Ventana (tramo 30 min)</span>
+                  <span className="text-muted-foreground">Window (30-minute segment)</span>
                   <span className="font-medium">{calcWindowCode(startedAt)}</span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Hora de inicio</span>
+                <span className="text-muted-foreground">Start time</span>
                 <span className="font-medium">{fmtTime(startedAt)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Encuestador</span>
+                <span className="text-muted-foreground">Interviewer</span>
                 <span className="font-medium">
                   {user?.name}{user?.identifier ? ` (${user.identifier})` : ""}
                 </span>
@@ -801,7 +799,7 @@ export default function SurveyForm() {
             {/* Idioma de la encuesta */}
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Clock className="h-4 w-4" />
-              <span>Encuesta en español · Survey in Spanish</span>
+              <span>Survey in English</span>
             </div>
           </div>
         )}
@@ -847,7 +845,7 @@ export default function SurveyForm() {
                   disabled={submitting}
                 >
                   <ChevronLeft className="h-4 w-4 mr-1" />
-                  Anterior
+                  Previous
                 </Button>
               )}
               {currentStep < totalSteps ? (
@@ -858,9 +856,9 @@ export default function SurveyForm() {
                   size="lg"
                 >
                   {submitting ? (
-                    <><Loader2 className="h-4 w-4 mr-1 animate-spin" />Guardando...</>
+                    <><Loader2 className="h-4 w-4 mr-1 animate-spin" />Saving...</>
                   ) : (
-                    <>Siguiente <ChevronRight className="h-4 w-4 ml-1" /></>
+                    <>Next <ChevronRight className="h-4 w-4 ml-1" /></>
                   )}
                 </Button>
               ) : (
@@ -871,9 +869,9 @@ export default function SurveyForm() {
                   size="lg"
                 >
                   {submitting ? (
-                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Enviando...</>
+                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Submitting...</>
                   ) : (
-                    <><CheckCircle2 className="h-4 w-4 mr-2" />Enviar encuesta</>
+                    <><CheckCircle2 className="h-4 w-4 mr-2" />Submit survey</>
                   )}
                 </Button>
               )}
@@ -886,21 +884,21 @@ export default function SurveyForm() {
         {currentStep === totalSteps && totalSteps > 0 && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-lg font-bold text-foreground">Resumen y envío</h2>
+              <h2 className="text-lg font-bold text-foreground">Summary and submission</h2>
               <p className="text-sm text-muted-foreground mt-1">
-                Revise y añada fotografías adicionales antes de enviar.
+                Review and add extra photos before submitting.
               </p>
             </div>
 
             <div className="bg-muted/50 rounded-xl p-4 space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Encuestador</span>
+                <span className="text-muted-foreground">Interviewer</span>
                 <span className="font-medium">
                   {user?.name}{user?.identifier ? ` (${user.identifier})` : ""}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Punto</span>
+                <span className="text-muted-foreground">Point</span>
                 <span className="font-medium">{surveyPoint || "—"}</span>
               </div>
               <div className="flex justify-between">
@@ -911,33 +909,33 @@ export default function SurveyForm() {
               </div>
               {isVisitantes && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Ventana</span>
+                  <span className="text-muted-foreground">Window</span>
                   <span className="font-medium">{calcWindowCode(startedAt)}</span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Inicio</span>
+                <span className="text-muted-foreground">Start</span>
                 <span className="font-medium">{fmtTime(startedAt)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">GPS</span>
                 <span className={`font-medium ${gpsStatus === "ok" ? "text-green-600" : "text-amber-600"}`}>
-                  {gpsStatus === "ok" ? "Capturado" : "No disponible"}
+                  {gpsStatus === "ok" ? "Captured" : "Unavailable"}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Respuestas</span>
+                <span className="text-muted-foreground">Answers</span>
                 <span className="font-medium">{answers.length} / {totalSteps}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Fotos</span>
+                <span className="text-muted-foreground">Photos</span>
                 <span className="font-medium">{photos.length}</span>
               </div>
             </div>
 
             {/* Extra photos */}
             <div>
-              <p className="text-sm font-medium text-foreground mb-2">Fotografías adicionales</p>
+              <p className="text-sm font-medium text-foreground mb-2">Additional photos</p>
               <PhotoCapture
                 onCapture={(d) => setPhotos((prev) => [...prev, d])}
                 photos={photos.filter((p) => !p.questionId)}
@@ -956,7 +954,7 @@ export default function SurveyForm() {
             size="lg"
             disabled={!canProceed()}
           >
-            Iniciar encuesta
+            Start survey
             <ChevronRight className="h-4 w-4 ml-1" />
           </Button>
         </div>
@@ -973,7 +971,7 @@ export default function SurveyForm() {
               disabled={submitting}
             >
               <ChevronLeft className="h-4 w-4 mr-1" />
-              Anterior
+              Previous
             </Button>
             <Button
               onClick={handleSubmit}
@@ -982,9 +980,9 @@ export default function SurveyForm() {
               size="lg"
             >
               {submitting ? (
-                <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Enviando...</>
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Submitting...</>
               ) : (
-                <><CheckCircle2 className="h-4 w-4 mr-2" />Enviar encuesta</>
+                <><CheckCircle2 className="h-4 w-4 mr-2" />Submit survey</>
               )}
             </Button>
           </div>

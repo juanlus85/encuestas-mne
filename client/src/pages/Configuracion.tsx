@@ -14,25 +14,21 @@ import {
   ChevronDown,
   ChevronUp,
   ClipboardList,
-  Edit2,
   Loader2,
   Plus,
-  Settings,
   Trash2,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 const QUESTION_TYPES = [
-  { value: "single_choice", label: "Opción única" },
-  { value: "multiple_choice", label: "Opción múltiple" },
-  { value: "yes_no", label: "Sí / No" },
-  { value: "scale", label: "Escala (1-5)" },
-  { value: "text", label: "Texto libre" },
-  { value: "number", label: "Número" },
+  { value: "single_choice", label: "Single choice" },
+  { value: "multiple_choice", label: "Multiple choice" },
+  { value: "yes_no", label: "Yes / No" },
+  { value: "scale", label: "Scale (1-5)" },
+  { value: "text", label: "Free text" },
+  { value: "number", label: "Number" },
 ];
-
-// ─── Question form ────────────────────────────────────────────────────────────
 
 function QuestionForm({
   templateId,
@@ -57,9 +53,9 @@ function QuestionForm({
     onSuccess: () => {
       setOpen(false);
       onCreated();
-      toast.success("Pregunta añadida");
+      toast.success("Question added");
     },
-    onError: () => toast.error("Error al crear pregunta"),
+    onError: () => toast.error("Error creating question"),
   });
 
   const hasOptions = ["single_choice", "multiple_choice"].includes(form.type);
@@ -83,37 +79,37 @@ function QuestionForm({
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="w-full border-dashed">
           <Plus className="h-4 w-4 mr-1.5" />
-          Añadir pregunta
+          Add question
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Nueva pregunta</DialogTitle>
+          <DialogTitle>New question</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div>
-            <label className="text-sm font-medium block mb-1.5">Texto (ES) *</label>
+            <label className="text-sm font-medium block mb-1.5">Text (default) *</label>
             <textarea
               value={form.text}
               onChange={(e) => setForm({ ...form, text: e.target.value })}
               required
               rows={2}
               className="w-full border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
-              placeholder="¿Cuántos años lleva viviendo en el barrio?"
+              placeholder="How many years have you lived in the neighbourhood?"
             />
           </div>
           <div>
-            <label className="text-sm font-medium block mb-1.5">Texto (EN)</label>
+            <label className="text-sm font-medium block mb-1.5">English text</label>
             <textarea
               value={form.textEn}
               onChange={(e) => setForm({ ...form, textEn: e.target.value })}
               rows={2}
               className="w-full border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
-              placeholder="How many years have you lived in the neighborhood?"
+              placeholder="How many years have you lived in the neighbourhood?"
             />
           </div>
           <div>
-            <label className="text-sm font-medium block mb-1.5">Tipo de pregunta</label>
+            <label className="text-sm font-medium block mb-1.5">Question type</label>
             <select
               value={form.type}
               onChange={(e) => setForm({ ...form, type: e.target.value })}
@@ -127,7 +123,7 @@ function QuestionForm({
 
           {hasOptions && (
             <div>
-              <label className="text-sm font-medium block mb-2">Opciones de respuesta</label>
+              <label className="text-sm font-medium block mb-2">Answer options</label>
               <div className="space-y-2">
                 {form.options.map((opt, i) => (
                   <div key={i} className="flex gap-2 items-center">
@@ -140,7 +136,7 @@ function QuestionForm({
                         setForm({ ...form, options: updated });
                       }}
                       className="flex-1 border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                      placeholder={`Opción ${i + 1} (ES)`}
+                      placeholder={`Option ${i + 1}`}
                     />
                     <input
                       type="text"
@@ -151,7 +147,7 @@ function QuestionForm({
                         setForm({ ...form, options: updated });
                       }}
                       className="flex-1 border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                      placeholder={`Option ${i + 1} (EN)`}
+                      placeholder={`Option ${i + 1} (secondary)`}
                     />
                     <button
                       type="button"
@@ -168,7 +164,7 @@ function QuestionForm({
                   size="sm"
                   onClick={() => setForm({ ...form, options: [...form.options, { value: `opt${form.options.length + 1}`, label: "", labelEn: "" }] })}
                 >
-                  <Plus className="h-3 w-3 mr-1" />Añadir opción
+                  <Plus className="h-3 w-3 mr-1" />Add option
                 </Button>
               </div>
             </div>
@@ -182,7 +178,7 @@ function QuestionForm({
                 onChange={(e) => setForm({ ...form, isRequired: e.target.checked })}
                 className="rounded"
               />
-              Obligatoria
+              Required
             </label>
             <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input
@@ -191,14 +187,14 @@ function QuestionForm({
                 onChange={(e) => setForm({ ...form, requiresPhoto: e.target.checked })}
                 className="rounded"
               />
-              Requiere foto
+              Requires photo
             </label>
           </div>
 
           <div className="flex gap-3 pt-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)} className="flex-1">Cancelar</Button>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} className="flex-1">Cancel</Button>
             <Button type="submit" className="flex-1" disabled={createMutation.isPending}>
-              {createMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Guardar pregunta"}
+              {createMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save question"}
             </Button>
           </div>
         </form>
@@ -206,8 +202,6 @@ function QuestionForm({
     </Dialog>
   );
 }
-
-// ─── Template card ────────────────────────────────────────────────────────────
 
 function TemplateCard({ template, onRefresh }: { template: any; onRefresh: () => void }) {
   const [expanded, setExpanded] = useState(false);
@@ -217,7 +211,7 @@ function TemplateCard({ template, onRefresh }: { template: any; onRefresh: () =>
   );
 
   const toggleMutation = trpc.templates.update.useMutation({
-    onSuccess: () => { onRefresh(); toast.success("Plantilla actualizada"); },
+    onSuccess: () => { onRefresh(); toast.success("Template updated"); },
   });
 
   return (
@@ -229,17 +223,17 @@ function TemplateCard({ template, onRefresh }: { template: any; onRefresh: () =>
               <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                 template.type === "residentes" ? "bg-blue-100 text-blue-700" : "bg-amber-100 text-amber-700"
               }`}>
-                {template.type === "residentes" ? "Residentes" : "Visitantes"}
+                {template.type === "residentes" ? "Residents" : "Visitors"}
               </span>
               <span className={`text-xs px-2 py-0.5 rounded-full ${
                 template.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
               }`}>
-                {template.isActive ? "Activa" : "Inactiva"}
+                {template.isActive ? "Active" : "Inactive"}
               </span>
             </div>
-            <CardTitle className="text-base">{template.name}</CardTitle>
-            {template.description && (
-              <p className="text-sm text-muted-foreground mt-1">{template.description}</p>
+            <CardTitle className="text-base">{template.nameEn || template.name}</CardTitle>
+            {(template.descriptionEn || template.description) && (
+              <p className="text-sm text-muted-foreground mt-1">{template.descriptionEn || template.description}</p>
             )}
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -249,7 +243,7 @@ function TemplateCard({ template, onRefresh }: { template: any; onRefresh: () =>
               onClick={() => toggleMutation.mutate({ id: template.id, isActive: !template.isActive })}
               className="text-xs"
             >
-              {template.isActive ? "Desactivar" : "Activar"}
+              {template.isActive ? "Deactivate" : "Activate"}
             </Button>
             <button
               onClick={() => setExpanded(!expanded)}
@@ -265,21 +259,21 @@ function TemplateCard({ template, onRefresh }: { template: any; onRefresh: () =>
         <CardContent className="pt-0 space-y-3">
           <div className="h-px bg-border" />
           {questions.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">No hay preguntas. Añade la primera.</p>
+            <p className="text-sm text-muted-foreground text-center py-4">There are no questions yet. Add the first one.</p>
           ) : (
             <div className="space-y-2">
               {questions.map((q: any, i: number) => (
                 <div key={q.id} className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
                   <span className="text-xs font-bold text-muted-foreground w-5 shrink-0 mt-0.5">{i + 1}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">{q.text}</p>
-                    {q.textEn && <p className="text-xs text-muted-foreground italic mt-0.5">{q.textEn}</p>}
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                    <p className="text-sm font-medium">{q.textEn || q.text}</p>
+                    {q.textEn && q.text !== q.textEn && <p className="text-xs text-muted-foreground italic mt-0.5">Default: {q.text}</p>}
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      <span className="text-xs text-muted-foreground">
                         {QUESTION_TYPES.find((t) => t.value === q.type)?.label ?? q.type}
                       </span>
-                      {q.isRequired && <span className="text-xs text-red-600">Obligatoria</span>}
-                      {q.requiresPhoto && <span className="text-xs text-blue-600">📷 Foto</span>}
+                      {q.isRequired && <span className="text-xs text-red-600">Required</span>}
+                      {q.requiresPhoto && <span className="text-xs text-blue-600">📷 Photo</span>}
                     </div>
                   </div>
                 </div>
@@ -297,55 +291,53 @@ function TemplateCard({ template, onRefresh }: { template: any; onRefresh: () =>
   );
 }
 
-// ─── Create template dialog ───────────────────────────────────────────────────
-
 function CreateTemplateDialog({ onCreated }: { onCreated: () => void }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", nameEn: "", description: "", type: "visitantes" as "residentes" | "visitantes" });
 
   const createMutation = trpc.templates.create.useMutation({
-    onSuccess: () => { setOpen(false); onCreated(); toast.success("Plantilla creada"); },
-    onError: () => toast.error("Error al crear plantilla"),
+    onSuccess: () => { setOpen(false); onCreated(); toast.success("Template created"); },
+    onError: () => toast.error("Error creating template"),
   });
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm"><Plus className="h-4 w-4 mr-1.5" />Nueva plantilla</Button>
+        <Button size="sm"><Plus className="h-4 w-4 mr-1.5" />New template</Button>
       </DialogTrigger>
       <DialogContent className="max-w-md">
-        <DialogHeader><DialogTitle>Nueva plantilla de encuesta</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>New survey template</DialogTitle></DialogHeader>
         <form onSubmit={(e) => { e.preventDefault(); createMutation.mutate(form); }} className="space-y-4 mt-2">
           <div>
-            <label className="text-sm font-medium block mb-1.5">Nombre (ES) *</label>
+            <label className="text-sm font-medium block mb-1.5">Default name *</label>
             <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required
               className="w-full border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Encuesta a Residentes - Barrio de Santa Cruz" />
+              placeholder="Residents Survey - Santa Cruz District" />
           </div>
           <div>
-            <label className="text-sm font-medium block mb-1.5">Nombre (EN)</label>
+            <label className="text-sm font-medium block mb-1.5">English name</label>
             <input type="text" value={form.nameEn} onChange={(e) => setForm({ ...form, nameEn: e.target.value })}
               className="w-full border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Residents Survey - Santa Cruz Quarter" />
+              placeholder="Residents Survey - Santa Cruz District" />
           </div>
           <div>
-            <label className="text-sm font-medium block mb-1.5">Tipo</label>
+            <label className="text-sm font-medium block mb-1.5">Type</label>
             <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as any })}
               className="w-full border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring">
-              <option value="residentes">Residentes (muestreo estratificado)</option>
-              <option value="visitantes">Visitantes (muestreo sistemático)</option>
+              <option value="residentes">Residents (stratified sampling)</option>
+              <option value="visitantes">Visitors (systematic sampling)</option>
             </select>
           </div>
           <div>
-            <label className="text-sm font-medium block mb-1.5">Descripción</label>
+            <label className="text-sm font-medium block mb-1.5">Description</label>
             <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2}
               className="w-full border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
-              placeholder="Descripción breve de la encuesta..." />
+              placeholder="Short survey description..." />
           </div>
           <div className="flex gap-3 pt-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)} className="flex-1">Cancelar</Button>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} className="flex-1">Cancel</Button>
             <Button type="submit" className="flex-1" disabled={createMutation.isPending}>
-              {createMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Crear plantilla"}
+              {createMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create template"}
             </Button>
           </div>
         </form>
@@ -353,8 +345,6 @@ function CreateTemplateDialog({ onCreated }: { onCreated: () => void }) {
     </Dialog>
   );
 }
-
-// ─── Main ─────────────────────────────────────────────────────────────────────
 
 export default function Configuracion() {
   const { user } = useAuth();
@@ -365,7 +355,7 @@ export default function Configuracion() {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center py-16">
-          <p className="text-muted-foreground">Acceso restringido a administradores.</p>
+          <p className="text-muted-foreground">Restricted access for administrators only.</p>
         </div>
       </DashboardLayout>
     );
@@ -378,8 +368,8 @@ export default function Configuracion() {
       <div className="space-y-6 max-w-3xl">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Configuración</h1>
-            <p className="text-muted-foreground text-sm mt-1">Gestión de plantillas y preguntas de encuesta</p>
+            <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+            <p className="text-muted-foreground text-sm mt-1">Manage survey templates and questions</p>
           </div>
           <CreateTemplateDialog onCreated={refresh} />
         </div>
@@ -391,8 +381,8 @@ export default function Configuracion() {
         ) : templates.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground">
             <ClipboardList className="h-10 w-10 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">No hay plantillas creadas.</p>
-            <p className="text-xs mt-1">Crea una plantilla para empezar a configurar las preguntas.</p>
+            <p className="text-sm">There are no templates yet.</p>
+            <p className="text-xs mt-1">Create a template to start configuring the survey questions.</p>
           </div>
         ) : (
           <div className="space-y-4">

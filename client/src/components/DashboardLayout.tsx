@@ -42,37 +42,37 @@ import { OfflineIndicator } from "./OfflineIndicator";
 // ─── Navigation config ────────────────────────────────────────────────────────
 
 const adminMenuItems = [
-  { icon: LayoutDashboard, label: "Inicio", path: "/" },
-  { icon: BarChart3, label: "Estadísticas", path: "/estadisticas" },
-  { icon: Map, label: "Mapa de Campo", path: "/mapa" },
-  { icon: Flame, label: "Mapa Conteos", path: "/mapa-conteos" },
-  { icon: ClipboardList, label: "Resultados", path: "/resultados" },
-  { icon: PersonStanding, label: "Conteos Peatonales", path: "/conteo-resultados" },
-  { icon: ArrowUpDown, label: "Sentidos de Conteo", path: "/conteo-sentidos" },
-  { icon: Target, label: "Cuotas", path: "/cuotas" },
-  { icon: FileDown, label: "Exportar", path: "/exportar" },
-  { icon: Users, label: "Usuarios", path: "/usuarios" },
-  { icon: Settings, label: "Configuración", path: "/configuracion" },
+  { icon: LayoutDashboard, label: "Home", path: "/" },
+  { icon: BarChart3, label: "Statistics", path: "/estadisticas" },
+  { icon: Map, label: "Field Map", path: "/mapa" },
+  { icon: Flame, label: "Counting Map", path: "/mapa-conteos" },
+  { icon: ClipboardList, label: "Results", path: "/resultados" },
+  { icon: PersonStanding, label: "Pedestrian Counts", path: "/conteo-resultados" },
+  { icon: ArrowUpDown, label: "Counting Directions", path: "/conteo-sentidos" },
+  { icon: Target, label: "Quotas", path: "/cuotas" },
+  { icon: FileDown, label: "Export", path: "/exportar" },
+  { icon: Users, label: "Users", path: "/usuarios" },
+  { icon: Settings, label: "Settings", path: "/configuracion" },
 ];
 
 const revisorMenuItems = [
-  { icon: LayoutDashboard, label: "Inicio", path: "/" },
-  { icon: BarChart3, label: "Estadísticas", path: "/estadisticas" },
-  { icon: Map, label: "Mapa de Campo", path: "/mapa" },
-  { icon: Flame, label: "Mapa Conteos", path: "/mapa-conteos" },
-  { icon: ClipboardList, label: "Resultados", path: "/resultados" },
-  { icon: PersonStanding, label: "Conteos Peatonales", path: "/conteo-resultados" },
-  { icon: Target, label: "Cuotas", path: "/cuotas" },
-  { icon: FileDown, label: "Exportar", path: "/exportar" },
+  { icon: LayoutDashboard, label: "Home", path: "/" },
+  { icon: BarChart3, label: "Statistics", path: "/estadisticas" },
+  { icon: Map, label: "Field Map", path: "/mapa" },
+  { icon: Flame, label: "Counting Map", path: "/mapa-conteos" },
+  { icon: ClipboardList, label: "Results", path: "/resultados" },
+  { icon: PersonStanding, label: "Pedestrian Counts", path: "/conteo-resultados" },
+  { icon: Target, label: "Quotas", path: "/cuotas" },
+  { icon: FileDown, label: "Export", path: "/exportar" },
 ];
 
 const encuestadorMenuItems = [
-  { icon: LayoutDashboard, label: "Inicio", path: "/" },
-  { icon: ClipboardList, label: "Nueva Encuesta", path: "/encuesta" },
-  { icon: PersonStanding, label: "Conteo Peatonal", path: "/conteo" },
-  { icon: Target, label: "Cuotas", path: "/cuotas" },
-  { icon: Calendar, label: "Mis Horarios", path: "/mis-horarios" },
-  { icon: DoorOpen, label: "Cierre de Turno", path: "/cierre-turno" },
+  { icon: LayoutDashboard, label: "Home", path: "/" },
+  { icon: ClipboardList, label: "New Survey", path: "/encuesta" },
+  { icon: PersonStanding, label: "Pedestrian Counting", path: "/conteo" },
+  { icon: Target, label: "Quotas", path: "/cuotas" },
+  { icon: Calendar, label: "My Schedules", path: "/mis-horarios" },
+  { icon: DoorOpen, label: "Shift Close", path: "/cierre-turno" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
@@ -82,7 +82,7 @@ const MAX_WIDTH = 400;
 
 // ─── Version indicator ────────────────────────────────────────────────────────
 const APP_VERSION = "v1.0";
-const BUILD_DATE = new Date().toLocaleDateString("es-ES", {
+const BUILD_DATE = new Date().toLocaleDateString("en-GB", {
   day: "2-digit", month: "2-digit", year: "numeric"
 });
 
@@ -139,10 +139,10 @@ function DashboardLayoutContent({
     : adminMenuItems;
   const activeMenuItem = menuItems.find((item) => item.path === location);
 
-  const roleLabel = user?.role === "admin" ? "Administrador"
-    : user?.role === "revisor" ? "Revisor"
-    : user?.role === "encuestador" ? "Encuestador"
-    : "Usuario";
+  const roleLabel = user?.role === "admin" ? "Administrator"
+    : user?.role === "revisor" ? "Reviewer"
+    : user?.role === "encuestador" ? "Interviewer"
+    : "User";
 
   useEffect(() => {
     if (isCollapsed) setIsResizing(false);
@@ -190,7 +190,7 @@ function DashboardLayoutContent({
                 <div className="flex items-center min-w-0 overflow-hidden">
                   <img
                     src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031419078/nHD7C8PRaURA7Ubm8Aop3k/logos-institucionales_324d47d4.jpg"
-                    alt="Logos institucionales"
+                    alt="Institutional logos"
                     className="h-10 w-auto max-w-full object-contain"
                   />
                 </div>
@@ -203,7 +203,7 @@ function DashboardLayoutContent({
             <SidebarGroup>
               {!isCollapsed && (
                 <SidebarGroupLabel className="text-sidebar-foreground/40 text-xs uppercase tracking-wider px-3 mb-1">
-                  Navegación
+                  Navigation
                 </SidebarGroupLabel>
               )}
               <SidebarMenu className="px-2 gap-0.5">
@@ -239,7 +239,7 @@ function DashboardLayoutContent({
               {!isCollapsed && (
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-sidebar-foreground truncate leading-tight">
-                    {user?.name || "Usuario"}
+                    {user?.name || "User"}
                   </p>
                   <p className="text-xs text-sidebar-foreground/50 truncate mt-0.5">{roleLabel}</p>
                 </div>
@@ -251,7 +251,7 @@ function DashboardLayoutContent({
               className="flex items-center gap-2 w-full rounded-lg px-2 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-destructive"
             >
               <LogOut className="h-4 w-4 shrink-0" />
-              {!isCollapsed && <span>Cerrar sesión</span>}
+              {!isCollapsed && <span>Sign out</span>}
             </button>
             {!isCollapsed && (
               <p className="text-xs text-muted-foreground px-2 pb-1">
@@ -276,7 +276,7 @@ function DashboardLayoutContent({
           <div className="flex border-b h-14 items-center justify-between bg-background/95 px-4 backdrop-blur sticky top-0 z-40">
             <div className="flex items-center gap-3">
               <SidebarTrigger className="h-9 w-9 rounded-lg" />
-              <span className="font-medium text-sm">{activeMenuItem?.label ?? "Encuestas Sevilla"}</span>
+              <span className="font-medium text-sm">{activeMenuItem?.label ?? "Seville Surveys"}</span>
             </div>
             <div className="flex items-center">
               <img

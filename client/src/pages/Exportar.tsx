@@ -25,24 +25,24 @@ import { toast } from "sonner";
 type FieldDef = { key: string; label: string; group: string; defaultOn: boolean };
 
 const META_FIELDS: FieldDef[] = [
-  { key: "ID",               label: "ID encuesta",                group: "Metadatos",   defaultOn: true },
-  { key: "Tipo",             label: "Tipo (visitantes/residentes)", group: "Metadatos",  defaultOn: true },
-  { key: "Encuestador",      label: "Nombre encuestador",          group: "Metadatos",   defaultOn: true },
-  { key: "CodEncuestador",   label: "Código encuestador",          group: "Metadatos",   defaultOn: true },
-  { key: "PuntoEncuesta",    label: "Punto de encuesta",           group: "Metadatos",   defaultOn: true },
-  { key: "FranjaHoraria",    label: "Franja horaria",              group: "Metadatos",   defaultOn: true },
-  { key: "VentanaMedia",     label: "Ventana 30 min",              group: "Metadatos",   defaultOn: false },
-  { key: "MinutoInicio",     label: "Minuto inicio entrevista",    group: "Metadatos",   defaultOn: false },
-  { key: "MinutoFin",        label: "Minuto fin entrevista",       group: "Metadatos",   defaultOn: false },
-  { key: "Inicio",           label: "Fecha/hora inicio",           group: "Metadatos",   defaultOn: true },
-  { key: "Fin",              label: "Fecha/hora fin",              group: "Metadatos",   defaultOn: false },
-  { key: "DuracionMin",      label: "Duración (minutos)",          group: "Metadatos",   defaultOn: false },
-  { key: "Idioma",           label: "Idioma encuesta",             group: "Metadatos",   defaultOn: false },
-  { key: "Estado",           label: "Estado (completa/incompleta)", group: "Metadatos",  defaultOn: true },
-  { key: "SalidaAnticipada", label: "Salida anticipada (residentes)", group: "Metadatos", defaultOn: true },
-  { key: "Latitud",          label: "Latitud GPS",                 group: "Metadatos",   defaultOn: false },
-  { key: "Longitud",         label: "Longitud GPS",                group: "Metadatos",   defaultOn: false },
-  { key: "GPS_m",            label: "Precisión GPS (m)",           group: "Metadatos",   defaultOn: false },
+  { key: "ID",               label: "Survey ID",                 group: "Metadata",    defaultOn: true },
+  { key: "Tipo",             label: "Type (visitors/residents)", group: "Metadata",    defaultOn: true },
+  { key: "Encuestador",      label: "Interviewer name",           group: "Metadata",    defaultOn: true },
+  { key: "CodEncuestador",   label: "Interviewer code",           group: "Metadata",    defaultOn: true },
+  { key: "PuntoEncuesta",    label: "Survey point",               group: "Metadata",    defaultOn: true },
+  { key: "FranjaHoraria",    label: "Time slot",                  group: "Metadata",    defaultOn: true },
+  { key: "VentanaMedia",     label: "30-minute window",           group: "Metadata",    defaultOn: false },
+  { key: "MinutoInicio",     label: "Interview start minute",     group: "Metadata",    defaultOn: false },
+  { key: "MinutoFin",        label: "Interview end minute",       group: "Metadata",    defaultOn: false },
+  { key: "Inicio",           label: "Start date/time",            group: "Metadata",    defaultOn: true },
+  { key: "Fin",              label: "End date/time",              group: "Metadata",    defaultOn: false },
+  { key: "DuracionMin",      label: "Duration (minutes)",         group: "Metadata",    defaultOn: false },
+  { key: "Idioma",           label: "Survey language",            group: "Metadata",    defaultOn: false },
+  { key: "Estado",           label: "Status (complete/incomplete)", group: "Metadata",  defaultOn: true },
+  { key: "SalidaAnticipada", label: "Early exit (residents)",     group: "Metadata",    defaultOn: true },
+  { key: "Latitud",          label: "GPS latitude",               group: "Metadata",    defaultOn: false },
+  { key: "Longitud",         label: "GPS longitude",              group: "Metadata",    defaultOn: false },
+  { key: "GPS_m",            label: "GPS accuracy (m)",           group: "Metadata",    defaultOn: false },
 ];
 
 const V_LABELS: [string, string][] = [
@@ -110,28 +110,28 @@ const R_LABELS: [string, string][] = [
 ];
 
 const CONTEO_FIELDS: FieldDef[] = [
-  { key: "ID",              label: "ID registro",                   group: "Conteos", defaultOn: true },
-  { key: "Fecha",           label: "Fecha",                         group: "Conteos", defaultOn: true },
-  { key: "Hora",            label: "Hora",                          group: "Conteos", defaultOn: true },
-  { key: "Tramo30min",      label: "Tramo 30 min",                  group: "Conteos", defaultOn: true },
-  { key: "Punto_Nombre",    label: "Punto de conteo (nombre)",      group: "Conteos", defaultOn: true },
-  { key: "Punto_Codigo",    label: "Punto de conteo (código)",      group: "Conteos", defaultOn: true },
-  { key: "Sentido",         label: "Sentido (etiqueta completa)",   group: "Conteos", defaultOn: true },
-  { key: "Origen_Codigo",   label: "Código origen del flujo",       group: "Conteos", defaultOn: true },
-  { key: "Destino_Codigo",  label: "Código destino del flujo",      group: "Conteos", defaultOn: true },
-  { key: "Encuestador",     label: "Nombre encuestador",            group: "Conteos", defaultOn: true },
-  { key: "Identificador",   label: "Código encuestador",            group: "Conteos", defaultOn: true },
-  { key: "Personas",        label: "Número de personas",            group: "Conteos", defaultOn: true },
-  { key: "Latitud",         label: "Latitud GPS",                   group: "Conteos", defaultOn: false },
-  { key: "Longitud",        label: "Longitud GPS",                  group: "Conteos", defaultOn: false },
-  { key: "Precision_GPS_m", label: "Precisión GPS (m)",             group: "Conteos", defaultOn: false },
+  { key: "ID",              label: "Record ID",                    group: "Counts",   defaultOn: true },
+  { key: "Fecha",           label: "Date",                         group: "Counts",   defaultOn: true },
+  { key: "Hora",            label: "Time",                         group: "Counts",   defaultOn: true },
+  { key: "Tramo30min",      label: "30-minute segment",            group: "Counts",   defaultOn: true },
+  { key: "Punto_Nombre",    label: "Counting point (name)",        group: "Counts",   defaultOn: true },
+  { key: "Punto_Codigo",    label: "Counting point (code)",        group: "Counts",   defaultOn: true },
+  { key: "Sentido",         label: "Direction (full label)",       group: "Counts",   defaultOn: true },
+  { key: "Origen_Codigo",   label: "Flow origin code",             group: "Counts",   defaultOn: true },
+  { key: "Destino_Codigo",  label: "Flow destination code",        group: "Counts",   defaultOn: true },
+  { key: "Encuestador",     label: "Interviewer name",             group: "Counts",   defaultOn: true },
+  { key: "Identificador",   label: "Interviewer code",             group: "Counts",   defaultOn: true },
+  { key: "Personas",        label: "Number of people",             group: "Counts",   defaultOn: true },
+  { key: "Latitud",         label: "GPS latitude",                 group: "Counts",   defaultOn: false },
+  { key: "Longitud",        label: "GPS longitude",                group: "Counts",   defaultOn: false },
+  { key: "Precision_GPS_m", label: "GPS accuracy (m)",             group: "Counts",   defaultOn: false },
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function downloadCsv(csvContent: string, filename: string, separator: "," | ";" | "\t") {
   let content = csvContent;
-  // El servidor genera con ",". Si el usuario elige ";" o "\t", convertimos desde ","
+  // The server generates CSV using commas. If the user chooses ";" or "\t", convert from commas.
   if (separator !== ",") {
     content = content.split("\n").map(line =>
       line.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).join(separator)
@@ -191,7 +191,7 @@ function FieldCheckboxGroup({
           />
           <span className="text-sm font-semibold text-foreground">{title}</span>
           <span className="text-xs text-muted-foreground">
-            {fields.filter(f => selected.has(f.key)).length}/{fields.length} seleccionados
+            {fields.filter(f => selected.has(f.key)).length}/{fields.length} selected
           </span>
         </div>
         {expanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
@@ -263,7 +263,7 @@ function ExportEncuestasSection() {
     setIsExporting(true);
     try {
       const result = await refetch();
-      if (!result.data) { toast.error("No hay datos para exportar"); return; }
+      if (!result.data) { toast.error("There is no data to export"); return; }
 
       // Filtrar columnas según selección
       const allHeaders = [
@@ -286,7 +286,7 @@ function ExportEncuestasSection() {
       });
 
       const lines = result.data.csv.split("\n");
-      if (lines.length === 0) { toast.error("CSV vacío"); return; }
+      if (lines.length === 0) { toast.error("Empty CSV"); return; }
 
       const originalHeaders = lines[0].split(",").map(h => h.replace(/^"|"$/g, ""));
       const keepIndices = originalHeaders
@@ -302,10 +302,10 @@ function ExportEncuestasSection() {
       });
 
       const dateStr = new Date().toISOString().split("T")[0];
-      downloadCsv(filteredLines.join("\n"), `Encuestas_Sevilla_${dateStr}.csv`, separator);
-      toast.success(`Exportadas ${result.data.count} encuestas (${keepIndices.length} columnas)`);
+      downloadCsv(filteredLines.join("\n"), `Surveys_Seville_${dateStr}.csv`, separator);
+      toast.success(`Exported ${result.data.count} surveys (${keepIndices.length} columns)`);
     } catch {
-      toast.error("Error al exportar. Inténtelo de nuevo.");
+      toast.error("Export failed. Please try again.");
     } finally {
       setIsExporting(false);
     }
@@ -318,40 +318,40 @@ function ExportEncuestasSection() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold flex items-center gap-2">
             <FileDown className="h-4 w-4 text-primary" />
-            Filtros de exportación
+            Export filters
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid sm:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-muted-foreground">Desde</label>
+              <label className="text-xs font-medium text-muted-foreground">From</label>
               <input type="date" value={filters.dateFrom}
                 onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
                 className="border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-muted-foreground">Hasta</label>
+              <label className="text-xs font-medium text-muted-foreground">To</label>
               <input type="date" value={filters.dateTo}
                 onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
                 className="border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-muted-foreground">Encuestador</label>
+              <label className="text-xs font-medium text-muted-foreground">Interviewer</label>
               <select value={filters.encuestadorId ?? ""}
                 onChange={(e) => setFilters({ ...filters, encuestadorId: e.target.value ? Number(e.target.value) : undefined })}
                 className="border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring">
-                <option value="">Todos los encuestadores</option>
+                <option value="">All interviewers</option>
                 {encuestadores.map((e) => (
                   <option key={e.id} value={e.id}>{e.name} {e.identifier ? `(${e.identifier})` : ""}</option>
                 ))}
               </select>
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-muted-foreground">Tipo de encuesta</label>
+              <label className="text-xs font-medium text-muted-foreground">Survey type</label>
               <select value={filters.templateId ?? ""}
                 onChange={(e) => setFilters({ ...filters, templateId: e.target.value ? Number(e.target.value) : undefined })}
                 className="border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring">
-                <option value="">Todos los tipos</option>
+                <option value="">All types</option>
                 {templates.map((t) => (
                   <option key={t.id} value={t.id}>{t.name}</option>
                 ))}
@@ -359,9 +359,9 @@ function ExportEncuestasSection() {
             </div>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-muted-foreground">Separador de columnas</label>
+            <label className="text-xs font-medium text-muted-foreground">Column separator</label>
             <div className="flex gap-2 flex-wrap">
-              {([["," , "Coma  ,"], [";", "Punto y coma  ;"], ["\t", "Tabulador  ⇥"]] as const).map(([val, label]) => (
+              {([["," , "Comma ,"], [";", "Semicolon ;"], ["\t", "Tab ⇥"]] as const).map(([val, label]) => (
                 <button key={val} onClick={() => setSeparator(val)}
                   className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
                     separator === val ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border hover:bg-muted"
@@ -369,7 +369,7 @@ function ExportEncuestasSection() {
               ))}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Usa <strong>punto y coma</strong> si abres el CSV con Excel en español.
+              Use a <strong>semicolon</strong> if you open the CSV with Excel configured for Spanish locale settings.
             </p>
           </div>
         </CardContent>
@@ -379,7 +379,7 @@ function ExportEncuestasSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-semibold">Campos a exportar</CardTitle>
+            <CardTitle className="text-base font-semibold">Fields to export</CardTitle>
             <div className="flex gap-2">
               <button onClick={() => {
                 const all = new Set<string>();
@@ -387,32 +387,32 @@ function ExportEncuestasSection() {
                 V_LABELS.forEach(([k]) => all.add(k));
                 R_LABELS.forEach(([k]) => all.add(k));
                 setSelectedFields(all);
-              }} className="text-xs text-primary hover:underline">Todos</button>
+              }} className="text-xs text-primary hover:underline">All</button>
               <span className="text-muted-foreground">·</span>
-              <button onClick={() => setSelectedFields(new Set())} className="text-xs text-muted-foreground hover:underline">Ninguno</button>
+              <button onClick={() => setSelectedFields(new Set())} className="text-xs text-muted-foreground hover:underline">None</button>
               <span className="text-muted-foreground">·</span>
-              <button onClick={() => setSelectedFields(defaultSelected)} className="text-xs text-muted-foreground hover:underline">Por defecto</button>
+              <button onClick={() => setSelectedFields(defaultSelected)} className="text-xs text-muted-foreground hover:underline">Default</button>
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            {selectedFields.size} campos seleccionados de {META_FIELDS.length + V_LABELS.length + R_LABELS.length}
+            {selectedFields.size} selected fields out of {META_FIELDS.length + V_LABELS.length + R_LABELS.length}
           </p>
         </CardHeader>
         <CardContent className="space-y-3">
           <FieldCheckboxGroup
-            title="Metadatos de la encuesta"
+            title="Survey metadata"
             fields={META_FIELDS.map(f => ({ key: f.key, label: f.label }))}
             selected={selectedFields}
             onChange={toggleField}
           />
           <FieldCheckboxGroup
-            title="Preguntas Visitantes (V_P01 – V_P20)"
+            title="Visitor questions (V_P01 – V_P20)"
             fields={V_LABELS.map(([k, l]) => ({ key: k, label: l }))}
             selected={selectedFields}
             onChange={toggleField}
           />
           <FieldCheckboxGroup
-            title="Preguntas Residentes (R_P01 – R_P36)"
+            title="Resident questions (R_P01 – R_P36)"
             fields={R_LABELS.map(([k, l]) => ({ key: k, label: l }))}
             selected={selectedFields}
             onChange={toggleField}
@@ -422,9 +422,9 @@ function ExportEncuestasSection() {
 
       <Button onClick={handleExport} disabled={isExporting || selectedFields.size === 0} className="w-full sm:w-auto">
         {isExporting ? (
-          <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Exportando...</>
+          <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Exporting...</>
         ) : (
-          <><Download className="h-4 w-4 mr-2" />Descargar CSV ({selectedFields.size} columnas)</>
+          <><Download className="h-4 w-4 mr-2" />Download CSV ({selectedFields.size} columns)</>
         )}
       </Button>
     </div>
@@ -471,10 +471,10 @@ function ExportConteosSection() {
     setIsExporting(true);
     try {
       const result = await refetch();
-      if (!result.data) { toast.error("No hay datos para exportar"); return; }
+      if (!result.data) { toast.error("There is no data to export"); return; }
 
       const lines = result.data.csv.split("\n");
-      if (lines.length === 0) { toast.error("CSV vacío"); return; }
+      if (lines.length === 0) { toast.error("Empty CSV"); return; }
 
       const originalHeaders = lines[0].split(",").map(h => h.replace(/^"|"$/g, ""));
       const keepIndices = originalHeaders
@@ -487,10 +487,10 @@ function ExportConteosSection() {
       });
 
       const dateStr = new Date().toISOString().split("T")[0];
-      downloadCsv(filteredLines.join("\n"), `Conteos_Sevilla_${dateStr}.csv`, separator);
-      toast.success(`Exportados ${result.data.count} registros (${keepIndices.length} columnas)`);
+      downloadCsv(filteredLines.join("\n"), `Counts_Seville_${dateStr}.csv`, separator);
+      toast.success(`Exported ${result.data.count} records (${keepIndices.length} columns)`);
     } catch {
-      toast.error("Error al exportar. Inténtelo de nuevo.");
+      toast.error("Export failed. Please try again.");
     } finally {
       setIsExporting(false);
     }
@@ -503,29 +503,29 @@ function ExportConteosSection() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold flex items-center gap-2">
             <PersonStanding className="h-4 w-4 text-amber-600" />
-            Filtros de exportación de conteos
+            Count export filters
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid sm:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-muted-foreground">Desde</label>
+              <label className="text-xs font-medium text-muted-foreground">From</label>
               <input type="date" value={filters.dateFrom}
                 onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
                 className="border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-muted-foreground">Hasta</label>
+              <label className="text-xs font-medium text-muted-foreground">To</label>
               <input type="date" value={filters.dateTo}
                 onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
                 className="border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-muted-foreground">Encuestador</label>
+              <label className="text-xs font-medium text-muted-foreground">Interviewer</label>
               <select value={filters.encuestadorId ?? ""}
                 onChange={(e) => setFilters({ ...filters, encuestadorId: e.target.value ? Number(e.target.value) : undefined })}
                 className="border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring">
-                <option value="">Todos los encuestadores</option>
+                <option value="">All interviewers</option>
                 {encuestadores.map((e) => (
                   <option key={e.id} value={e.id}>{e.name} {e.identifier ? `(${e.identifier})` : ""}</option>
                 ))}
@@ -533,9 +533,9 @@ function ExportConteosSection() {
             </div>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-muted-foreground">Separador de columnas</label>
+            <label className="text-xs font-medium text-muted-foreground">Column separator</label>
             <div className="flex gap-2 flex-wrap">
-              {([["," , "Coma  ,"], [";", "Punto y coma  ;"], ["\t", "Tabulador  ⇥"]] as const).map(([val, label]) => (
+              {([["," , "Comma ,"], [";", "Semicolon ;"], ["\t", "Tab ⇥"]] as const).map(([val, label]) => (
                 <button key={val} onClick={() => setSeparator(val)}
                   className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
                     separator === val ? "bg-amber-600 text-white border-amber-600" : "bg-background border-border hover:bg-muted"
@@ -550,20 +550,20 @@ function ExportConteosSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-semibold">Campos a exportar</CardTitle>
+            <CardTitle className="text-base font-semibold">Fields to export</CardTitle>
             <div className="flex gap-2">
-              <button onClick={() => setSelectedFields(new Set(CONTEO_FIELDS.map(f => f.key)))} className="text-xs text-primary hover:underline">Todos</button>
+              <button onClick={() => setSelectedFields(new Set(CONTEO_FIELDS.map(f => f.key)))} className="text-xs text-primary hover:underline">All</button>
               <span className="text-muted-foreground">·</span>
-              <button onClick={() => setSelectedFields(new Set())} className="text-xs text-muted-foreground hover:underline">Ninguno</button>
+              <button onClick={() => setSelectedFields(new Set())} className="text-xs text-muted-foreground hover:underline">None</button>
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            {selectedFields.size} campos seleccionados de {CONTEO_FIELDS.length}
+            {selectedFields.size} selected fields out of {CONTEO_FIELDS.length}
           </p>
         </CardHeader>
         <CardContent>
           <FieldCheckboxGroup
-            title="Campos de conteo peatonal"
+            title="Pedestrian count fields"
             fields={CONTEO_FIELDS.map(f => ({ key: f.key, label: f.label }))}
             selected={selectedFields}
             onChange={toggleField}
@@ -574,9 +574,9 @@ function ExportConteosSection() {
       <Button onClick={handleExport} disabled={isExporting || selectedFields.size === 0}
         variant="outline" className="w-full sm:w-auto border-amber-300 text-amber-700 hover:bg-amber-50">
         {isExporting ? (
-          <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Exportando...</>
+          <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Exporting...</>
         ) : (
-          <><Download className="h-4 w-4 mr-2" />Descargar CSV conteos ({selectedFields.size} columnas)</>
+          <><Download className="h-4 w-4 mr-2" />Download counts CSV ({selectedFields.size} columns)</>
         )}
       </Button>
     </div>
@@ -603,14 +603,14 @@ function FieldMetricsSection() {
   const saveMutation = trpc.fieldMetrics.upsert.useMutation({
     onSuccess: () => {
       utils.fieldMetrics.list.invalidate();
-      toast.success("Parte de campo guardado");
+      toast.success("Field report saved");
       setForm({ completed: 0, rejected: 0, substitutions: 0, notes: "" });
     },
-    onError: () => toast.error("Error al guardar"),
+    onError: () => toast.error("Error saving"),
   });
 
   const handleSave = async () => {
-    if (!selectedEncuestador) { toast.error("Seleccione un encuestador"); return; }
+    if (!selectedEncuestador) { toast.error("Select an interviewer"); return; }
     setSaving(true);
     try {
       await saveMutation.mutateAsync({
@@ -631,23 +631,23 @@ function FieldMetricsSection() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold flex items-center gap-2">
             <ClipboardList className="h-4 w-4 text-primary" />
-            Registrar parte de campo
+            Register field report
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid sm:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-muted-foreground">Fecha</label>
+              <label className="text-xs font-medium text-muted-foreground">Date</label>
               <input type="date" value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
                 className="border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-muted-foreground">Encuestador</label>
+              <label className="text-xs font-medium text-muted-foreground">Interviewer</label>
               <select value={selectedEncuestador ?? ""}
                 onChange={(e) => setSelectedEncuestador(e.target.value ? Number(e.target.value) : undefined)}
                 className="border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring">
-                <option value="">Seleccionar...</option>
+                <option value="">Select...</option>
                 {encuestadores.map((e) => (
                   <option key={e.id} value={e.id}>{e.name} {e.identifier ? `(${e.identifier})` : ""}</option>
                 ))}
@@ -657,7 +657,7 @@ function FieldMetricsSection() {
           <div className="grid grid-cols-3 gap-3">
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                <CheckCircle2 className="h-3 w-3 text-green-600" />Completadas
+                <CheckCircle2 className="h-3 w-3 text-green-600" />Completed
               </label>
               <input type="number" min={0} value={form.completed}
                 onChange={(e) => setForm({ ...form, completed: Number(e.target.value) })}
@@ -665,7 +665,7 @@ function FieldMetricsSection() {
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                <AlertCircle className="h-3 w-3 text-red-600" />Rechazadas
+                <AlertCircle className="h-3 w-3 text-red-600" />Rejected
               </label>
               <input type="number" min={0} value={form.rejected}
                 onChange={(e) => setForm({ ...form, rejected: Number(e.target.value) })}
@@ -673,7 +673,7 @@ function FieldMetricsSection() {
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                <RefreshCw className="h-3 w-3 text-amber-600" />Sustituciones
+                <RefreshCw className="h-3 w-3 text-amber-600" />Substitutions
               </label>
               <input type="number" min={0} value={form.substitutions}
                 onChange={(e) => setForm({ ...form, substitutions: Number(e.target.value) })}
@@ -681,36 +681,36 @@ function FieldMetricsSection() {
             </div>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-muted-foreground">Observaciones</label>
+            <label className="text-xs font-medium text-muted-foreground">Notes</label>
             <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })}
               rows={2}
               className="border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none"
-              placeholder="Incidencias, condiciones del campo, observaciones..." />
+              placeholder="Incidents, field conditions, notes..." />
           </div>
           <Button onClick={handleSave} disabled={saving || !selectedEncuestador} className="w-full sm:w-auto">
             {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
-            Guardar parte
+            Save shift report
           </Button>
         </CardContent>
       </Card>
 
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold">Partes de campo registrados</CardTitle>
+          <CardTitle className="text-base font-semibold">Registered field reports</CardTitle>
         </CardHeader>
         <CardContent>
           {metrics.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <ClipboardList className="h-8 w-8 mx-auto mb-2 opacity-30" />
-              <p className="text-sm">No hay partes registrados para los filtros seleccionados.</p>
+              <p className="text-sm">There are no shift reports for the selected filters.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Fecha</th>
-                    <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Encuestador</th>
+                    <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Date</th>
+                    <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Interviewer</th>
                     <th className="px-3 py-2.5 text-center text-xs font-semibold text-green-600 uppercase tracking-wide">Completadas</th>
                     <th className="px-3 py-2.5 text-center text-xs font-semibold text-red-600 uppercase tracking-wide">Rechazadas</th>
                     <th className="px-3 py-2.5 text-center text-xs font-semibold text-amber-600 uppercase tracking-wide">Sustituciones</th>
@@ -769,12 +769,12 @@ function ExportCountingSessionsSection() {
     setIsExporting(true);
     try {
       const result = await refetch();
-      if (!result.data) { toast.error("No hay datos para exportar"); return; }
-      if (result.data.count === 0) { toast.error("No hay sesiones de conteo en el rango seleccionado"); return; }
+      if (!result.data) { toast.error("There is no data to export"); return; }
+      if (result.data.count === 0) { toast.error("There are no counting sessions in the selected range"); return; }
       const dateStr = new Date().toISOString().split("T")[0];
-      downloadCsv(result.data.csv, `SesionesConteo_${dateStr}.csv`, separator);
-      toast.success(`Exportadas ${result.data.count} sesiones de conteo`);
-    } catch { toast.error("Error al exportar. Inténtelo de nuevo."); }
+      downloadCsv(result.data.csv, `CountingSessions_${dateStr}.csv`, separator);
+      toast.success(`Exported ${result.data.count} counting sessions`);
+    } catch { toast.error("Export failed. Please try again."); }
     finally { setIsExporting(false); }
   };
   return (
@@ -783,46 +783,46 @@ function ExportCountingSessionsSection() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold flex items-center gap-2">
             <Timer className="h-4 w-4 text-teal-600" />
-            Filtros — Sesiones de conteo
+            Filters — Counting sessions
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid sm:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-muted-foreground">Desde</label>
+              <label className="text-xs font-medium text-muted-foreground">From</label>
               <input type="date" value={filters.dateFrom} onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
                 className="border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-muted-foreground">Hasta</label>
+              <label className="text-xs font-medium text-muted-foreground">To</label>
               <input type="date" value={filters.dateTo} onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
                 className="border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-muted-foreground">Encuestador</label>
+              <label className="text-xs font-medium text-muted-foreground">Interviewer</label>
               <select value={filters.encuestadorId ?? ""} onChange={(e) => setFilters({ ...filters, encuestadorId: e.target.value ? Number(e.target.value) : undefined })}
                 className="border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring">
-                <option value="">Todos los encuestadores</option>
+                <option value="">All interviewers</option>
                 {encuestadores.map((e) => <option key={e.id} value={e.id}>{e.name} {e.identifier ? `(${e.identifier})` : ""}</option>)}
               </select>
             </div>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-muted-foreground">Separador de columnas</label>
+            <label className="text-xs font-medium text-muted-foreground">Column separator</label>
             <div className="flex gap-2 flex-wrap">
               {(["," , ";", "\t"] as const).map((val) => (
                 <button key={val} onClick={() => setSeparator(val)}
                   className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
                     separator === val ? "bg-teal-600 text-white border-teal-600" : "bg-background border-border hover:bg-muted"
-                  }`}>{val === "," ? "Coma  ," : val === ";" ? "Punto y coma  ;" : "Tabulador  ⇥"}</button>
+                  }`}>{val === "," ? "Comma ," : val === ";" ? "Semicolon ;" : "Tab ⇥"}</button>
               ))}
             </div>
           </div>
         </CardContent>
       </Card>
-      <p className="text-xs text-muted-foreground">El CSV incluye: ID, encuestador, punto, subpunto, inicio, fin, duración, total personas y GPS.</p>
+      <p className="text-xs text-muted-foreground">The CSV includes: ID, interviewer, point, subpoint, start, end, duration, total people, and GPS.</p>
       <Button onClick={handleExport} disabled={isExporting} variant="outline" className="w-full sm:w-auto border-teal-300 text-teal-700 hover:bg-teal-50">
-        {isExporting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Exportando...</> : <><Download className="h-4 w-4 mr-2" />Descargar CSV sesiones de conteo</>}
+        {isExporting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Exporting...</> : <><Download className="h-4 w-4 mr-2" />Download counting sessions CSV</>}
       </Button>
     </div>
   );
@@ -843,12 +843,12 @@ function ExportShiftClosuresSection() {
     setIsExporting(true);
     try {
       const result = await refetch();
-      if (!result.data) { toast.error("No hay datos para exportar"); return; }
-      if (result.data.count === 0) { toast.error("No hay cierres de turno en el rango seleccionado"); return; }
+      if (!result.data) { toast.error("There is no data to export"); return; }
+      if (result.data.count === 0) { toast.error("There are no shift closures in the selected range"); return; }
       const dateStr = new Date().toISOString().split("T")[0];
-      downloadCsv(result.data.csv, `CierresTurno_${dateStr}.csv`, separator);
-      toast.success(`Exportados ${result.data.count} cierres de turno`);
-    } catch { toast.error("Error al exportar. Inténtelo de nuevo."); }
+      downloadCsv(result.data.csv, `ShiftClosures_${dateStr}.csv`, separator);
+      toast.success(`Exported ${result.data.count} shift closures`);
+    } catch { toast.error("Export failed. Please try again."); }
     finally { setIsExporting(false); }
   };
   return (
@@ -857,46 +857,46 @@ function ExportShiftClosuresSection() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold flex items-center gap-2">
             <LogOut className="h-4 w-4 text-purple-600" />
-            Filtros — Cierres de turno
+            Filters — Shift closures
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid sm:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-muted-foreground">Desde</label>
+              <label className="text-xs font-medium text-muted-foreground">From</label>
               <input type="date" value={filters.dateFrom} onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
                 className="border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-muted-foreground">Hasta</label>
+              <label className="text-xs font-medium text-muted-foreground">To</label>
               <input type="date" value={filters.dateTo} onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
                 className="border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-muted-foreground">Encuestador</label>
+              <label className="text-xs font-medium text-muted-foreground">Interviewer</label>
               <select value={filters.encuestadorId ?? ""} onChange={(e) => setFilters({ ...filters, encuestadorId: e.target.value ? Number(e.target.value) : undefined })}
                 className="border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring">
-                <option value="">Todos los encuestadores</option>
+                <option value="">All interviewers</option>
                 {encuestadores.map((e) => <option key={e.id} value={e.id}>{e.name} {e.identifier ? `(${e.identifier})` : ""}</option>)}
               </select>
             </div>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-muted-foreground">Separador de columnas</label>
+            <label className="text-xs font-medium text-muted-foreground">Column separator</label>
             <div className="flex gap-2 flex-wrap">
               {(["," , ";", "\t"] as const).map((val) => (
                 <button key={val} onClick={() => setSeparator(val)}
                   className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
                     separator === val ? "bg-purple-600 text-white border-purple-600" : "bg-background border-border hover:bg-muted"
-                  }`}>{val === "," ? "Coma  ," : val === ";" ? "Punto y coma  ;" : "Tabulador  ⇥"}</button>
+                  }`}>{val === "," ? "Comma ," : val === ";" ? "Semicolon ;" : "Tab ⇥"}</button>
               ))}
             </div>
           </div>
         </CardContent>
       </Card>
-      <p className="text-xs text-muted-foreground">El CSV incluye: encuestador, fecha/hora de cierre, total encuestas, conteos, rechazos, punto, tipo, valoración e incidencias.</p>
+      <p className="text-xs text-muted-foreground">The CSV includes: interviewer, closure date/time, total surveys, counts, rejections, point, type, rating, and incidents.</p>
       <Button onClick={handleExport} disabled={isExporting} variant="outline" className="w-full sm:w-auto border-purple-300 text-purple-700 hover:bg-purple-50">
-        {isExporting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Exportando...</> : <><Download className="h-4 w-4 mr-2" />Descargar CSV cierres de turno</>}
+        {isExporting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Exporting...</> : <><Download className="h-4 w-4 mr-2" />Download shift closures CSV</>}
       </Button>
     </div>
   );
@@ -911,8 +911,8 @@ export default function Exportar() {
     <DashboardLayout>
       <div className="space-y-6 max-w-4xl">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Exportación y Métricas</h1>
-          <p className="text-muted-foreground text-sm mt-1">Descarga de datos para análisis en SPSS, Excel o SIG</p>
+          <h1 className="text-2xl font-bold text-foreground">Export and Metrics</h1>
+          <p className="text-muted-foreground text-sm mt-1">Download data for analysis in SPSS, Excel, or GIS</p>
         </div>
 
         {/* Tab switcher */}
@@ -921,31 +921,31 @@ export default function Exportar() {
             className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors ${
               tab === "export" ? "bg-primary text-primary-foreground" : "bg-background text-foreground hover:bg-muted"
             }`}>
-            <FileDown className="h-4 w-4" />Encuestas
+            <FileDown className="h-4 w-4" />Surveys
           </button>
           <button onClick={() => setTab("conteos")}
             className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors ${
               tab === "conteos" ? "bg-primary text-primary-foreground" : "bg-background text-foreground hover:bg-muted"
             }`}>
-            <PersonStanding className="h-4 w-4" />Conteos
+            <PersonStanding className="h-4 w-4" />Counts
           </button>
           <button onClick={() => setTab("sessions")}
             className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors ${
               tab === "sessions" ? "bg-teal-600 text-white" : "bg-background text-foreground hover:bg-muted"
             }`}>
-            <Timer className="h-4 w-4" />Sesiones
+            <Timer className="h-4 w-4" />Sessions
           </button>
           <button onClick={() => setTab("closures")}
             className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors ${
               tab === "closures" ? "bg-purple-600 text-white" : "bg-background text-foreground hover:bg-muted"
             }`}>
-            <LogOut className="h-4 w-4" />Cierres de turno
+            <LogOut className="h-4 w-4" />Shift closures
           </button>
           <button onClick={() => setTab("metrics")}
             className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors ${
               tab === "metrics" ? "bg-primary text-primary-foreground" : "bg-background text-foreground hover:bg-muted"
             }`}>
-            <ClipboardList className="h-4 w-4" />Partes de campo
+            <ClipboardList className="h-4 w-4" />Field reports
           </button>
         </div>
 
