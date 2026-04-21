@@ -1344,7 +1344,20 @@ export const appRouter = router({
 
     update: adminProcedure
       .input(z.object({
+        projectName: z.string().trim().min(1).optional(),
+        exportProjectName: z.string().trim().min(1).optional(),
         mapPrimaryPointCode: z.string().regex(/^\d{2}$/).nullable().optional(),
+        surveyTargetTotal: z.number().int().min(0).optional(),
+        surveyTargetResidents: z.number().int().min(0).optional(),
+        surveyTargetVisitors: z.number().int().min(0).optional(),
+        surveyWeeklyTargetTotal: z.number().int().min(0).optional(),
+        surveyWeeklyTargetResidents: z.number().int().min(0).optional(),
+        surveyWeeklyTargetVisitors: z.number().int().min(0).optional(),
+        quotasEnabled: z.boolean().optional(),
+        residentQuotaTotal: z.number().int().min(0).optional(),
+        visitorQuotaTotal: z.number().int().min(0).optional(),
+        enabledCharts: z.array(z.string().trim().min(1)).optional(),
+        openAiApiKey: z.string().optional(),
       }))
       .mutation(({ input }) => updateAppSettings(input)),
   }),
@@ -1876,6 +1889,7 @@ export const appRouter = router({
      * Accesible por encuestadores, revisores y admins.
      */
     progress: protectedProcedure.query(async () => {
+      const settings = await getAppSettings();
       // Obtener todas las respuestas completas
       const allResponses = await getSurveyResponses({ status: "completa" });
 
@@ -1942,7 +1956,8 @@ export const appRouter = router({
 
       return {
         visitantes: {
-          total: { current: visitantesResponses.length, target: VISITANTES_QUOTAS.total },
+          enabled: settings.quotasEnabled,
+          total: { current: visitantesResponses.length, target: settings.visitorQuotaTotal },
           genero: {
             hombre: { current: vGenero.hombre, target: VISITANTES_QUOTAS.genero.hombre.target, label: VISITANTES_QUOTAS.genero.hombre.label },
             mujer: { current: vGenero.mujer, target: VISITANTES_QUOTAS.genero.mujer.target, label: VISITANTES_QUOTAS.genero.mujer.label },
@@ -1960,7 +1975,8 @@ export const appRouter = router({
           })),
         },
         residentes: {
-          total: { current: residentesResponses.length, target: RESIDENTES_QUOTAS.total },
+          enabled: settings.quotasEnabled,
+          total: { current: residentesResponses.length, target: settings.residentQuotaTotal },
           genero: {
             hombre: { current: rGenero.hombre, target: RESIDENTES_QUOTAS.genero.hombre.target, label: RESIDENTES_QUOTAS.genero.hombre.label },
             mujer: { current: rGenero.mujer, target: RESIDENTES_QUOTAS.genero.mujer.target, label: RESIDENTES_QUOTAS.genero.mujer.label },

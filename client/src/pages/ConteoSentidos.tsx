@@ -131,7 +131,7 @@ export default function ConteoSentidos() {
       setSelectedCode(pointDialog.code || selectedCode);
       setPointDialog(EMPTY_POINT_DIALOG);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Unable to save the point.");
+      setErrorMessage(error instanceof Error ? error.message : "No se pudo guardar el punto.");
     }
   }
 
@@ -157,12 +157,12 @@ export default function ConteoSentidos() {
       setSelectedCode(subPointDialog.pointCode);
       setSubPointDialog(EMPTY_SUBPOINT_DIALOG);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Unable to save the subpoint.");
+      setErrorMessage(error instanceof Error ? error.message : "No se pudo guardar el subpunto.");
     }
   }
 
   async function handleDeletePoint(point: CountingPoint) {
-    if (!window.confirm(`Delete point ${point.fullName} and all its subpoints?`)) {
+    if (!window.confirm(`¿Eliminar el punto ${point.fullName} y todos sus subpuntos?`)) {
       return;
     }
 
@@ -171,12 +171,12 @@ export default function ConteoSentidos() {
       await deletePoint.mutateAsync({ code: point.code });
       await refreshPoints();
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Unable to delete the point.");
+      setErrorMessage(error instanceof Error ? error.message : "No se pudo eliminar el punto.");
     }
   }
 
   async function handleDeleteSubPoint(point: CountingPoint, subPoint: CountingSubPoint) {
-    if (!window.confirm(`Delete subpoint ${subPoint.fullName}?`)) {
+    if (!window.confirm(`¿Eliminar el subpunto ${subPoint.fullName}?`)) {
       return;
     }
 
@@ -185,7 +185,7 @@ export default function ConteoSentidos() {
       await deleteSubPoint.mutateAsync({ pointCode: point.code, code: subPoint.code });
       await refreshPoints();
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Unable to delete the subpoint.");
+      setErrorMessage(error instanceof Error ? error.message : "No se pudo eliminar el subpunto.");
     }
   }
 
@@ -194,14 +194,14 @@ export default function ConteoSentidos() {
       <div className="p-6 max-w-6xl mx-auto space-y-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Point Counting Directions</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Sentidos de conteo</h1>
             <p className="text-gray-500 mt-1 max-w-3xl">
-              Manage the master list of counting points and subpoints used across pedestrian counting, reporting, and flow selection.
+              Gestiona la lista maestra de puntos y subpuntos de conteo utilizada en el conteo peatonal, los resultados y la selección de flujos.
             </p>
           </div>
           <Button onClick={openCreatePoint} disabled={busy} className="bg-blue-700 hover:bg-blue-800">
             <Plus className="h-4 w-4 mr-2" />
-            Add point
+            Añadir punto
           </Button>
         </div>
 
@@ -214,13 +214,13 @@ export default function ConteoSentidos() {
         <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Counting points</CardTitle>
+              <CardTitle className="text-base">Puntos de conteo</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {pointsQuery.isLoading ? (
-                <p className="text-sm text-gray-500">Loading points...</p>
+                <p className="text-sm text-gray-500">Cargando puntos...</p>
               ) : points.length === 0 ? (
-                <p className="text-sm text-gray-500">No points available yet.</p>
+                <p className="text-sm text-gray-500">Aún no hay puntos disponibles.</p>
               ) : (
                 points.map((point) => (
                   <button
@@ -234,7 +234,7 @@ export default function ConteoSentidos() {
                   >
                     <div className="font-semibold">{point.fullName}</div>
                     <div className={`text-xs mt-1 ${selectedPoint?.code === point.code ? "text-blue-100" : "text-gray-500"}`}>
-                      {point.subPoints.length} subpoints · {getFlowsForPoint(point).length} flows
+                      {point.subPoints.length} subpuntos · {getFlowsForPoint(point).length} flujos
                     </div>
                   </button>
                 ))
@@ -255,18 +255,18 @@ export default function ConteoSentidos() {
                         <div>
                           <div className="text-lg">{selectedPoint.fullName}</div>
                           <div className="text-sm font-normal text-gray-500">
-                            {selectedPoint.subPoints.length} subpoints · {flows.length} bidirectional flows
+                            {selectedPoint.subPoints.length} subpuntos · {flows.length} flujos bidireccionales
                           </div>
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         <Button variant="outline" onClick={() => openEditPoint(selectedPoint)} disabled={busy}>
                           <Pencil className="h-4 w-4 mr-2" />
-                          Edit point
+                          Editar punto
                         </Button>
                         <Button variant="destructive" onClick={() => handleDeletePoint(selectedPoint)} disabled={busy}>
                           <Trash2 className="h-4 w-4 mr-2" />
-                          Delete point
+                          Eliminar punto
                         </Button>
                       </div>
                     </CardTitle>
@@ -274,16 +274,16 @@ export default function ConteoSentidos() {
                   <CardContent className="space-y-5">
                     <div>
                       <div className="flex items-center justify-between gap-3 mb-3">
-                        <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Subpoints</h3>
+                        <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Subpuntos</h3>
                         <Button size="sm" onClick={() => openCreateSubPoint(selectedPoint)} disabled={busy}>
                           <Plus className="h-4 w-4 mr-2" />
-                          Add subpoint
+                          Añadir subpunto
                         </Button>
                       </div>
                       <div className="space-y-3">
                         {selectedPoint.subPoints.length === 0 ? (
                           <div className="rounded-lg border border-dashed border-gray-300 px-4 py-6 text-sm text-gray-500">
-                            This point has no subpoints yet.
+                            Este punto todavía no tiene subpuntos.
                           </div>
                         ) : (
                           selectedPoint.subPoints.map((subPoint) => (
@@ -298,11 +298,11 @@ export default function ConteoSentidos() {
                               <div className="flex flex-wrap gap-2">
                                 <Button variant="outline" size="sm" onClick={() => openEditSubPoint(selectedPoint, subPoint)} disabled={busy}>
                                   <Pencil className="h-4 w-4 mr-2" />
-                                  Edit
+                                  Editar
                                 </Button>
                                 <Button variant="destructive" size="sm" onClick={() => handleDeleteSubPoint(selectedPoint, subPoint)} disabled={busy}>
                                   <Trash2 className="h-4 w-4 mr-2" />
-                                  Delete
+                                  Eliminar
                                 </Button>
                               </div>
                             </div>
@@ -314,7 +314,7 @@ export default function ConteoSentidos() {
                     <div>
                       <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3 flex items-center gap-2">
                         <ArrowLeftRight className="h-4 w-4" />
-                        Generated flows
+                        Flujos generados
                       </h3>
                       <div className="space-y-2">
                         {flows.map((flow) => (
@@ -332,16 +332,16 @@ export default function ConteoSentidos() {
 
                 <Card>
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-base">Global summary</CardTitle>
+                    <CardTitle className="text-base">Resumen global</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b border-gray-200">
-                            <th className="text-left py-2 pr-4 font-semibold text-gray-600">Point</th>
-                            <th className="text-left py-2 pr-4 font-semibold text-gray-600">Subpoints</th>
-                            <th className="text-left py-2 font-semibold text-gray-600">Flows</th>
+                            <th className="text-left py-2 pr-4 font-semibold text-gray-600">Punto</th>
+                            <th className="text-left py-2 pr-4 font-semibold text-gray-600">Subpuntos</th>
+                            <th className="text-left py-2 font-semibold text-gray-600">Flujos</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -349,7 +349,7 @@ export default function ConteoSentidos() {
                             <tr key={point.code} className="border-b border-gray-100 hover:bg-gray-50">
                               <td className="py-2 pr-4 font-medium">{point.fullName}</td>
                               <td className="py-2 pr-4 text-gray-600">{point.subPoints.map((sub) => sub.fullName).join(", ") || "—"}</td>
-                              <td className="py-2 text-gray-600">{getFlowsForPoint(point).length} flows</td>
+                              <td className="py-2 text-gray-600">{getFlowsForPoint(point).length} flujos</td>
                             </tr>
                           ))}
                         </tbody>
@@ -360,7 +360,7 @@ export default function ConteoSentidos() {
               </>
             ) : (
               <Card>
-                <CardContent className="pt-6 text-sm text-gray-500">Create the first point to start configuring the counting structure.</CardContent>
+                <CardContent className="pt-6 text-sm text-gray-500">Crea el primer punto para empezar a configurar la estructura de conteo.</CardContent>
               </Card>
             )}
           </div>
@@ -370,23 +370,23 @@ export default function ConteoSentidos() {
       <Dialog open={pointDialog.open} onOpenChange={(open) => setPointDialog((current) => ({ ...current, open }))}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{pointDialog.mode === "create" ? "Create point" : "Edit point"}</DialogTitle>
+            <DialogTitle>{pointDialog.mode === "create" ? "Crear punto" : "Editar punto"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             {pointDialog.mode === "create" && (
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Point code</label>
+                <label className="text-sm font-medium text-gray-700">Código del punto</label>
                 <Input
                   placeholder="01"
                   maxLength={2}
                   value={pointDialog.code}
                   onChange={(event) => setPointDialog((current) => ({ ...current, code: event.target.value.replace(/\D/g, "").slice(0, 2) }))}
                 />
-                <p className="text-xs text-gray-500">Leave this field empty to assign the next available code automatically.</p>
+                <p className="text-xs text-gray-500">Deja este campo vacío para asignar automáticamente el siguiente código disponible.</p>
               </div>
             )}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Point name</label>
+              <label className="text-sm font-medium text-gray-700">Nombre del punto</label>
               <Input
                 placeholder="Virgen de los Reyes"
                 value={pointDialog.name}
@@ -395,9 +395,9 @@ export default function ConteoSentidos() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPointDialog(EMPTY_POINT_DIALOG)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setPointDialog(EMPTY_POINT_DIALOG)}>Cancelar</Button>
             <Button onClick={handlePointSubmit} disabled={busy || !pointDialog.name.trim()}>
-              {pointDialog.mode === "create" ? "Create point" : "Save changes"}
+              {pointDialog.mode === "create" ? "Crear punto" : "Guardar cambios"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -406,22 +406,22 @@ export default function ConteoSentidos() {
       <Dialog open={subPointDialog.open} onOpenChange={(open) => setSubPointDialog((current) => ({ ...current, open }))}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{subPointDialog.mode === "create" ? "Create subpoint" : "Edit subpoint"}</DialogTitle>
+            <DialogTitle>{subPointDialog.mode === "create" ? "Crear subpunto" : "Editar subpunto"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             {subPointDialog.mode === "create" && (
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Subpoint code</label>
+                <label className="text-sm font-medium text-gray-700">Código del subpunto</label>
                 <Input
                   placeholder={`${subPointDialog.pointCode || "01"}.01`}
                   value={subPointDialog.code}
                   onChange={(event) => setSubPointDialog((current) => ({ ...current, code: event.target.value }))}
                 />
-                <p className="text-xs text-gray-500">Use the same point prefix. If you leave it blank, the next available code will be generated automatically.</p>
+                <p className="text-xs text-gray-500">Usa el mismo prefijo del punto. Si lo dejas vacío, se generará automáticamente el siguiente código disponible.</p>
               </div>
             )}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Subpoint name</label>
+              <label className="text-sm font-medium text-gray-700">Nombre del subpunto</label>
               <Input
                 placeholder="Alemanes"
                 value={subPointDialog.name}
@@ -430,9 +430,9 @@ export default function ConteoSentidos() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setSubPointDialog(EMPTY_SUBPOINT_DIALOG)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setSubPointDialog(EMPTY_SUBPOINT_DIALOG)}>Cancelar</Button>
             <Button onClick={handleSubPointSubmit} disabled={busy || !subPointDialog.name.trim()}>
-              {subPointDialog.mode === "create" ? "Create subpoint" : "Save changes"}
+              {subPointDialog.mode === "create" ? "Crear subpunto" : "Guardar cambios"}
             </Button>
           </DialogFooter>
         </DialogContent>

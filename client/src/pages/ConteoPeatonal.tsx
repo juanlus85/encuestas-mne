@@ -125,38 +125,37 @@ export default function ConteoPeatonal() {
   });
 
   const addPass = trpc.passes.add.useMutation({
-    onSuccess: () => {
-      if (selectedCount !== null && selectedFlow) {
-        const newPass = {
-          count: selectedCount,
-          direction: selectedFlow.label,
-          time: new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
-        };
-        setRecentPasses((prev) => [newPass, ...prev.slice(0, 9)]);
-        setTotalToday((prev) => prev + selectedCount);
-        setSessionTotal((prev) => prev + selectedCount);
-        toast.success(`+${selectedCount} person${selectedCount !== 1 ? "s" : ""} · ${selectedFlow.label}`, { duration: 1500 });
-        setSelectedCount(null);
-        setSelectedFlow(null);
-      }
+    onSuccess: (_data, variables) => {
+      const newPass = {
+        count: variables.count,
+        direction: variables.directionLabel ?? "",
+        time: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+      };
+      setRecentPasses((prev) => [newPass, ...prev.slice(0, 9)]);
+      setTotalToday((prev) => prev + variables.count);
+      setSessionTotal((prev) => prev + variables.count);
+      setSelectedCount(variables.count);
+      toast.success(`+${variables.count} persona${variables.count !== 1 ? "s" : ""} · ${variables.directionLabel}`, { duration: 1500 });
     },
-    onError: (err) => toast.error("Error saving: " + err.message),
+    onError: (err) => toast.error("Error al guardar: " + err.message),
   });
 
   // ─── Handlers ───────────────────────────────────────────────────────────────
 
-  const handleAddPass = () => {
-    if (!selectedCount || !selectedFlow || !selectedPoint) {
-      toast.error("Select the number of people and the flow");
+  const submitPass = (count: number) => {
+    if (!selectedFlow || !selectedPoint) {
+      toast.error("Selecciona primero un flujo");
       return;
     }
+    if (addPass.isPending) return;
+
     addPass.mutate({
       surveyPoint: selectedPoint.fullName,
       surveyPointCode: selectedPoint.code,
       directionLabel: selectedFlow.label,
       flowOrigin: selectedFlow.fromCode,
       flowDestination: selectedFlow.toCode,
-      count: selectedCount,
+      count,
       latitude: gps?.lat,
       longitude: gps?.lng,
       gpsAccuracy: gps?.acc,
@@ -164,12 +163,17 @@ export default function ConteoPeatonal() {
     });
   };
 
+  const handleQuickAdd = (count: number) => {
+    setSelectedCount(count);
+    submitPass(count);
+  };
+
   const handleGroupConfirm = () => {
     const n = parseInt(groupCount, 10);
     if (!isNaN(n) && n > 0) {
-      setSelectedCount(n);
       setGroupDialogOpen(false);
       setGroupCount("");
+      handleQuickAdd(n);
     }
   };
 
@@ -225,23 +229,23 @@ export default function ConteoPeatonal() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-lg font-semibold text-gray-900">Pedestrian Counting</h1>
+            <h1 className="text-lg font-semibold text-gray-900">Conteo peatonal</h1>
             <p className="text-sm text-gray-500">{user?.name}</p>
           </div>
         </div>
         <div className="flex-1 p-4 max-w-lg mx-auto w-full">
           <div className="mb-6 mt-4">
-            <h2 className="text-xl font-bold text-gray-800 mb-1">Select the counting point</h2>
-            <p className="text-sm text-gray-500">Choose the main point where you will perform the count</p>
+            <h2 className="text-xl font-bold text-gray-800 mb-1">Selecciona el punto de conteo</h2>
+            <p className="text-sm text-gray-500">Elige el punto principal en el que vas a realizar el conteo</p>
           </div>
           <div className="space-y-3">
             {pointsLoading ? (
               <div className="rounded-xl border border-gray-200 bg-white px-4 py-6 text-sm text-gray-500">
-                Loading counting points...
+Cargando puntos de conteo...
               </div>
             ) : surveyPoints.length === 0 ? (
               <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-6 text-sm text-gray-500">
-                No counting points are configured yet.
+Todavía no hay puntos de conteo configurados.
               </div>
             ) : surveyPoints.map((point) => (
               <button
@@ -280,7 +284,7 @@ export default function ConteoPeatonal() {
             <h1 className="text-lg font-semibold text-gray-900">
               {selectedPoint.code} {selectedPoint.name}
             </h1>
-            <p className="text-sm text-gray-500">Select the subpoint</p>
+            <p className="text-sm text-gray-500">Selecciona el subpunto</p>
           </div>
         </div>
         <div className="flex-1 p-4 max-w-lg mx-auto w-full">
@@ -323,7 +327,6 @@ export default function ConteoPeatonal() {
     ? allFlows.filter((f) => f.fromCode === selectedSubPoint.code || f.toCode === selectedSubPoint.code)
     : allFlows;
 
-  const canAdd = selectedCount !== null && selectedFlow !== null;
   const sessionActive = sessionId !== null && sessionStartedAt !== null;
 
   return (
@@ -396,21 +399,22 @@ export default function ConteoPeatonal() {
           <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3 flex items-center gap-2">
             <Users className="h-4 w-4" /> Personas
           </h2>
-          <div className="grid grid-cols-4 gap-2 mb-2">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-              <button
-                key={n}
-                onClick={() => setSelectedCount(n)}
-                className={`h-16 rounded-xl text-2xl font-bold transition-all duration-100 border-2 ${
-                  selectedCount === n
-                    ? "bg-blue-700 border-blue-700 text-white shadow-md scale-105"
-                    : "bg-white border-gray-200 text-gray-800 hover:border-blue-400 hover:bg-blue-50"
-                }`}
-              >
-                {n}
-              </button>
-            ))}
-          </div>
+            <div className="grid grid-cols-4 gap-2 mb-2">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                <button
+                  key={n}
+                  onClick={() => handleQuickAdd(n)}
+                  disabled={!selectedFlow || addPass.isPending}
+                  className={`h-16 rounded-xl text-2xl font-bold transition-all duration-100 border-2 ${
+                    selectedCount === n
+                      ? "bg-blue-700 border-blue-700 text-white shadow-md scale-105"
+                      : "bg-white border-gray-200 text-gray-800 hover:border-blue-400 hover:bg-blue-50"
+                  } ${(!selectedFlow || addPass.isPending) ? "opacity-60" : ""}`}
+                >
+                  +{n}
+                </button>
+              ))}
+            </div>
           <button
             onClick={() => {
               setGroupDialogOpen(true);
@@ -429,9 +433,12 @@ export default function ConteoPeatonal() {
 
         {/* ─── Flujos (solo los del subpunto seleccionado) ─── */}
         <div>
-          <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3 flex items-center gap-2">
-            <ArrowLeftRight className="h-4 w-4" /> Flujo (sentido)
+            <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3 flex items-center gap-2">
+            <ArrowLeftRight className="h-4 w-4" /> Flujo seleccionado
           </h2>
+          <p className="text-sm text-gray-500 mb-3">
+            Pulsa un flujo para dejarlo marcado. Después podrás registrar personas directamente con los botones rápidos inferiores.
+          </p>
           <div className="space-y-2">
             {flows.map((flow) => (
               <button
@@ -449,20 +456,23 @@ export default function ConteoPeatonal() {
           </div>
         </div>
 
-        {/* ─── Botón Añadir ─── */}
-        <Button
-          onClick={handleAddPass}
-          disabled={!canAdd || addPass.isPending}
-          className={`w-full h-16 text-lg font-bold rounded-xl transition-all duration-150 ${
-            canAdd
-              ? "bg-green-600 hover:bg-green-700 text-white shadow-lg"
-              : "bg-gray-200 text-gray-400 cursor-not-allowed"
-          }`}
-        >
-          {addPass.isPending ? "Saving..." : canAdd ? (
-            <><CheckCircle2 className="h-6 w-6 mr-2" />Add · {selectedCount} person{selectedCount !== 1 ? "s" : ""} · {selectedFlow?.label}</>
-          ) : "Select people and flow"}
-        </Button>
+        <div className={`rounded-xl border px-4 py-3 ${selectedFlow ? "border-green-200 bg-green-50" : "border-amber-200 bg-amber-50"}`}>
+          <div className="flex items-start gap-3">
+            <CheckCircle2 className={`mt-0.5 h-5 w-5 ${selectedFlow ? "text-green-600" : "text-amber-500"}`} />
+            <div>
+              <p className="text-sm font-semibold text-gray-900">
+                {selectedFlow ? `Flujo activo: ${selectedFlow.label}` : "Selecciona un flujo para empezar a registrar"}
+              </p>
+              <p className="text-xs text-gray-600 mt-1">
+                {selectedFlow
+                  ? addPass.isPending
+                    ? "Guardando registro..."
+                    : "Cada botón +1, +2, +3... añadirá el conteo directamente con este flujo."
+                  : "Cuando elijas un flujo, quedará marcado hasta que selecciones otro."}
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* ─── Últimos registros ─── */}
         {recentPasses.length > 0 && (
@@ -486,9 +496,9 @@ export default function ConteoPeatonal() {
       {/* Dialog grupo grande */}
       <Dialog open={groupDialogOpen} onOpenChange={setGroupDialogOpen}>
         <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>Large group</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Grupo grande</DialogTitle></DialogHeader>
           <div className="py-2">
-            <p className="text-sm text-gray-600 mb-3">Enter the exact number of people in the group:</p>
+            <p className="text-sm text-gray-600 mb-3">Introduce el número exacto de personas del grupo:</p>
             <Input
               ref={groupInputRef}
               type="number"
@@ -505,8 +515,8 @@ export default function ConteoPeatonal() {
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setGroupDialogOpen(false); setGroupCount(""); }}>Cancel</Button>
-            <Button onClick={handleGroupConfirm} disabled={!groupCount || parseInt(groupCount) < 1}>Confirm</Button>
+            <Button variant="outline" onClick={() => { setGroupDialogOpen(false); setGroupCount(""); }}>Cancelar</Button>
+            <Button onClick={handleGroupConfirm} disabled={!groupCount || parseInt(groupCount) < 1}>Registrar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

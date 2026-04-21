@@ -28,7 +28,7 @@ function loadMapScript(): Promise<void> {
     script.onload = () => resolve();
     script.onerror = () => {
       mapScriptPromise = null;
-      reject(new Error("Failed to load Google Maps"));
+      reject(new Error("No se pudo cargar Google Maps"));
     };
     document.head.appendChild(script);
   });
@@ -245,7 +245,7 @@ export default function MapaConteos() {
                   onChange={(e) => setSurveyPoint(e.target.value)}
                   className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
                 >
-                  <option value="">All points</option>
+                  <option value="">Todos los puntos</option>
                   {countingPoints.map((point) => (
                     <option key={point.code} value={point.fullName}>{point.fullName}</option>
                   ))}

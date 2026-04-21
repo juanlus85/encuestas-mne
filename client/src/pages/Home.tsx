@@ -253,18 +253,19 @@ function AdminHome() {
   const [, setLocation] = useLocation();
   const { data: stats } = trpc.dashboard.stats.useQuery();
   const { data: encuestadores } = trpc.users.encuestadores.useQuery();
+  const { data: appSettings } = trpc.appSettings.get.useQuery();
 
-  const TARGET_RESIDENTES = 300;
-  const TARGET_VISITANTES = 450;
-  const TARGET_TOTAL = 750;
+  const TARGET_RESIDENTES = Number(appSettings?.surveyTargetResidents ?? 300);
+  const TARGET_VISITANTES = Number(appSettings?.surveyTargetVisitors ?? 450);
+  const TARGET_TOTAL = Number(appSettings?.surveyTargetTotal ?? 750);
 
   const residentes = Number(stats?.residentes ?? 0);
   const visitantes = Number(stats?.visitantes ?? 0);
   const total = Number(stats?.total ?? 0);
 
-  const pctResidentes = Math.min(100, Math.round((residentes / TARGET_RESIDENTES) * 100));
-  const pctVisitantes = Math.min(100, Math.round((visitantes / TARGET_VISITANTES) * 100));
-  const pctTotal = Math.min(100, Math.round((total / TARGET_TOTAL) * 100));
+  const pctResidentes = TARGET_RESIDENTES > 0 ? Math.min(100, Math.round((residentes / TARGET_RESIDENTES) * 100)) : 0;
+  const pctVisitantes = TARGET_VISITANTES > 0 ? Math.min(100, Math.round((visitantes / TARGET_VISITANTES) * 100)) : 0;
+  const pctTotal = TARGET_TOTAL > 0 ? Math.min(100, Math.round((total / TARGET_TOTAL) * 100)) : 0;
 
   return (
     <DashboardLayout>

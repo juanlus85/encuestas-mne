@@ -47,7 +47,7 @@ function QuotaBar({
             {current}/{target}
           </span>
           {completed && (
-            <Badge className="bg-green-600 text-white text-xs px-1.5 py-0.5">COMPLETED</Badge>
+              <Badge className="bg-green-600 text-white text-xs px-1.5 py-0.5">COMPLETA</Badge>
           )}
         </div>
       </div>
@@ -108,9 +108,9 @@ function CuotasContent({
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Survey quotas</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Cuotas de encuestas</h1>
           <p className="text-gray-500 text-sm mt-1">
-            Real-time progress. Once a quota is complete, do not look for more people in that profile.
+            Progreso en tiempo real. Cuando una cuota esté completa, deja de buscar perfiles de ese tipo.
           </p>
         </div>
         <Button
@@ -121,15 +121,15 @@ function CuotasContent({
           className="shrink-0"
         >
           <RefreshCw className={`h-4 w-4 mr-1.5 ${isFetching ? "animate-spin" : ""}`} />
-          Refresh
+Actualizar
         </Button>
       </div>
 
       <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
         <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
         <div className="text-sm text-amber-800">
-          <strong>Important:</strong> When a quota shows <Badge className="bg-green-600 text-white text-xs mx-1">COMPLETED</Badge>,
-          do not look for more people in that profile. Move on to the next profile that is still pending.
+          <strong>Importante:</strong> cuando una cuota muestre <Badge className="bg-green-600 text-white text-xs mx-1">COMPLETA</Badge>,
+          no busques más personas de ese perfil. Continúa con el siguiente perfil que siga pendiente.
         </div>
       </div>
 
@@ -140,8 +140,8 @@ function CuotasContent({
               <Globe className="h-4 w-4 text-blue-700" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-gray-900">Visitors survey</h2>
-              <p className="text-sm text-gray-500">N={v.total.target} total surveys</p>
+              <h2 className="text-lg font-bold text-gray-900">Encuesta de visitantes</h2>
+              <p className="text-sm text-gray-500">N={v.total.target} encuestas objetivo</p>
             </div>
             <div className="ml-auto">
               <span className={`text-2xl font-bold ${v.total.current >= v.total.target ? "text-green-600" : "text-blue-700"}`}>
@@ -151,22 +151,22 @@ function CuotasContent({
             </div>
           </div>
 
-          <QuotaSection title="Overall total" icon={<Users className="h-4 w-4 text-blue-600" />}>
-            <QuotaBar label="Total visitors" current={v.total.current} target={v.total.target} color="blue" />
+          <QuotaSection title="Total general" icon={<Users className="h-4 w-4 text-blue-600" />}>
+            <QuotaBar label="Total visitantes" current={v.total.current} target={v.total.target} color="blue" />
           </QuotaSection>
 
-          <QuotaSection title="By gender" icon={<Users className="h-4 w-4 text-purple-600" />}>
+          <QuotaSection title="Por género" icon={<Users className="h-4 w-4 text-purple-600" />}>
             <QuotaBar label={v.genero.hombre.label} current={v.genero.hombre.current} target={v.genero.hombre.target} color="blue" />
             <QuotaBar label={v.genero.mujer.label} current={v.genero.mujer.current} target={v.genero.mujer.target} color="purple" />
           </QuotaSection>
 
-          <QuotaSection title="By origin" icon={<Globe className="h-4 w-4 text-green-600" />}>
+          <QuotaSection title="Por procedencia" icon={<Globe className="h-4 w-4 text-green-600" />}>
             <QuotaBar label={v.procedencia.sevilla.label} current={v.procedencia.sevilla.current} target={v.procedencia.sevilla.target} color="green" />
             <QuotaBar label={v.procedencia.nacional.label} current={v.procedencia.nacional.current} target={v.procedencia.nacional.target} color="blue" />
             <QuotaBar label={v.procedencia.extranjero.label} current={v.procedencia.extranjero.current} target={v.procedencia.extranjero.target} color="amber" />
           </QuotaSection>
 
-          <QuotaSection title="By survey point (90 per point)" icon={<MapPin className="h-4 w-4 text-red-600" />}>
+          <QuotaSection title="Por punto de encuesta" icon={<MapPin className="h-4 w-4 text-red-600" />}>
             {v.puntos.map((p: { key: string; label: string; current: number; target: number }) => (
               <QuotaBar key={p.key} label={p.label} current={p.current} target={p.target} color="red" />
             ))}
@@ -181,8 +181,8 @@ function CuotasContent({
               <Users className="h-4 w-4 text-green-700" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-gray-900">Residents survey</h2>
-              <p className="text-sm text-gray-500">N={r.total.target} total surveys</p>
+              <h2 className="text-lg font-bold text-gray-900">Encuesta de residentes</h2>
+              <p className="text-sm text-gray-500">N={r.total.target} encuestas objetivo</p>
             </div>
             <div className="ml-auto">
               <span className={`text-2xl font-bold ${r.total.current >= r.total.target ? "text-green-600" : "text-green-700"}`}>
@@ -192,22 +192,22 @@ function CuotasContent({
             </div>
           </div>
 
-          <QuotaSection title="Overall total" icon={<Users className="h-4 w-4 text-green-600" />}>
-            <QuotaBar label="Total residents" current={r.total.current} target={r.total.target} color="green" />
+          <QuotaSection title="Total general" icon={<Users className="h-4 w-4 text-green-600" />}>
+            <QuotaBar label="Total residentes" current={r.total.current} target={r.total.target} color="green" />
           </QuotaSection>
 
-          <QuotaSection title="By gender" icon={<Users className="h-4 w-4 text-purple-600" />}>
+          <QuotaSection title="Por género" icon={<Users className="h-4 w-4 text-purple-600" />}>
             <QuotaBar label={r.genero.hombre.label} current={r.genero.hombre.current} target={r.genero.hombre.target} color="blue" />
             <QuotaBar label={r.genero.mujer.label} current={r.genero.mujer.current} target={r.genero.mujer.target} color="purple" />
           </QuotaSection>
 
-          <QuotaSection title="By age group" icon={<Users className="h-4 w-4 text-amber-600" />}>
+          <QuotaSection title="Por grupo de edad" icon={<Users className="h-4 w-4 text-amber-600" />}>
             <QuotaBar label={r.edad["18_44"].label} current={r.edad["18_44"].current} target={r.edad["18_44"].target} color="blue" />
             <QuotaBar label={r.edad["45_65"].label} current={r.edad["45_65"].current} target={r.edad["45_65"].target} color="amber" />
             <QuotaBar label={r.edad["65_mas"].label} current={r.edad["65_mas"].current} target={r.edad["65_mas"].target} color="red" />
           </QuotaSection>
 
-          <QuotaSection title="By employment link to tourism" icon={<Briefcase className="h-4 w-4 text-blue-600" />}>
+          <QuotaSection title="Por vínculo laboral con el turismo" icon={<Briefcase className="h-4 w-4 text-blue-600" />}>
             <QuotaBar label={r.vinculo.con_vinculo.label} current={r.vinculo.con_vinculo.current} target={r.vinculo.con_vinculo.target} color="blue" />
             <QuotaBar label={r.vinculo.sin_vinculo.label} current={r.vinculo.sin_vinculo.current} target={r.vinculo.sin_vinculo.target} color="green" />
           </QuotaSection>
@@ -215,7 +215,7 @@ function CuotasContent({
       )}
 
       <p className="text-xs text-gray-400 text-center pb-4">
-        Automatic refresh every 60 seconds · Last updated: {new Date().toLocaleTimeString("en-GB")}
+        Actualización automática cada 60 segundos · Última actualización: {new Date().toLocaleTimeString("es-ES")}
       </p>
     </div>
   );
@@ -234,12 +234,12 @@ export default function Cuotas() {
       <div className="flex items-center justify-center min-h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-3" />
-          <p className="text-gray-500 text-sm">Loading quotas...</p>
+          <p className="text-gray-500 text-sm">Cargando cuotas...</p>
         </div>
       </div>
     );
     if (isEncuestador) {
-      return <EncuestadorLayout title="Quotas">{spinner}</EncuestadorLayout>;
+      return <EncuestadorLayout title="Cuotas">{spinner}</EncuestadorLayout>;
     }
     return <DashboardLayout><div className="p-6">{spinner}</div></DashboardLayout>;
   }
@@ -250,7 +250,7 @@ export default function Cuotas() {
 
   if (isEncuestador) {
     return (
-      <EncuestadorLayout title="Quotas">
+      <EncuestadorLayout title="Cuotas">
         <CuotasContent data={data} refetch={refetch} isFetching={isFetching} surveyTypeFilter={surveyTypeFilter} />
       </EncuestadorLayout>
     );
