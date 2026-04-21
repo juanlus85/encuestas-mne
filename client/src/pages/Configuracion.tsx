@@ -360,8 +360,8 @@ export default function Configuracion() {
     { key: "survey_by_point", label: "Encuestas por punto" },
     { key: "survey_by_interviewer", label: "Encuestas por encuestador" },
     { key: "survey_by_day", label: "Encuestas por día" },
-    { key: "rejections_overview", label: "Resumen de rechazos" },
-    { key: "rejections_by_type", label: "Rechazos por tipo" },
+    { key: "rejections_overview", label: "Rejections overview" },
+    { key: "rejections_by_type", label: "Rejections by type" },
   ];
 
   const [projectName, setProjectName] = useState("");
@@ -382,7 +382,7 @@ export default function Configuracion() {
   const saveSettings = trpc.appSettings.update.useMutation({
     onSuccess: async () => {
       await utils.appSettings.get.invalidate();
-      toast.success("Configuración guardada correctamente");
+      toast.success("Settings saved successfully");
     },
     onError: (error) => toast.error(`Error al guardar la configuración: ${error.message}`),
   });
@@ -464,9 +464,9 @@ export default function Configuracion() {
       <div className="max-w-5xl space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Configuración</h1>
+            <h1 className="text-2xl font-bold text-foreground">Settings</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Gestiona la configuración general del proyecto, los objetivos, las cuotas, las visualizaciones y las plantillas de encuestas.
+              Manage the project's general settings, targets, quotas, visualisations, and survey templates.
             </p>
           </div>
           <CreateTemplateDialog onCreated={refresh} />
@@ -475,14 +475,14 @@ export default function Configuracion() {
         <div className="grid gap-6 xl:grid-cols-2">
           <Card className="border-0 shadow-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Proyecto y exportaciones</CardTitle>
+              <CardTitle className="text-base">Project and exports</CardTitle>
               <p className="text-sm text-muted-foreground">
-                Define el nombre visible del proyecto y el texto base que se utilizará en los archivos exportados.
+                Define the visible project name and the base text used in exported files.
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="mb-1.5 block text-sm font-medium">Nombre del proyecto</label>
+                <label className="mb-1.5 block text-sm font-medium">Project name</label>
                 <input
                   type="text"
                   value={projectName}
@@ -492,7 +492,7 @@ export default function Configuracion() {
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium">Nombre para exportaciones</label>
+                <label className="mb-1.5 block text-sm font-medium">Export file base name</label>
                 <input
                   type="text"
                   value={exportProjectName}
@@ -501,7 +501,7 @@ export default function Configuracion() {
                   placeholder="survexia"
                 />
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Se utilizará como base en los nombres de los archivos CSV descargables.
+                  This will be used as the base name for downloadable CSV files.
                 </p>
               </div>
             </CardContent>
@@ -509,26 +509,26 @@ export default function Configuracion() {
 
           <Card className="border-0 shadow-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Punto principal del mapa</CardTitle>
+              <CardTitle className="text-base">Primary map point</CardTitle>
               <p className="text-sm text-muted-foreground">
-                Selecciona el punto que se usará por defecto como foco inicial en los mapas del sistema.
+                Select the point that will be used as the default initial focus on system maps.
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="mb-1.5 block text-sm font-medium">Punto principal</label>
+                <label className="mb-1.5 block text-sm font-medium">Primary point</label>
                 <select
                   value={effectiveMapPrimaryPointCode}
                   onChange={(e) => setMapPrimaryPointCode(e.target.value)}
                   className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 >
-                  <option value="">Selecciona un punto</option>
+                  <option value="">Select a point</option>
                   {countingPoints.map((point) => (
                     <option key={point.code} value={point.code}>{point.fullName}</option>
                   ))}
                 </select>
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Este punto se utilizará para centrar el mapa de campo y el mapa de conteos cuando exista información GPS disponible.
+                  This point will be used to centre the field map and counting map when GPS information is available.
                 </p>
               </div>
             </CardContent>
@@ -536,37 +536,37 @@ export default function Configuracion() {
 
           <Card className="border-0 shadow-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Objetivos de encuestas</CardTitle>
+              <CardTitle className="text-base">Survey targets</CardTitle>
               <p className="text-sm text-muted-foreground">
-                Configura tanto el objetivo global final como el objetivo semanal para el seguimiento del proyecto.
+                Configure both the final overall target and the weekly target for project tracking.
               </p>
             </CardHeader>
             <CardContent className="space-y-5">
               <div className="grid gap-4 sm:grid-cols-3">
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium">Objetivo total</label>
+                  <label className="mb-1.5 block text-sm font-medium">Total target</label>
                   <input type="number" min={0} value={surveyTargetTotal} onChange={(e) => setSurveyTargetTotal(Number(e.target.value) || 0)} className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium">Residentes</label>
+                  <label className="mb-1.5 block text-sm font-medium">Residents</label>
                   <input type="number" min={0} value={surveyTargetResidents} onChange={(e) => setSurveyTargetResidents(Number(e.target.value) || 0)} className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium">Visitantes</label>
+                  <label className="mb-1.5 block text-sm font-medium">Visitors</label>
                   <input type="number" min={0} value={surveyTargetVisitors} onChange={(e) => setSurveyTargetVisitors(Number(e.target.value) || 0)} className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
                 </div>
               </div>
               <div className="grid gap-4 sm:grid-cols-3">
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium">Objetivo semanal total</label>
+                  <label className="mb-1.5 block text-sm font-medium">Weekly total target</label>
                   <input type="number" min={0} value={surveyWeeklyTargetTotal} onChange={(e) => setSurveyWeeklyTargetTotal(Number(e.target.value) || 0)} className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium">Semanal residentes</label>
+                  <label className="mb-1.5 block text-sm font-medium">Weekly residents</label>
                   <input type="number" min={0} value={surveyWeeklyTargetResidents} onChange={(e) => setSurveyWeeklyTargetResidents(Number(e.target.value) || 0)} className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium">Semanal visitantes</label>
+                  <label className="mb-1.5 block text-sm font-medium">Weekly visitors</label>
                   <input type="number" min={0} value={surveyWeeklyTargetVisitors} onChange={(e) => setSurveyWeeklyTargetVisitors(Number(e.target.value) || 0)} className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
                 </div>
               </div>
@@ -575,9 +575,9 @@ export default function Configuracion() {
 
           <Card className="border-0 shadow-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Cuotas y visualizaciones</CardTitle>
+              <CardTitle className="text-base">Quotas and visualisations</CardTitle>
               <p className="text-sm text-muted-foreground">
-                Controla si el panel de cuotas está activo y qué gráficos estarán disponibles en estadísticas.
+                Control whether the quotas panel is active and which charts will be available in statistics.
               </p>
             </CardHeader>
             <CardContent className="space-y-5">
@@ -589,24 +589,24 @@ export default function Configuracion() {
                   className="mt-0.5 rounded"
                 />
                 <span>
-                  <span className="block font-medium text-foreground">Activar módulo de cuotas</span>
-                  <span className="text-muted-foreground">Si se desactiva, el panel puede ocultarse o mostrarse solo como información general.</span>
+                  <span className="block font-medium text-foreground">Enable quotas module</span>
+                  <span className="text-muted-foreground">If disabled, the panel may be hidden or shown only as general information.</span>
                 </span>
               </label>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium">Cuota total de residentes</label>
+                  <label className="mb-1.5 block text-sm font-medium">Total residents quota</label>
                   <input type="number" min={0} value={residentQuotaTotal} onChange={(e) => setResidentQuotaTotal(Number(e.target.value) || 0)} className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium">Cuota total de visitantes</label>
+                  <label className="mb-1.5 block text-sm font-medium">Total visitors quota</label>
                   <input type="number" min={0} value={visitorQuotaTotal} onChange={(e) => setVisitorQuotaTotal(Number(e.target.value) || 0)} className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
                 </div>
               </div>
 
               <div className="space-y-3">
-                <p className="text-sm font-medium">Gráficos habilitados en estadísticas</p>
+                <p className="text-sm font-medium">Charts enabled in statistics</p>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {chartOptions.map((chart) => (
                     <label key={chart.key} className="flex items-center gap-3 rounded-lg border border-border px-3 py-2 text-sm">
@@ -626,14 +626,14 @@ export default function Configuracion() {
 
           <Card className="border-0 shadow-sm xl:col-span-2">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Integraciones y control de versión</CardTitle>
+              <CardTitle className="text-base">Integrations and version control</CardTitle>
               <p className="text-sm text-muted-foreground">
-                Guarda la clave API de OpenAI del proyecto y consulta la versión desplegada en la aplicación.
+                Store the project's OpenAI API key and check the version deployed in the application.
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="mb-1.5 block text-sm font-medium">Clave API de OpenAI</label>
+                <label className="mb-1.5 block text-sm font-medium">OpenAI API key</label>
                 <input
                   type="password"
                   value={openAiApiKey}
@@ -644,7 +644,7 @@ export default function Configuracion() {
               </div>
               <div className="flex justify-end">
                 <p className="text-right text-xs text-muted-foreground">
-                  Versión {deploymentVersion}. {deploymentDate}
+                  Version {deploymentVersion}. {deploymentDate}
                 </p>
               </div>
             </CardContent>
@@ -653,7 +653,7 @@ export default function Configuracion() {
 
         <div className="flex justify-end">
           <Button onClick={saveProjectSettings} disabled={saveSettings.isPending || !effectiveMapPrimaryPointCode}>
-            {saveSettings.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Guardar configuración"}
+            {saveSettings.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save settings"}
           </Button>
         </div>
 
@@ -664,14 +664,14 @@ export default function Configuracion() {
         ) : templates.length === 0 ? (
           <div className="py-16 text-center text-muted-foreground">
             <ClipboardList className="mx-auto mb-3 h-10 w-10 opacity-30" />
-            <p className="text-sm">Todavía no hay plantillas.</p>
-            <p className="mt-1 text-xs">Crea una plantilla para empezar a configurar las preguntas de la encuesta.</p>
+            <p className="text-sm">There are no templates yet.</p>
+            <p className="mt-1 text-xs">Create a template to start configuring survey questions.</p>
           </div>
         ) : (
           <div className="space-y-4">
             <div>
-              <h2 className="text-lg font-semibold text-foreground">Plantillas de encuestas</h2>
-              <p className="mt-1 text-sm text-muted-foreground">Gestiona las plantillas activas y la estructura de preguntas disponibles para cada tipo de encuesta.</p>
+              <h2 className="text-lg font-semibold text-foreground">Survey templates</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Manage the active templates and the question structure available for each survey type.</p>
             </div>
             {templates.map((t) => (
               <TemplateCard key={t.id} template={t} onRefresh={refresh} />

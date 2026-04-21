@@ -28,7 +28,7 @@ function loadMapScript(): Promise<void> {
     script.onload = () => resolve();
     script.onerror = () => {
       mapScriptPromise = null;
-      reject(new Error("No se pudo cargar Google Maps"));
+      reject(new Error("Could not load Google Maps"));
     };
     document.head.appendChild(script);
   });
@@ -40,17 +40,17 @@ function HeatmapLegend() {
     <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
       <div className="flex items-center gap-1.5">
         <div className="w-3 h-3 rounded-full bg-green-500" />
-        <span>Baja densidad</span>
+        <span>Low density</span>
       </div>
       <div className="flex items-center gap-1.5">
         <div className="w-3 h-3 rounded-full bg-yellow-400" />
-        <span>Media</span>
+        <span>Medium</span>
       </div>
       <div className="flex items-center gap-1.5">
         <div className="w-3 h-3 rounded-full bg-red-500" />
-        <span>Alta densidad</span>
+        <span>High density</span>
       </div>
-      <span className="text-muted-foreground/60">· peso proporcional al nº de personas</span>
+      <span className="text-muted-foreground/60">· weight proportional to the number of people</span>
     </div>
   );
 }
@@ -147,13 +147,13 @@ export default function MapaConteos() {
             ],
           });
         } else {
-          // Marcadores con tamaño proporcional al count
+          // Markers con tamaño proporcional al count
           validPasses.forEach((p: any) => {
             const scale = Math.max(8, Math.min(24, 8 + Math.sqrt(Number(p.count) ?? 1) * 2));
             const marker = new window.google.maps.Marker({
               position: { lat: Number(p.latitude), lng: Number(p.longitude) },
               map,
-              title: `${p.count} persona(s) · ${p.directionLabel ?? "Sin sentido"}`,
+              title: `${p.count} people · ${p.directionLabel ?? "No direction"}`,
               icon: {
                 path: window.google.maps.SymbolPath.CIRCLE,
                 scale,
@@ -167,12 +167,12 @@ export default function MapaConteos() {
             const infoWindow = new window.google.maps.InfoWindow({
               content: `
                 <div style="font-family: Inter, sans-serif; padding: 4px; min-width: 180px;">
-                  <p style="font-weight: 600; margin: 0 0 4px 0; font-size: 13px;">${p.count} persona(s)</p>
-                  <p style="margin: 0; font-size: 12px; color: #666;">Punto: ${p.surveyPoint}</p>
-                  <p style="margin: 2px 0; font-size: 12px; color: #666;">Sentido: ${p.directionLabel ?? "—"}</p>
-                  <p style="margin: 2px 0; font-size: 12px; color: #666;">Encuestador: ${p.encuestadorName ?? "—"}</p>
-                  <p style="margin: 2px 0; font-size: 12px; color: #666;">Fecha: ${new Date(p.recordedAt).toLocaleDateString("es-ES")}</p>
-                  <p style="margin: 2px 0; font-size: 12px; color: #666;">Hora: ${new Date(p.recordedAt).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</p>
+                  <p style="font-weight: 600; margin: 0 0 4px 0; font-size: 13px;">${p.count} people</p>
+                  <p style="margin: 0; font-size: 12px; color: #666;">Point: ${p.surveyPoint}</p>
+                  <p style="margin: 2px 0; font-size: 12px; color: #666;">Direction: ${p.directionLabel ?? "—"}</p>
+                  <p style="margin: 2px 0; font-size: 12px; color: #666;">Interviewer: ${p.encuestadorName ?? "—"}</p>
+                  <p style="margin: 2px 0; font-size: 12px; color: #666;">Date: ${new Date(p.recordedAt).toLocaleDateString("en-GB")}</p>
+                  <p style="margin: 2px 0; font-size: 12px; color: #666;">Time: ${new Date(p.recordedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</p>
                 </div>
               `,
             });
@@ -182,7 +182,7 @@ export default function MapaConteos() {
         }
       })
       .catch((err) => {
-        if (!cancelled) setMapError("No se pudo cargar el mapa. Comprueba la conexión.");
+        if (!cancelled) setMapError("Could not load the map. Please check the connection.");
         console.error(err);
       });
 
@@ -197,9 +197,9 @@ export default function MapaConteos() {
         {/* Header */}
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Mapa de Calor · Conteos Peatonales</h1>
+            <h1 className="text-2xl font-bold text-foreground">Heat Map · Pedestrian Counts</h1>
             <p className="text-muted-foreground text-sm mt-1">
-              {isLoading ? "Cargando..." : `${validPasses.length} pases con GPS · ${totalPersonas.toLocaleString("es-ES")} personas`}
+              {isLoading ? "Loading..." : `${validPasses.length} GPS passes · ${totalPersonas.toLocaleString("en-GB")} people`}
             </p>
           </div>
         </div>
@@ -210,7 +210,7 @@ export default function MapaConteos() {
             <div className="flex flex-wrap items-end gap-4">
               {/* Mode toggle */}
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-medium text-muted-foreground">Visualización</label>
+                <label className="text-xs font-medium text-muted-foreground">View</label>
                 <div className="flex rounded-lg border border-border overflow-hidden">
                   <button
                     onClick={() => setMode("heatmap")}
@@ -221,7 +221,7 @@ export default function MapaConteos() {
                     }`}
                   >
                     <Thermometer className="h-4 w-4" />
-                    Mapa de calor
+                    Heat map
                   </button>
                   <button
                     onClick={() => setMode("markers")}
@@ -232,20 +232,20 @@ export default function MapaConteos() {
                     }`}
                   >
                     <MapPin className="h-4 w-4" />
-                    Marcadores
+                    Markers
                   </button>
                 </div>
               </div>
 
               {/* Punto filter */}
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-medium text-muted-foreground">Punto de conteo</label>
+                <label className="text-xs font-medium text-muted-foreground">Counting point</label>
                 <select
                   value={surveyPoint}
                   onChange={(e) => setSurveyPoint(e.target.value)}
                   className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
                 >
-                  <option value="">Todos los puntos</option>
+                  <option value="">All points</option>
                   {countingPoints.map((point) => (
                     <option key={point.code} value={point.fullName}>{point.fullName}</option>
                   ))}
@@ -255,7 +255,7 @@ export default function MapaConteos() {
 
               {/* Date filters */}
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-medium text-muted-foreground">Desde</label>
+                <label className="text-xs font-medium text-muted-foreground">From</label>
                 <input
                   type="date"
                   value={dateFrom}
@@ -264,7 +264,7 @@ export default function MapaConteos() {
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-medium text-muted-foreground">Hasta</label>
+                <label className="text-xs font-medium text-muted-foreground">To</label>
                 <input
                   type="date"
                   value={dateTo}
@@ -293,8 +293,8 @@ export default function MapaConteos() {
             {!isLoading && validPasses.length === 0 && (
               <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground z-10">
                 <PersonStanding className="h-12 w-12 mb-3 opacity-30" />
-                <p className="text-sm">No hay pases con GPS para el período seleccionado.</p>
-                <p className="text-xs mt-1">Los conteos con GPS capturado aparecerán aquí.</p>
+                <p className="text-sm">There are no GPS passes for the selected period.</p>
+                <p className="text-xs mt-1">Counts with captured GPS will appear here.</p>
               </div>
             )}
             {mapError && (
@@ -323,7 +323,7 @@ export default function MapaConteos() {
                 color: "text-primary",
               },
               {
-                label: "Puntos activos",
+                label: "Active points",
                 value: new Set(validPasses.map((p: any) => p.surveyPoint)).size,
                 color: "text-blue-600",
               },

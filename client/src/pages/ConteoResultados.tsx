@@ -8,9 +8,9 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 import { Users, MapPin, Clock, TrendingUp, Calendar } from "lucide-react";
 
 const TIME_GRANULARITIES = [
-  { value: "hour", label: "Por hora" },
-  { value: "slot30", label: "Franjas de 30 min" },
-  { value: "day", label: "Por día" },
+  { value: "hour", label: "By hour" },
+  { value: "slot30", label: "30-minute slots" },
+  { value: "day", label: "By day" },
 ];
 
 function formatHour(h: number) {
@@ -24,22 +24,22 @@ function formatSlot30(slot: number) {
 }
 
 export default function ConteoResultados() {
-  const [selectedPoint, setSelectedPoint] = useState("Todos");
-  const [selectedEncuestador, setSelectedEncuestador] = useState("all");
+  const [selectedPoint, setSelectedPoint] = useState("All");
+  const [selectedInterviewer, setSelectedInterviewer] = useState("all");
   const [granularity, setGranularity] = useState("hour");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
   const { data: encuestadores = [] } = trpc.users.encuestadores.useQuery();
   const { data: countingPoints = [] } = trpc.countingPoints.list.useQuery();
-  const surveyPointOptions = useMemo(() => ["Todos", ...countingPoints.map((point) => point.fullName)], [countingPoints]);
+  const surveyPointOptions = useMemo(() => ["All", ...countingPoints.map((point) => point.fullName)], [countingPoints]);
 
   const listInput = useMemo(() => ({
-    surveyPoint: selectedPoint !== "Todos" ? selectedPoint : undefined,
-    encuestadorId: selectedEncuestador !== "all" ? parseInt(selectedEncuestador) : undefined,
+    surveyPoint: selectedPoint !== "All" ? selectedPoint : undefined,
+    encuestadorId: selectedInterviewer !== "all" ? parseInt(selectedInterviewer) : undefined,
     dateFrom: dateFrom || undefined,
     dateTo: dateTo || undefined,
-  }), [selectedPoint, selectedEncuestador, dateFrom, dateTo]);
+  }), [selectedPoint, selectedInterviewer, dateFrom, dateTo]);
 
   const { data: passes = [], isLoading } = trpc.passes.list.useQuery(listInput);
 
@@ -56,8 +56,8 @@ export default function ConteoResultados() {
       });
       return Array.from({ length: 24 }, (_, h) => ({
         label: formatHour(h),
-        personas: byHour[h] ?? 0,
-      })).filter(d => d.personas > 0);
+        people: byHour[h] ?? 0,
+      })).filter(d => d.people > 0);
     }
 
     if (granularity === "slot30") {
@@ -69,8 +69,8 @@ export default function ConteoResultados() {
       });
       return Array.from({ length: 48 }, (_, s) => ({
         label: formatSlot30(s),
-        personas: bySlot[s] ?? 0,
-      })).filter(d => d.personas > 0);
+        people: bySlot[s] ?? 0,
+      })).filter(d => d.people > 0);
     }
 
     if (granularity === "day") {
@@ -79,7 +79,7 @@ export default function ConteoResultados() {
         const d = new Date(p.recordedAt).toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit" });
         byDay[d] = (byDay[d] ?? 0) + p.count;
       });
-      return Object.entries(byDay).map(([label, personas]) => ({ label, personas }));
+      return Object.entries(byDay).map(([label, people]) => ({ label, people }));
     }
 
     return [];
@@ -89,7 +89,7 @@ export default function ConteoResultados() {
   const byDirection = useMemo(() => {
     const map: Record<string, number> = {};
     passes.forEach((p) => {
-      const key = p.directionLabel ?? "Sin sentido";
+      const key = p.directionLabel ?? "No direction";
       map[key] = (map[key] ?? 0) + p.count;
     });
     return Object.entries(map).sort((a, b) => b[1] - a[1]);
@@ -113,9 +113,9 @@ export default function ConteoResultados() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <TrendingUp className="h-6 w-6 text-blue-700" />
-            Resultados de Conteo Peatonal
+            Pedestrian Count Results
           </h1>
-          <p className="text-sm text-gray-500 mt-1">Análisis de flujos peatonales por punto, sentido y franja horaria</p>
+          <p className="text-sm text-gray-500 mt-1">Analysis of pedestrian flows by point, direction, and time slot</p>
         </div>
 
         {/* Filtros */}
@@ -123,7 +123,7 @@ export default function ConteoResultados() {
           <CardContent className="pt-4 pb-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div>
-                <label className="text-xs font-medium text-gray-600 mb-1 block">Punto</label>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Point</label>
                 <Select value={selectedPoint} onValueChange={setSelectedPoint}>
                   <SelectTrigger className="h-9">
                     <SelectValue />
@@ -136,13 +136,13 @@ export default function ConteoResultados() {
                 </Select>
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-600 mb-1 block">Encuestador</label>
-                <Select value={selectedEncuestador} onValueChange={setSelectedEncuestador}>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Interviewer</label>
+                <Select value={selectedInterviewer} onValueChange={setSelectedInterviewer}>
                   <SelectTrigger className="h-9">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="all">All</SelectItem>
                     {encuestadores.map((e: { id: number; name: string | null; identifier: string | null }) => (
                       <SelectItem key={e.id} value={String(e.id)}>
                         {e.name ?? e.identifier ?? `#${e.id}`}
@@ -152,7 +152,7 @@ export default function ConteoResultados() {
                 </Select>
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-600 mb-1 block">Desde</label>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">From</label>
                 <input
                   type="date"
                   value={dateFrom}
@@ -161,7 +161,7 @@ export default function ConteoResultados() {
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-600 mb-1 block">Hasta</label>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">To</label>
                 <input
                   type="date"
                   value={dateTo}
@@ -183,7 +183,7 @@ export default function ConteoResultados() {
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-gray-900">{totalPeople.toLocaleString("es-ES")}</div>
-                  <div className="text-xs text-gray-500">Total personas</div>
+                  <div className="text-xs text-gray-500">Total people</div>
                 </div>
               </div>
             </CardContent>
@@ -196,7 +196,7 @@ export default function ConteoResultados() {
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-gray-900">{totalPasses}</div>
-                  <div className="text-xs text-gray-500">Registros</div>
+                  <div className="text-xs text-gray-500">Records</div>
                 </div>
               </div>
             </CardContent>
@@ -209,7 +209,7 @@ export default function ConteoResultados() {
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-gray-900">{byPoint.length}</div>
-                  <div className="text-xs text-gray-500">Puntos activos</div>
+                  <div className="text-xs text-gray-500">Active points</div>
                 </div>
               </div>
             </CardContent>
@@ -224,7 +224,7 @@ export default function ConteoResultados() {
                   <div className="text-2xl font-bold text-gray-900">
                     {totalPasses > 0 ? Math.round(totalPeople / totalPasses) : 0}
                   </div>
-                  <div className="text-xs text-gray-500">Media por registro</div>
+                  <div className="text-xs text-gray-500">Average per record</div>
                 </div>
               </div>
             </CardContent>
@@ -236,7 +236,7 @@ export default function ConteoResultados() {
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-base flex items-center gap-2">
               <Calendar className="h-4 w-4 text-blue-700" />
-              Distribución temporal
+              Time distribution
             </CardTitle>
             <Select value={granularity} onValueChange={setGranularity}>
               <SelectTrigger className="w-44 h-8 text-xs">
@@ -251,9 +251,9 @@ export default function ConteoResultados() {
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="h-48 flex items-center justify-center text-gray-400">Cargando...</div>
+              <div className="h-48 flex items-center justify-center text-gray-400">Loading...</div>
             ) : chartData.length === 0 ? (
-              <div className="h-48 flex items-center justify-center text-gray-400">Sin datos para los filtros seleccionados</div>
+              <div className="h-48 flex items-center justify-center text-gray-400">No data for the selected filters</div>
             ) : (
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
@@ -261,10 +261,10 @@ export default function ConteoResultados() {
                   <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} />
                   <Tooltip
-                    formatter={(v: number) => [`${v} personas`, "Flujo"]}
+                    formatter={(v: number) => [`${v} people`, "Flow"]}
                     contentStyle={{ fontSize: 12 }}
                   />
-                  <Bar dataKey="personas" fill="#1d4ed8" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="people" fill="#1d4ed8" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -275,11 +275,11 @@ export default function ConteoResultados() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Por sentido</CardTitle>
+              <CardTitle className="text-base">By direction</CardTitle>
             </CardHeader>
             <CardContent>
               {byDirection.length === 0 ? (
-                <p className="text-sm text-gray-400 text-center py-4">Sin datos</p>
+                <p className="text-sm text-gray-400 text-center py-4">No data</p>
               ) : (
                 <div className="space-y-2">
                   {byDirection.map(([label, count]) => (
@@ -308,11 +308,11 @@ export default function ConteoResultados() {
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Por punto de conteo</CardTitle>
+              <CardTitle className="text-base">By counting point</CardTitle>
             </CardHeader>
             <CardContent>
               {byPoint.length === 0 ? (
-                <p className="text-sm text-gray-400 text-center py-4">Sin datos</p>
+                <p className="text-sm text-gray-400 text-center py-4">No data</p>
               ) : (
                 <div className="space-y-2">
                   {byPoint.map(([point, count]) => (
@@ -343,21 +343,21 @@ export default function ConteoResultados() {
         {/* Tabla de últimos registros */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Últimos registros</CardTitle>
+            <CardTitle className="text-base">Latest records</CardTitle>
           </CardHeader>
           <CardContent>
             {passes.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-4">Sin registros</p>
+              <p className="text-sm text-gray-400 text-center py-4">No records</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-100">
-                      <th className="text-left py-2 px-3 text-xs font-semibold text-gray-500">Fecha/Hora</th>
-                      <th className="text-left py-2 px-3 text-xs font-semibold text-gray-500">Punto</th>
-                      <th className="text-left py-2 px-3 text-xs font-semibold text-gray-500">Sentido</th>
-                      <th className="text-left py-2 px-3 text-xs font-semibold text-gray-500">Encuestador</th>
-                      <th className="text-right py-2 px-3 text-xs font-semibold text-gray-500">Personas</th>
+                      <th className="text-left py-2 px-3 text-xs font-semibold text-gray-500">Date/Time</th>
+                      <th className="text-left py-2 px-3 text-xs font-semibold text-gray-500">Point</th>
+                      <th className="text-left py-2 px-3 text-xs font-semibold text-gray-500">Direction</th>
+                      <th className="text-left py-2 px-3 text-xs font-semibold text-gray-500">Interviewer</th>
+                      <th className="text-right py-2 px-3 text-xs font-semibold text-gray-500">People</th>
                     </tr>
                   </thead>
                   <tbody>

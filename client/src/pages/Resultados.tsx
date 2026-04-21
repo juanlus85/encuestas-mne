@@ -30,7 +30,7 @@ function FilterBar({
   return (
     <div className="flex flex-wrap gap-3 items-end">
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-muted-foreground">Desde</label>
+        <label className="text-xs font-medium text-muted-foreground">From</label>
         <input
           type="date"
           value={filters.dateFrom}
@@ -39,7 +39,7 @@ function FilterBar({
         />
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-muted-foreground">Hasta</label>
+        <label className="text-xs font-medium text-muted-foreground">To</label>
         <input
           type="date"
           value={filters.dateTo}
@@ -48,26 +48,26 @@ function FilterBar({
         />
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-muted-foreground">Encuestador</label>
+        <label className="text-xs font-medium text-muted-foreground">Interviewer</label>
         <select
           value={filters.encuestadorId ?? ""}
           onChange={(e) => onChange({ ...filters, encuestadorId: e.target.value ? Number(e.target.value) : undefined })}
           className="border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
         >
-          <option value="">Todos</option>
+          <option value="">All</option>
           {encuestadores.map((e) => (
             <option key={e.id} value={e.id}>{e.name} {e.identifier ? `(${e.identifier})` : ""}</option>
           ))}
         </select>
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-muted-foreground">Tipo</label>
+        <label className="text-xs font-medium text-muted-foreground">Type</label>
         <select
           value={filters.templateId ?? ""}
           onChange={(e) => onChange({ ...filters, templateId: e.target.value ? Number(e.target.value) : undefined })}
           className="border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
         >
-          <option value="">Todos</option>
+          <option value="">All</option>
           {templates.map((t) => (
             <option key={t.id} value={t.id}>{t.name}</option>
           ))}
@@ -78,7 +78,7 @@ function FilterBar({
         size="sm"
         onClick={() => onChange({ dateFrom: "", dateTo: "", encuestadorId: undefined, templateId: undefined })}
       >
-        Limpiar
+        Clear
       </Button>
     </div>
   );
@@ -104,7 +104,7 @@ function ResponseRow({ response, templates }: { response: any; templates: any[] 
           <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
             template?.type === "residentes" ? "bg-blue-100 text-blue-700" : "bg-amber-100 text-amber-700"
           }`}>
-            {template?.type === "residentes" ? "Residente" : "Visitante"}
+            {template?.type === "residentes" ? "Resident" : "Visitor"}
           </span>
         </td>
         <td className="px-4 py-3 text-sm font-medium">{response.encuestadorName}</td>
@@ -125,7 +125,7 @@ function ResponseRow({ response, templates }: { response: any; templates: any[] 
               className="flex items-center gap-1 text-xs text-primary hover:underline"
             >
               <MapPin className="h-3 w-3" />
-              Ver
+              View
             </a>
           ) : <span className="text-xs text-muted-foreground">—</span>}
         </td>
@@ -138,7 +138,7 @@ function ResponseRow({ response, templates }: { response: any; templates: any[] 
             className="flex items-center gap-1 text-xs text-primary hover:underline"
           >
             {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-            {expanded ? "Ocultar" : "Ver"}
+            {expanded ? "Hide" : "View"}
           </button>
         </td>
       </tr>
@@ -148,13 +148,13 @@ function ResponseRow({ response, templates }: { response: any; templates: any[] 
           <td colSpan={10} className="px-4 py-4">
             {!detail ? (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />Cargando detalle...
+                <Loader2 className="h-4 w-4 animate-spin" />Loading details...
               </div>
             ) : (
               <div className="grid md:grid-cols-2 gap-4">
                 {/* Answers */}
                 <div>
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Respuestas</p>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Answers</p>
                   <div className="space-y-2">
                     {(detail.answers as any[]).map((a: any, i: number) => (
                       <div key={i} className="text-sm">
@@ -168,11 +168,11 @@ function ResponseRow({ response, templates }: { response: any; templates: any[] 
                 {/* Photos */}
                 {detail.photos && detail.photos.length > 0 && (
                   <div>
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Fotografías ({detail.photos.length})</p>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Photos ({detail.photos.length})</p>
                     <div className="grid grid-cols-3 gap-2">
                       {detail.photos.map((p: any) => (
                         <a key={p.id} href={p.url} target="_blank" rel="noopener noreferrer" className="relative aspect-square rounded-lg overflow-hidden border border-border hover:opacity-90 transition-opacity">
-                          <img src={p.url} alt="Foto encuesta" className="w-full h-full object-cover" />
+                          <img src={p.url} alt="Survey photo" className="w-full h-full object-cover" />
                           <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-black/30 transition-opacity">
                             <ExternalLink className="h-5 w-5 text-white" />
                           </div>
@@ -186,19 +186,19 @@ function ResponseRow({ response, templates }: { response: any; templates: any[] 
                 <div className="md:col-span-2 border-t border-border pt-3">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                     <div>
-                      <span className="text-muted-foreground">Idioma: </span>
+                      <span className="text-muted-foreground">Language: </span>
                       <span className="font-medium uppercase">{detail.language}</span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">Franja: </span>
+                      <span className="text-muted-foreground">Time slot: </span>
                       <span className="font-medium">{detail.timeSlot || "—"}</span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">Inicio: </span>
+                      <span className="text-muted-foreground">Start: </span>
                       <span className="font-medium">{new Date(detail.startedAt).toLocaleTimeString("es-ES")}</span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">Fin: </span>
+                      <span className="text-muted-foreground">End: </span>
                       <span className="font-medium">{detail.finishedAt ? new Date(detail.finishedAt).toLocaleTimeString("es-ES") : "—"}</span>
                     </div>
                   </div>
@@ -236,9 +236,9 @@ export default function Resultados() {
       <div className="space-y-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Resultados de Campo</h1>
+            <h1 className="text-2xl font-bold text-foreground">Field Results</h1>
             <p className="text-muted-foreground text-sm mt-1">
-              {responses.length} encuesta{responses.length !== 1 ? "s" : ""} encontrada{responses.length !== 1 ? "s" : ""}
+              {responses.length} survey{responses.length !== 1 ? "s" : ""} found
             </p>
           </div>
         </div>
@@ -247,7 +247,7 @@ export default function Resultados() {
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Filter className="h-4 w-4" />Filtros
+              <Filter className="h-4 w-4" />Filters
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -269,7 +269,7 @@ export default function Resultados() {
           ) : responses.length === 0 ? (
             <div className="text-center py-16 text-muted-foreground">
               <Search className="h-10 w-10 mx-auto mb-3 opacity-30" />
-              <p className="text-sm">No se encontraron encuestas con los filtros aplicados.</p>
+              <p className="text-sm">No surveys were found for the selected filters.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -277,15 +277,15 @@ export default function Resultados() {
                 <thead>
                   <tr className="border-b border-border bg-muted/40">
                     <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">ID</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Tipo</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Encuestador</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Type</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Interviewer</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">ID</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Fecha</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Hora</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Punto</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Date</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Time</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Point</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">GPS</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Estado</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Detalle</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Details</th>
                   </tr>
                 </thead>
                 <tbody>

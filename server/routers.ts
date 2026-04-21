@@ -118,8 +118,82 @@ const ANSWER_CODES: Record<string, string> = {
  */
 function encodeAnswer(val: string | null): string | null {
   if (val === null || val === undefined) return null;
-  const lower = val.toLowerCase().trim();
-  return ANSWER_CODES[lower] ?? val;
+  const raw = String(val).trim();
+  const key = raw.toLowerCase();
+  return ANSWER_CODES[key] ?? raw;
+}
+
+type SurveyExportSchemaField = {
+  key: string;
+  label: string;
+  defaultOn: boolean;
+};
+
+type SurveyExportSchemaGroup = {
+  key: string;
+  title: string;
+  fields: SurveyExportSchemaField[];
+};
+
+const SURVEY_EXPORT_META_FIELDS: SurveyExportSchemaField[] = [
+  { key: "ID", label: "ID de encuesta", defaultOn: true },
+  { key: "Tipo", label: "Tipo de plantilla", defaultOn: true },
+  { key: "Plantilla", label: "Nombre de plantilla", defaultOn: true },
+  { key: "Encuestador", label: "Nombre del encuestador", defaultOn: true },
+  { key: "CodEncuestador", label: "Código del encuestador", defaultOn: true },
+  { key: "PuntoEncuesta", label: "Punto de encuesta", defaultOn: true },
+  { key: "FranjaHoraria", label: "Franja horaria", defaultOn: true },
+  { key: "VentanaMedia", label: "Ventana de 30 minutos", defaultOn: false },
+  { key: "MinutoInicio", label: "Minuto de inicio", defaultOn: false },
+  { key: "MinutoFin", label: "Minuto de fin", defaultOn: false },
+  { key: "Inicio", label: "Fecha y hora de inicio", defaultOn: true },
+  { key: "Fin", label: "Fecha y hora de fin", defaultOn: false },
+  { key: "DuracionMin", label: "Duración en minutos", defaultOn: false },
+  { key: "Idioma", label: "Idioma", defaultOn: false },
+  { key: "Estado", label: "Estado", defaultOn: true },
+  { key: "SalidaAnticipada", label: "Salida anticipada", defaultOn: true },
+  { key: "Latitud", label: "Latitud GPS", defaultOn: false },
+  { key: "Longitud", label: "Longitud GPS", defaultOn: false },
+  { key: "GPS_m", label: "Precisión GPS (m)", defaultOn: false },
+];
+
+async function buildSurveyExportSchema(templateId?: number): Promise<{
+  metaFields: SurveyExportSchemaField[];
+  groups: SurveyExportSchemaGroup[];
+  questionFields: Array<{ key: string; label: string; templateId: number; questionId: number }>;
+}> {
+  const templateList = templateId
+    ? [await getSurveyTemplateById(templateId)].filter((template): template is NonNullable<Awaited<ReturnType<typeof getSurveyTemplateById>>> => Boolean(template))
+    : await getSurveyTemplates();
+
+  const groups: SurveyExportSchemaGroup[] = [];
+  const questionFields: Array<{ key: string; label: string; templateId: number; questionId: number }> = [];
+
+  for (const template of templateList) {
+    const questions = (await getQuestionsByTemplate(template.id))
+      .slice()
+      .sort((a, b) => a.order - b.order);
+
+    const fields = questions.map((question) => {
+      const key = `Q${question.id}`;
+      const orderLabel = String(question.order).padStart(2, "0");
+      const label = `${orderLabel} · ${question.text}`;
+      questionFields.push({ key, label, templateId: template.id, questionId: question.id });
+      return { key, label, defaultOn: true };
+    });
+
+    groups.push({
+      key: `template-${template.id}`,
+      title: `Preguntas · ${template.name}`,
+      fields,
+    });
+  }
+
+  return {
+    metaFields: SURVEY_EXPORT_META_FIELDS,
+    groups,
+    questionFields,
+  };
 }
 
 // ─── Middleware helpers ───────────────────────────────────────────────────────
@@ -1503,6 +1577,17 @@ export const appRouter = router({
         ];
         return { csv: csvLines.join("\n"), count: rows.length };
       }),
+    csvSchema: adminOrRevisorProcedure
+      .input(z.object({
+        templateId: z.number().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        const schema = await buildSurveyExportSchema(input?.templateId);
+        return {
+          metaFields: schema.metaFields,
+          groups: schema.groups,
+        };
+      }),
     csv: adminOrRevisorProcedure
       .input(z.object({
         encuestadorId: z.number().optional(),
@@ -1512,6 +1597,7 @@ export const appRouter = router({
       }).optional())
       .query(async ({ input }) => {
         const responses = await getSurveyResponses(input);
+        const schema = await buildSurveyExportSchema(input?.templateId);
         const escape = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
         const fmtDate = (d: Date) => {
           const tz = new Intl.DateTimeFormat("es-ES", { timeZone: "Europe/Madrid", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
@@ -1519,56 +1605,62 @@ export const appRouter = router({
           const p = Object.fromEntries(parts.filter(x => x.type !== "literal").map(x => [x.type, x.value]));
           return `${p.day}/${p.month}/${p.year} ${p.hour}:${p.minute}:${p.second}`;
         };
-        // Cabeceras metadatos
-        const metaHeaders = [
-          "ID", "Tipo", "Encuestador", "CodEncuestador",
-          "PuntoEncuesta", "FranjaHoraria", "VentanaMedia", "MinutoInicio", "MinutoFin",
-          "Inicio", "Fin", "DuracionMin", "Idioma", "Estado", "SalidaAnticipada",
-          "Latitud", "Longitud", "GPS_m",
-        ];
-        // Cabeceras visitantes (v_p01..v_p20)
-        const vHeaders = Array.from({ length: 20 }, (_, i) => `V_P${String(i + 1).padStart(2, "0")}`);
-        // Cabeceras residentes v6 (r_p01..r_p34 + r_p35 + r_p35a/b/c + r_p36 + r_p37 + seccion037)
-        const rHeaders = [
-          ...Array.from({ length: 34 }, (_, i) => `R_P${String(i + 1).padStart(2, "0")}`),
-          "R_P35", "R_P35a", "R_P35b", "R_P35c", "R_P36", "R_P37", "SECCION037",
-        ];
-        const headers = [...metaHeaders, ...vHeaders, ...rHeaders];
+        const formatAnswer = (value: unknown): string => {
+          if (value === null || value === undefined) return "";
+          if (Array.isArray(value)) {
+            return value.map((item) => {
+              if (item && typeof item === "object") {
+                const record = item as Record<string, unknown>;
+                return String(record.label ?? record.value ?? JSON.stringify(item));
+              }
+              return String(item);
+            }).join(" | ");
+          }
+          if (typeof value === "object") {
+            const record = value as Record<string, unknown>;
+            return String(record.label ?? record.value ?? JSON.stringify(value));
+          }
+          return String(value);
+        };
+
+        const metaHeaders = schema.metaFields.map((field) => field.key);
+        const questionHeaders = schema.questionFields.map((field) => field.key);
+        const headers = [...metaHeaders, ...questionHeaders];
+
         const rows = responses.map((r) => {
-          const rAny = r as any;
-          // Duración en minutos
+          const rawAnswers = typeof r.answers === "string"
+            ? (() => { try { return JSON.parse(r.answers); } catch { return []; } })()
+            : (Array.isArray(r.answers) ? r.answers : []);
+          const answerMap = new Map<number, unknown>(
+            (rawAnswers as Array<{ questionId: number; answer: unknown }>).map((answer) => [Number(answer.questionId), answer.answer]),
+          );
           const durMin = (r.startedAt && r.finishedAt)
             ? Math.round((r.finishedAt.getTime() - r.startedAt.getTime()) / 60000)
             : "";
+          const templateName = schema.groups.find((group) => group.key === `template-${r.templateId}`)?.title.replace(/^Preguntas · /, "") ?? "";
           const meta = [
             r.id,
-            rAny.templateType ?? "",
+            (r as any).templateType ?? "",
+            templateName,
             r.encuestadorName ?? "",
             r.encuestadorIdentifier ?? "",
             r.surveyPoint ?? "",
             r.timeSlot ?? "",
-            rAny.windowCode ?? "",
-            rAny.minuteStart ?? "",
-            rAny.minuteEnd ?? "",
+            (r as any).windowCode ?? "",
+            (r as any).minuteStart ?? "",
+            (r as any).minuteEnd ?? "",
             r.startedAt ? fmtDate(new Date(r.startedAt)) : "",
             r.finishedAt ? fmtDate(new Date(r.finishedAt)) : "",
             durMin,
             r.language,
             r.status,
-            rAny.earlyExit ? "SI" : "NO",
+            (r as any).earlyExit ? "SI" : "NO",
             r.latitude ?? "",
             r.longitude ?? "",
             r.gpsAccuracy ?? "",
           ];
-          // Columnas visitantes
-          const vCols = Array.from({ length: 20 }, (_, i) => rAny[`v_p${String(i + 1).padStart(2, "0")}`] ?? "");
-          // Columnas residentes v6
-          const rCols = [
-            ...Array.from({ length: 34 }, (_, i) => rAny[`r_p${String(i + 1).padStart(2, "0")}`] ?? ""),
-            rAny.r_p35 ?? "", rAny.r_p35a ?? "", rAny.r_p35b ?? "", rAny.r_p35c ?? "", rAny.r_p36 ?? "", rAny.r_p37 ?? "",
-            rAny.seccion037 === 1 || rAny.seccion037 === true ? "1" : (rAny.seccion037 === 2 ? "2" : ""),  // SECCION037: 1=Centro histórico, 2=Resto de Sevilla
-          ];
-          return [...meta, ...vCols, ...rCols];
+          const dynamicCols = schema.questionFields.map((field) => formatAnswer(answerMap.get(field.questionId)));
+          return [...meta, ...dynamicCols];
         });
         const csvLines = [
           headers.map(escape).join(","),

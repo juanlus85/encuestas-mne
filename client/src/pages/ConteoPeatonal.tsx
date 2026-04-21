@@ -48,7 +48,7 @@ export default function ConteoPeatonal() {
   const [sessionId, setSessionId] = useState<number | null>(null);
   const [sessionStartedAt, setSessionStartedAt] = useState<Date | null>(null);
   const [elapsed, setElapsed] = useState(0);
-  const [sessionTotal, setSessionTotal] = useState(0); // total de personas en esta sesión
+  const [sessionTotal, setSessionTotal] = useState(0); // total de people en esta sesión
 
   // Mantener sincronizado el punto seleccionado con la lista dinámica
   useEffect(() => {
@@ -129,22 +129,22 @@ export default function ConteoPeatonal() {
       const newPass = {
         count: variables.count,
         direction: variables.directionLabel ?? "",
-        time: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+        time: new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
       };
       setRecentPasses((prev) => [newPass, ...prev.slice(0, 9)]);
       setTotalToday((prev) => prev + variables.count);
       setSessionTotal((prev) => prev + variables.count);
       setSelectedCount(variables.count);
-      toast.success(`+${variables.count} persona${variables.count !== 1 ? "s" : ""} · ${variables.directionLabel}`, { duration: 1500 });
+      toast.success(`+${variables.count} ${variables.count !== 1 ? "people" : "person"} · ${variables.directionLabel}`, { duration: 1500 });
     },
-    onError: (err) => toast.error("Error al guardar: " + err.message),
+    onError: (err) => toast.error("Error saving: " + err.message),
   });
 
   // ─── Handlers ───────────────────────────────────────────────────────────────
 
   const submitPass = (count: number) => {
     if (!selectedFlow || !selectedPoint) {
-      toast.error("Selecciona primero un flujo");
+      toast.error("Select a flow first");
       return;
     }
     if (addPass.isPending) return;
@@ -229,23 +229,23 @@ export default function ConteoPeatonal() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-lg font-semibold text-gray-900">Conteo peatonal</h1>
+            <h1 className="text-lg font-semibold text-gray-900">Pedestrian Count</h1>
             <p className="text-sm text-gray-500">{user?.name}</p>
           </div>
         </div>
         <div className="flex-1 p-4 max-w-lg mx-auto w-full">
           <div className="mb-6 mt-4">
-            <h2 className="text-xl font-bold text-gray-800 mb-1">Selecciona el punto de conteo</h2>
-            <p className="text-sm text-gray-500">Elige el punto principal en el que vas a realizar el conteo</p>
+            <h2 className="text-xl font-bold text-gray-800 mb-1">Select the counting point</h2>
+            <p className="text-sm text-gray-500">Choose the main point where you will carry out the count</p>
           </div>
           <div className="space-y-3">
             {pointsLoading ? (
               <div className="rounded-xl border border-gray-200 bg-white px-4 py-6 text-sm text-gray-500">
-Cargando puntos de conteo...
+Loading counting points...
               </div>
             ) : surveyPoints.length === 0 ? (
               <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-6 text-sm text-gray-500">
-Todavía no hay puntos de conteo configurados.
+There are no counting points configured yet.
               </div>
             ) : surveyPoints.map((point) => (
               <button
@@ -284,14 +284,14 @@ Todavía no hay puntos de conteo configurados.
             <h1 className="text-lg font-semibold text-gray-900">
               {selectedPoint.code} {selectedPoint.name}
             </h1>
-            <p className="text-sm text-gray-500">Selecciona el subpunto</p>
+            <p className="text-sm text-gray-500">Select the subpoint</p>
           </div>
         </div>
         <div className="flex-1 p-4 max-w-lg mx-auto w-full">
           <div className="mb-6 mt-4">
-            <h2 className="text-xl font-bold text-gray-800 mb-1">¿Desde qué subpunto?</h2>
+            <h2 className="text-xl font-bold text-gray-800 mb-1">Which subpoint are you counting from?</h2>
             <p className="text-sm text-gray-500">
-              Elige el subpunto. El conteo mostrará solo los flujos hacia ese subpunto en ambos sentidos.
+              Choose the subpoint. The count will only show flows to that subpoint in both directions.
             </p>
           </div>
           <div className="space-y-3">
@@ -342,12 +342,12 @@ Todavía no hay puntos de conteo configurados.
             {selectedSubPoint && <span className="text-gray-500 font-normal"> · {selectedSubPoint.name}</span>}
           </h1>
           <p className="text-xs text-gray-500">
-            {gps ? `GPS ±${Math.round(gps.acc)}m` : "Obteniendo GPS..."}
+            {gps ? `GPS ±${Math.round(gps.acc)}m` : "Getting GPS..."}
           </p>
         </div>
         <div className="text-right shrink-0">
           <div className="text-2xl font-bold text-blue-700">{totalToday}</div>
-          <div className="text-xs text-gray-500">hoy</div>
+          <div className="text-xs text-gray-500">today</div>
         </div>
       </div>
 
@@ -356,14 +356,14 @@ Todavía no hay puntos de conteo configurados.
         {/* ─── Barra de sesión cronometrada ─── */}
         <div className="bg-white border border-gray-200 rounded-xl p-3">
           <div className="grid grid-cols-3 gap-2 items-center">
-            {/* Botón Iniciar */}
+            {/* Botón Start */}
             <Button
               onClick={handleStartSession}
               disabled={sessionActive || startSession.isPending}
               className="h-12 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg disabled:opacity-40"
             >
               <Play className="h-4 w-4 mr-1.5" />
-              Iniciar
+              Start
             </Button>
 
             {/* Temporizador central */}
@@ -375,70 +375,32 @@ Todavía no hay puntos de conteo configurados.
                 </span>
               </div>
               {sessionActive && (
-                <span className="text-xs text-green-600 font-medium mt-0.5">{sessionTotal} personas</span>
+                <span className="text-xs text-green-600 font-medium mt-0.5">{sessionTotal} people</span>
               )}
               {!sessionActive && (
-                <span className="text-xs text-gray-400 mt-0.5">sin sesión</span>
+                <span className="text-xs text-gray-400 mt-0.5">no session</span>
               )}
             </div>
 
-            {/* Botón Finalizar */}
+            {/* Botón Finish */}
             <Button
               onClick={handleFinishSession}
               disabled={!sessionActive || finishSession.isPending}
               className="h-12 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg disabled:opacity-40"
             >
               <Square className="h-4 w-4 mr-1.5" />
-              Finalizar
+              Finish
             </Button>
           </div>
         </div>
 
-        {/* ─── Personas ─── */}
-        <div>
-          <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3 flex items-center gap-2">
-            <Users className="h-4 w-4" /> Personas
-          </h2>
-            <div className="grid grid-cols-4 gap-2 mb-2">
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-                <button
-                  key={n}
-                  onClick={() => handleQuickAdd(n)}
-                  disabled={!selectedFlow || addPass.isPending}
-                  className={`h-16 rounded-xl text-2xl font-bold transition-all duration-100 border-2 ${
-                    selectedCount === n
-                      ? "bg-blue-700 border-blue-700 text-white shadow-md scale-105"
-                      : "bg-white border-gray-200 text-gray-800 hover:border-blue-400 hover:bg-blue-50"
-                  } ${(!selectedFlow || addPass.isPending) ? "opacity-60" : ""}`}
-                >
-                  +{n}
-                </button>
-              ))}
-            </div>
-          <button
-            onClick={() => {
-              setGroupDialogOpen(true);
-              setTimeout(() => groupInputRef.current?.focus(), 100);
-            }}
-            className={`w-full h-14 rounded-xl border-2 flex items-center justify-center gap-2 font-semibold text-base transition-all duration-100 ${
-              selectedCount !== null && selectedCount > 8
-                ? "bg-amber-500 border-amber-500 text-white shadow-md"
-                : "bg-white border-dashed border-gray-300 text-gray-600 hover:border-amber-400 hover:bg-amber-50"
-            }`}
-          >
-            <Plus className="h-5 w-5" />
-            {selectedCount !== null && selectedCount > 8 ? `Grupo: ${selectedCount} personas` : "Grupo grande (9+)"}
-          </button>
-        </div>
-
         {/* ─── Flujos (solo los del subpunto seleccionado) ─── */}
         <div>
-            <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3 flex items-center gap-2">
-            <ArrowLeftRight className="h-4 w-4" /> Flujo seleccionado
+          <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3 flex items-center gap-2">
+            <ArrowLeftRight className="h-4 w-4" /> Selected flow
           </h2>
           <p className="text-sm text-gray-500 mb-3">
-            Pulsa un flujo para dejarlo marcado. Después podrás registrar personas directamente con los botones rápidos inferiores.
-          </p>
+           Tap a flow to keep it selected. After that, you can record people directly with the quick buttons below.          </p>
           <div className="space-y-2">
             {flows.map((flow) => (
               <button
@@ -461,23 +423,60 @@ Todavía no hay puntos de conteo configurados.
             <CheckCircle2 className={`mt-0.5 h-5 w-5 ${selectedFlow ? "text-green-600" : "text-amber-500"}`} />
             <div>
               <p className="text-sm font-semibold text-gray-900">
-                {selectedFlow ? `Flujo activo: ${selectedFlow.label}` : "Selecciona un flujo para empezar a registrar"}
+                {selectedFlow ? `Active flow: ${selectedFlow.label}` : "Select a flow to start recording"}
               </p>
               <p className="text-xs text-gray-600 mt-1">
                 {selectedFlow
                   ? addPass.isPending
-                    ? "Guardando registro..."
-                    : "Cada botón +1, +2, +3... añadirá el conteo directamente con este flujo."
-                  : "Cuando elijas un flujo, quedará marcado hasta que selecciones otro."}
+                    ? "Saving record..."
+                    : "Each +1, +2, +3... button will add the count directly with this flow."
+                  : "Once you choose a flow, it will stay selected until you choose another one."}
               </p>
             </div>
           </div>
         </div>
 
-        {/* ─── Últimos registros ─── */}
+        {/* ─── Personas ─── */}
+        <div>
+          <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3 flex items-center gap-2">
+            <Users className="h-4 w-4" /> People
+          </h2>
+          <div className="grid grid-cols-4 gap-2 mb-2">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+              <button
+                key={n}
+                onClick={() => handleQuickAdd(n)}
+                disabled={!selectedFlow || addPass.isPending}
+                className={`h-16 rounded-xl text-2xl font-bold transition-all duration-100 border-2 ${
+                  selectedCount === n
+                    ? "bg-blue-700 border-blue-700 text-white shadow-md scale-105"
+                    : "bg-white border-gray-200 text-gray-800 hover:border-blue-400 hover:bg-blue-50"
+                } ${(!selectedFlow || addPass.isPending) ? "opacity-60" : ""}`}
+              >
+                +{n}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => {
+              setGroupDialogOpen(true);
+              setTimeout(() => groupInputRef.current?.focus(), 100);
+            }}
+            className={`w-full h-14 rounded-xl border-2 flex items-center justify-center gap-2 font-semibold text-base transition-all duration-100 ${
+              selectedCount !== null && selectedCount > 8
+                ? "bg-amber-500 border-amber-500 text-white shadow-md"
+                : "bg-white border-dashed border-gray-300 text-gray-600 hover:border-amber-400 hover:bg-amber-50"
+            }`}
+          >
+            <Plus className="h-5 w-5" />
+            {selectedCount !== null && selectedCount > 8 ? `Grupo: ${selectedCount} people` : "Large group (9+)"}
+          </button>
+        </div>
+
+        {/* ─── Latest records ─── */}
         {recentPasses.length > 0 && (
           <div>
-            <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-2">Últimos registros</h2>
+            <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-2">Latest records</h2>
             <div className="space-y-1.5">
               {recentPasses.map((p, i) => (
                 <div key={i} className="bg-white border border-gray-100 rounded-lg px-4 py-2.5 flex items-center justify-between text-sm">
@@ -496,9 +495,9 @@ Todavía no hay puntos de conteo configurados.
       {/* Dialog grupo grande */}
       <Dialog open={groupDialogOpen} onOpenChange={setGroupDialogOpen}>
         <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>Grupo grande</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Large group</DialogTitle></DialogHeader>
           <div className="py-2">
-            <p className="text-sm text-gray-600 mb-3">Introduce el número exacto de personas del grupo:</p>
+            <p className="text-sm text-gray-600 mb-3">Enter the exact number of people in the group:</p>
             <Input
               ref={groupInputRef}
               type="number"
@@ -509,14 +508,14 @@ Todavía no hay puntos de conteo configurados.
               value={groupCount}
               onChange={(e) => setGroupCount(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleGroupConfirm()}
-              placeholder="Ej: 20"
+              placeholder="E.g. 20"
               className="text-center text-2xl font-bold h-14"
               autoFocus
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setGroupDialogOpen(false); setGroupCount(""); }}>Cancelar</Button>
-            <Button onClick={handleGroupConfirm} disabled={!groupCount || parseInt(groupCount) < 1}>Registrar</Button>
+            <Button variant="outline" onClick={() => { setGroupDialogOpen(false); setGroupCount(""); }}>Cancel</Button>
+            <Button onClick={handleGroupConfirm} disabled={!groupCount || parseInt(groupCount) < 1}>Record</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

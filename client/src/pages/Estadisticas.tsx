@@ -94,7 +94,7 @@ function SectionTitle({ icon: Icon, title, color = "text-primary" }: { icon: any
 }
 
 function EmptyState() {
-  return <div className="flex items-center justify-center h-40 text-muted-foreground text-sm">No hay datos suficientes</div>;
+  return <div className="flex items-center justify-center h-40 text-muted-foreground text-sm">Not enough data</div>;
 }
 
 // Etiqueta de porcentaje dentro del segmento (solo si > 8%)
@@ -166,8 +166,8 @@ function TabGeneral({
   }));
 
   const timeSlotLabels: Record<string, string> = {
-    manana: "Mañana", tarde: "Tarde", noche: "Noche", fin_semana: "Fin de semana",
-    mediodia: "Mediodía", mañana: "Mañana", Mañana: "Mañana", Tarde: "Tarde", Noche: "Noche",
+    manana: "Morning", tarde: "Afternoon", noche: "Night", fin_semana: "Weekend",
+    mediodia: "Midday", mañana: "Morning", Mañana: "Morning", Tarde: "Afternoon", Noche: "Night",
   };
   const timeSlotOrder = ["manana", "mediodia", "tarde", "noche", "fin_semana"];
   const timeSlotData = [...(byTimeSlot as any[])]
@@ -182,9 +182,9 @@ function TabGeneral({
     }));
 
   const rejTotal = Number((rejStats as any)?.total ?? 0);
-  const rejResidentes = Number((rejStats as any)?.byType?.residentes ?? 0);
-  const rejVisitantes = Number((rejStats as any)?.byType?.visitantes ?? 0);
-  const tasaRechazo = total + rejTotal > 0
+  const rejResidents = Number((rejStats as any)?.byType?.residentes ?? 0);
+  const rejVisitors = Number((rejStats as any)?.byType?.visitantes ?? 0);
+  const rejectionRate = total + rejTotal > 0
     ? ((rejTotal / (total + rejTotal)) * 100).toFixed(1) + "%"
     : "—";
 
@@ -196,35 +196,35 @@ function TabGeneral({
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-primary" /> Progreso del estudio
+            <TrendingUp className="h-4 w-4 text-primary" /> Study progress
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap justify-around gap-6 py-4">
-            <ProgressRing value={total} max={TARGET_T} color={C.primary} label="Total" sublabel={`objetivo ${TARGET_T}`} />
-            <ProgressRing value={residentes} max={TARGET_R} color={C.secondary} label="Residentes" sublabel={`objetivo ${TARGET_R}`} />
-            <ProgressRing value={visitantes} max={TARGET_V} color={C.warning} label="Visitantes" sublabel={`objetivo ${TARGET_V}`} />
+            <ProgressRing value={total} max={TARGET_T} color={C.primary} label="Total" sublabel={`target ${TARGET_T}`} />
+            <ProgressRing value={residentes} max={TARGET_R} color={C.secondary} label="Residents" sublabel={`target ${TARGET_R}`} />
+            <ProgressRing value={visitantes} max={TARGET_V} color={C.warning} label="Visitors" sublabel={`target ${TARGET_V}`} />
           </div>
         </CardContent>
       </Card>
 
-      {/* Rechazos */}
+      {/* Rejections */}
       <Card className="border-0 shadow-sm border-l-4 border-l-red-400">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-red-500 inline-block" /> Rechazos
+            <span className="w-3 h-3 rounded-full bg-red-500 inline-block" /> Rejections
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 divide-x divide-border">
-            <StatBadge value={rejTotal} label="Rechazos totales" color="text-red-600" />
-            <StatBadge value={rejResidentes} label="Residentes" color="text-blue-700" />
-            <StatBadge value={rejVisitantes} label="Visitantes" color="text-amber-600" />
-            <StatBadge value={tasaRechazo} label="Tasa de rechazo" color="text-muted-foreground" />
+            <StatBadge value={rejTotal} label="Total rejections" color="text-red-600" />
+            <StatBadge value={rejResidents} label="Residents" color="text-blue-700" />
+            <StatBadge value={rejVisitors} label="Visitors" color="text-amber-600" />
+            <StatBadge value={rejectionRate} label="Rejection rate" color="text-muted-foreground" />
           </div>
           {(rejStats as any)?.byPoint && Object.keys((rejStats as any).byPoint).length > 0 && (
             <div className="mt-4 space-y-1.5">
-              <p className="text-xs font-medium text-muted-foreground mb-2">Por punto de encuesta</p>
+              <p className="text-xs font-medium text-muted-foreground mb-2">By survey point</p>
               {Object.entries((rejStats as any).byPoint as Record<string, number>)
                 .sort(([, a], [, b]) => b - a)
                 .map(([point, count]) => (
@@ -246,7 +246,7 @@ function TabGeneral({
       <div className="grid md:grid-cols-2 gap-4">
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">Encuestas por encuestador</CardTitle>
+            <CardTitle className="text-sm font-semibold">Surveys by interviewer</CardTitle>
           </CardHeader>
           <CardContent>
             {encuestadorData.length === 0 ? <EmptyState /> : (
@@ -263,7 +263,7 @@ function TabGeneral({
                         return (
                           <div className="bg-white border border-gray-200 rounded shadow p-2 text-xs">
                             <p className="font-semibold mb-1">{enc?.fullName ?? label}</p>
-                            <p className="text-muted-foreground mb-1">Código: {enc?.identifier}</p>
+                            <p className="text-muted-foreground mb-1">Code: {enc?.identifier}</p>
                             {payload.map((p: any) => (
                               <p key={p.dataKey} style={{ color: p.fill }}>{p.name}: {p.value}</p>
                             ))}
@@ -272,8 +272,8 @@ function TabGeneral({
                       }}
                     />
                     <Legend wrapperStyle={{ fontSize: 11 }} />
-                    <Bar dataKey="residentes" name="Residentes" fill={C.primary} radius={[3, 3, 0, 0]} stackId="a" />
-                    <Bar dataKey="visitantes" name="Visitantes" fill={C.warning} radius={[3, 3, 0, 0]} stackId="a" />
+                    <Bar dataKey="residentes" name="Residents" fill={C.primary} radius={[3, 3, 0, 0]} stackId="a" />
+                    <Bar dataKey="visitantes" name="Visitors" fill={C.warning} radius={[3, 3, 0, 0]} stackId="a" />
                   </BarChart>
                 </ResponsiveContainer>
                 <div className="mt-3 overflow-x-auto">
@@ -307,7 +307,7 @@ function TabGeneral({
 
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">Distribución por franja horaria</CardTitle>
+            <CardTitle className="text-sm font-semibold">Distribution by time slot</CardTitle>
           </CardHeader>
           <CardContent>
             {timeSlotData.length === 0 ? <EmptyState /> : (
@@ -316,8 +316,8 @@ function TabGeneral({
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} />
-                  <Tooltip formatter={(v: any) => [v, "Encuestas"]} />
-                  <Bar dataKey="value" name="Encuestas" radius={[4, 4, 0, 0]}>
+                  <Tooltip formatter={(v: any) => [v, "Surveys"]} />
+                  <Bar dataKey="value" name="Surveys" radius={[4, 4, 0, 0]}>
                     {timeSlotData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                     <LabelList dataKey="value" position="top" style={{ fontSize: 12, fontWeight: 600 }} />
                   </Bar>
@@ -331,7 +331,7 @@ function TabGeneral({
       {/* Evolución diaria */}
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold">Evolución diaria de encuestas</CardTitle>
+          <CardTitle className="text-sm font-semibold">Daily survey trend</CardTitle>
         </CardHeader>
         <CardContent>
           {dayData.length === 0 ? <EmptyState /> : (
@@ -352,8 +352,8 @@ function TabGeneral({
                 <YAxis tick={{ fontSize: 11 }} />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Area type="monotone" dataKey="residentes" name="Residentes" stroke={C.primary} fill="url(#gradR)" strokeWidth={2} />
-                <Area type="monotone" dataKey="visitantes" name="Visitantes" stroke={C.warning} fill="url(#gradV)" strokeWidth={2} />
+                <Area type="monotone" dataKey="residentes" name="Residents" stroke={C.primary} fill="url(#gradR)" strokeWidth={2} />
+                <Area type="monotone" dataKey="visitantes" name="Visitors" stroke={C.warning} fill="url(#gradV)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
           )}
@@ -363,8 +363,8 @@ function TabGeneral({
   );
 }
 
-// ─── Tab: Visitantes ──────────────────────────────────────────────────────────
-function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) {
+// ─── Tab: Visitors ──────────────────────────────────────────────────────────
+function TabVisitors({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) {
   const { data: d, isLoading } = trpc.dashboard.visitantesStats.useQuery({
     dateFrom: dateFrom ? new Date(dateFrom) : undefined,
     dateTo: dateTo ? new Date(dateTo + "T23:59:59") : undefined,
@@ -379,7 +379,7 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="border-0 shadow-sm text-center p-4">
           <p className="text-3xl font-bold text-amber-600">{d.total}</p>
-          <p className="text-xs text-muted-foreground mt-1">Total visitantes</p>
+          <p className="text-xs text-muted-foreground mt-1">Total visitors</p>
         </Card>
         <Card className="border-0 shadow-sm text-center p-4">
           <p className="text-3xl font-bold text-primary">{d.avgValoracion}</p>
@@ -387,20 +387,20 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
         </Card>
         <Card className="border-0 shadow-sm text-center p-4">
           <p className="text-3xl font-bold text-teal-600">{d.avgSatisfaccion}</p>
-          <p className="text-xs text-muted-foreground mt-1">Satisfacción general ★</p>
+          <p className="text-xs text-muted-foreground mt-1">Overall satisfaction ★</p>
         </Card>
         <Card className="border-0 shadow-sm text-center p-4">
           <p className="text-3xl font-bold text-purple-600">
             {d.pais.find((p) => p.name === "Extranjero")?.value ?? 0}
           </p>
-          <p className="text-xs text-muted-foreground mt-1">Visitantes extranjeros</p>
+          <p className="text-xs text-muted-foreground mt-1">International visitors</p>
         </Card>
       </div>
 
-      {/* Procedencia + Género */}
+      {/* Origin + Género */}
       <div className="grid md:grid-cols-2 gap-4">
         <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Procedencia</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Origin</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
@@ -417,7 +417,7 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
         </Card>
 
         <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Género y edad</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Gender and age</CardTitle></CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
               <ResponsiveContainer width="100%" height={180}>
@@ -435,7 +435,7 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
                 <BarChart data={d.edad} layout="vertical" margin={{ top: 0, right: 20, left: 10, bottom: 0 }}>
                   <XAxis type="number" tick={{ fontSize: 10 }} />
                   <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={40} />
-                  <Tooltip formatter={(v: any) => [v, "Encuestas"]} />
+                  <Tooltip formatter={(v: any) => [v, "Surveys"]} />
                   <Bar dataKey="value" fill={C.primary} radius={[0, 3, 3, 0]}>
                     <LabelList dataKey="value" position="right" style={{ fontSize: 10 }} />
                   </Bar>
@@ -449,14 +449,14 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
       {/* Motivo + Grupo */}
       <div className="grid md:grid-cols-2 gap-4">
         <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Motivo de la visita</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Visit purpose</CardTitle></CardHeader>
           <CardContent>
             {d.motivo.length === 0 ? <EmptyState /> : (
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={d.motivo} layout="vertical" margin={{ top: 0, right: 30, left: 10, bottom: 0 }}>
                   <XAxis type="number" tick={{ fontSize: 10 }} />
                   <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={90} />
-                  <Tooltip formatter={(v: any) => [v, "Encuestas"]} />
+                  <Tooltip formatter={(v: any) => [v, "Surveys"]} />
                   <Bar dataKey="value" fill={C.warning} radius={[0, 4, 4, 0]}>
                     <LabelList dataKey="value" position="right" style={{ fontSize: 11, fontWeight: 600 }} />
                   </Bar>
@@ -467,7 +467,7 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
         </Card>
 
         <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Tipo de grupo</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Group type</CardTitle></CardHeader>
           <CardContent>
             {d.grupo.length === 0 ? <EmptyState /> : (
               <ResponsiveContainer width="100%" height={200}>
@@ -489,7 +489,7 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
       {/* Frecuencia visita + Estancia */}
       <div className="grid md:grid-cols-2 gap-4">
         <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Frecuencia de visita</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Visit frequency</CardTitle></CardHeader>
           <CardContent>
             {d.frecuencia.length === 0 ? <EmptyState /> : (
               <ResponsiveContainer width="100%" height={200}>
@@ -497,7 +497,7 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip formatter={(v: any) => [v, "Encuestas"]} />
+                  <Tooltip formatter={(v: any) => [v, "Surveys"]} />
                   <Bar dataKey="value" fill={C.accent} radius={[4, 4, 0, 0]}>
                     {d.frecuencia.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                     <LabelList dataKey="value" position="top" style={{ fontSize: 11, fontWeight: 600 }} />
@@ -509,7 +509,7 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
         </Card>
 
         <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Duración de la estancia</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Length of stay</CardTitle></CardHeader>
           <CardContent>
             {d.estancia.length === 0 ? <EmptyState /> : (
               <ResponsiveContainer width="100%" height={200}>
@@ -517,7 +517,7 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip formatter={(v: any) => [v, "Encuestas"]} />
+                  <Tooltip formatter={(v: any) => [v, "Surveys"]} />
                   <Bar dataKey="value" fill={C.teal} radius={[4, 4, 0, 0]}>
                     <LabelList dataKey="value" position="top" style={{ fontSize: 11, fontWeight: 600 }} />
                   </Bar>
@@ -531,14 +531,14 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
       {/* Transporte + Actividad */}
       <div className="grid md:grid-cols-2 gap-4">
         <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Medio de transporte</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Transport mode</CardTitle></CardHeader>
           <CardContent>
             {d.transporte.length === 0 ? <EmptyState /> : (
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={d.transporte} layout="vertical" margin={{ top: 0, right: 30, left: 10, bottom: 0 }}>
                   <XAxis type="number" tick={{ fontSize: 10 }} />
                   <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={90} />
-                  <Tooltip formatter={(v: any) => [v, "Encuestas"]} />
+                  <Tooltip formatter={(v: any) => [v, "Surveys"]} />
                   <Bar dataKey="value" fill={C.success} radius={[0, 4, 4, 0]}>
                     <LabelList dataKey="value" position="right" style={{ fontSize: 11, fontWeight: 600 }} />
                   </Bar>
@@ -549,14 +549,14 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
         </Card>
 
         <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Actividad principal</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Main activity</CardTitle></CardHeader>
           <CardContent>
             {d.actividad.length === 0 ? <EmptyState /> : (
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={d.actividad} layout="vertical" margin={{ top: 0, right: 30, left: 10, bottom: 0 }}>
                   <XAxis type="number" tick={{ fontSize: 10 }} />
                   <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={100} />
-                  <Tooltip formatter={(v: any) => [v, "Encuestas"]} />
+                  <Tooltip formatter={(v: any) => [v, "Surveys"]} />
                   <Bar dataKey="value" fill={C.purple} radius={[0, 4, 4, 0]}>
                     <LabelList dataKey="value" position="right" style={{ fontSize: 11, fontWeight: 600 }} />
                   </Bar>
@@ -570,7 +570,7 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
       {/* Valoración + Masificación */}
       <div className="grid md:grid-cols-2 gap-4">
         <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Valoración del espacio (1-5 ★)</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Space rating (1-5 ★)</CardTitle></CardHeader>
           <CardContent>
             {d.valoracionDist.length === 0 ? <EmptyState /> : (
               <ResponsiveContainer width="100%" height={180}>
@@ -578,7 +578,7 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip formatter={(v: any) => [v, "Encuestas"]} />
+                  <Tooltip formatter={(v: any) => [v, "Surveys"]} />
                   <Bar dataKey="value" fill={C.warning} radius={[4, 4, 0, 0]}>
                     {d.valoracionDist.map((entry, i) => {
                       const n = parseInt(entry.name);
@@ -594,7 +594,7 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
         </Card>
 
         <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Impacto de la masificación en la visita</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Impact of overcrowding on the visit</CardTitle></CardHeader>
           <CardContent>
             {d.masificacion.length === 0 ? <EmptyState /> : (
               <ResponsiveContainer width="100%" height={180}>
@@ -618,7 +618,7 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
 
       {/* Por punto */}
       <Card className="border-0 shadow-sm">
-        <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Encuestas por punto de encuesta</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Surveys by survey point</CardTitle></CardHeader>
         <CardContent>
           {d.byPunto.length === 0 ? <EmptyState /> : (
             <ResponsiveContainer width="100%" height={180}>
@@ -626,7 +626,7 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="name" tick={{ fontSize: 10 }} angle={-20} textAnchor="end" interval={0} />
                 <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip formatter={(v: any) => [v, "Encuestas"]} />
+                <Tooltip formatter={(v: any) => [v, "Surveys"]} />
                 <Bar dataKey="value" fill={C.warning} radius={[4, 4, 0, 0]}>
                   {d.byPunto.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                   <LabelList dataKey="value" position="top" style={{ fontSize: 11, fontWeight: 600 }} />
@@ -640,8 +640,8 @@ function TabVisitantes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
   );
 }
 
-// ─── Tab: Residentes ──────────────────────────────────────────────────────────
-function TabResidentes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) {
+// ─── Tab: Residents ──────────────────────────────────────────────────────────
+function TabResidents({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) {
   const { data: d, isLoading } = trpc.dashboard.residentesStats.useQuery({
     dateFrom: dateFrom ? new Date(dateFrom) : undefined,
     dateTo: dateTo ? new Date(dateTo + "T23:59:59") : undefined,
@@ -702,7 +702,7 @@ function TabResidentes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip formatter={(v: any) => [v, "Encuestas"]} />
+                  <Tooltip formatter={(v: any) => [v, "Surveys"]} />
                   <Bar dataKey="value" fill={C.primary} radius={[4, 4, 0, 0]}>
                     {d.edad.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                     <LabelList dataKey="value" position="top" style={{ fontSize: 11, fontWeight: 600 }} />
@@ -718,7 +718,7 @@ function TabResidentes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
       {d.satisfaccion.length > 0 && (
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">Satisfacción con el barrio (media 1-5 ★)</CardTitle>
+            <CardTitle className="text-sm font-semibold">Neighbourhood satisfaction (average 1-5 ★)</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-2 gap-4 items-center">
@@ -842,8 +842,8 @@ function TabResidentes({ dateFrom, dateTo }: { dateFrom: string; dateTo: string 
   );
 }
 
-// ─── Tab: Conteos ─────────────────────────────────────────────────────────────
-function TabConteos({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) {
+// ─── Tab: Counts ─────────────────────────────────────────────────────────────
+function TabCounts({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) {
   const { data: d, isLoading } = trpc.dashboard.conteosStats.useQuery({
     dateFrom: dateFrom ? new Date(dateFrom) : undefined,
     dateTo: dateTo ? new Date(dateTo + "T23:59:59") : undefined,
@@ -866,7 +866,7 @@ function TabConteos({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
         </Card>
         <Card className="border-0 shadow-sm text-center p-4">
           <p className="text-3xl font-bold text-amber-600">{d.sessions.length}</p>
-          <p className="text-xs text-muted-foreground mt-1">Sesiones de conteo</p>
+          <p className="text-xs text-muted-foreground mt-1">Counting sessions</p>
         </Card>
       </div>
 
@@ -964,7 +964,7 @@ function TabConteos({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
       {/* Tabla de sesiones */}
       {d.sessions.length > 0 && (
         <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Sesiones de conteo</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Counting sessions</CardTitle></CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
@@ -972,7 +972,7 @@ function TabConteos({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
                   <tr className="border-b border-border">
                     <th className="text-left py-2 pr-3 font-semibold text-muted-foreground">Point</th>
                     <th className="text-left py-2 pr-3 font-semibold text-muted-foreground">Subpoint</th>
-                    <th className="text-left py-2 pr-3 font-semibold text-muted-foreground">Encuestador</th>
+                    <th className="text-left py-2 pr-3 font-semibold text-muted-foreground">Interviewer</th>
                     <th className="text-right py-2 pr-3 font-semibold text-muted-foreground">Start</th>
                     <th className="text-right py-2 pr-3 font-semibold text-muted-foreground">End</th>
                     <th className="text-right py-2 font-semibold text-muted-foreground">People</th>
@@ -1002,9 +1002,9 @@ function TabConteos({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 const TABS = [
   { id: "general", label: "General", icon: BarChart2 },
-  { id: "visitantes", label: "Visitantes", icon: Eye },
-  { id: "residentes", label: "Residentes", icon: Home },
-  { id: "conteos", label: "Conteos", icon: ArrowLeftRight },
+  { id: "visitantes", label: "Visitors", icon: Eye },
+  { id: "residentes", label: "Residents", icon: Home },
+  { id: "conteos", label: "Counts", icon: ArrowLeftRight },
 ];
 
 export default function Estadisticas() {
@@ -1022,17 +1022,17 @@ export default function Estadisticas() {
         {/* Header */}
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Estadísticas</h1>
-            <p className="text-muted-foreground text-sm mt-1">Análisis en tiempo real del trabajo de campo</p>
+            <h1 className="text-2xl font-bold text-foreground">Statistics</h1>
+            <p className="text-muted-foreground text-sm mt-1">Real-time fieldwork analysis</p>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-muted-foreground">Desde</label>
+              <label className="text-xs font-medium text-muted-foreground">From</label>
               <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
                 className="border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-muted-foreground">Hasta</label>
+              <label className="text-xs font-medium text-muted-foreground">To</label>
               <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
                 className="border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
@@ -1070,9 +1070,9 @@ export default function Estadisticas() {
             surveyTargetTotal={surveyTargetTotal}
           />
         )}
-        {activeTab === "visitantes" && <TabVisitantes dateFrom={dateFrom} dateTo={dateTo} />}
-        {activeTab === "residentes" && <TabResidentes dateFrom={dateFrom} dateTo={dateTo} />}
-        {activeTab === "conteos" && <TabConteos dateFrom={dateFrom} dateTo={dateTo} />}
+        {activeTab === "visitantes" && <TabVisitors dateFrom={dateFrom} dateTo={dateTo} />}
+        {activeTab === "residentes" && <TabResidents dateFrom={dateFrom} dateTo={dateTo} />}
+        {activeTab === "conteos" && <TabCounts dateFrom={dateFrom} dateTo={dateTo} />}
       </div>
     </DashboardLayout>
   );
