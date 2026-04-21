@@ -4,8 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
+import { DEFAULT_MAP_CENTER, resolveConfiguredMapCenter } from "@/lib/mapFocus";
 import { Loader2, MapPin, Radio, RefreshCw, Thermometer, UserCheck } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 type ViewMode = "markers" | "heatmap" | "live";
 
@@ -160,11 +161,16 @@ function LiveMapView() {
     undefined,
     { refetchInterval: 30_000 }
   );
+  const { data: appSettings } = trpc.appSettings.get.useQuery();
 
   const validLive = (liveData as any[]).filter((l) => l.latitude != null && l.longitude != null);
+  const defaultCenter = useMemo(
+    () => resolveConfiguredMapCenter(validLive, appSettings?.mapPrimaryPointCode, DEFAULT_MAP_CENTER),
+    [validLive, appSettings?.mapPrimaryPointCode],
+  );
 
   const handleMapReady = (map: google.maps.Map) => {
-    const center = { lat: 37.3861, lng: -5.9915 };
+    const center = defaultCenter;
     map.setCenter(center);
     map.setZoom(16);
 
@@ -235,6 +241,7 @@ export default function Mapa() {
   const [mode, setMode] = useState<ViewMode>("markers");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const { data: appSettings } = trpc.appSettings.get.useQuery();
 
   const { data: locations = [], isLoading } = trpc.dashboard.gpsLocations.useQuery({
     dateFrom: dateFrom ? new Date(dateFrom) : undefined,
@@ -245,8 +252,13 @@ export default function Mapa() {
     (l) => l.latitude != null && l.longitude != null
   );
 
+  const defaultCenter = useMemo(
+    () => resolveConfiguredMapCenter(validLocations, appSettings?.mapPrimaryPointCode, DEFAULT_MAP_CENTER),
+    [validLocations, appSettings?.mapPrimaryPointCode],
+  );
+
   const handleMapReady = (map: google.maps.Map) => {
-    const center = { lat: 37.3861, lng: -5.9915 };
+    const center = defaultCenter;
     map.setCenter(center);
     map.setZoom(16);
 

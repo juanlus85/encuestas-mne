@@ -1,0 +1,26 @@
+[
+  {
+    "code": "01",
+    "name": "Pont Scurda",
+    "fullName": "01 Pont Scurda",
+    "subPoints": [
+      {
+        "code": "01.01",
+        "name": "OldTown",
+        "fullName": "01.01 OldTown"
+      }
+    ]
+  },
+  {
+    "code": "02",
+    "name": "Bastión Gurdic",
+    "fullName": "02 Bastión Gurdic",
+    "subPoints": [
+      {
+        "code": "02.01",
+        "name": "OldTown",
+        "fullName": "02.01 OldTown"
+      }
+    ]
+  }
+]

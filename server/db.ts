@@ -453,6 +453,7 @@ export async function getGpsLocations(filters?: { dateFrom?: Date; dateTo?: Date
     encuestadorName: surveyResponses.encuestadorName,
     startedAt: surveyResponses.startedAt,
     templateId: surveyResponses.templateId,
+    surveyPoint: surveyResponses.surveyPoint,
   })
     .from(surveyResponses)
     .where(and(...conditions))

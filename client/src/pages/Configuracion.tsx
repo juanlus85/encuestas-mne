@@ -18,7 +18,7 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 const QUESTION_TYPES = [
@@ -350,6 +350,19 @@ export default function Configuracion() {
   const { user } = useAuth();
   const utils = trpc.useUtils();
   const { data: templates = [], isLoading } = trpc.templates.list.useQuery();
+  const { data: countingPoints = [] } = trpc.countingPoints.list.useQuery();
+  const { data: appSettings } = trpc.appSettings.get.useQuery();
+  const [mapPrimaryPointCode, setMapPrimaryPointCode] = useState("");
+
+  const saveMapSettings = trpc.appSettings.update.useMutation({
+    onSuccess: async () => {
+      await utils.appSettings.get.invalidate();
+      toast.success("Map settings updated");
+    },
+    onError: (error) => toast.error(`Error saving map settings: ${error.message}`),
+  });
+
+  const effectiveMapPrimaryPointCode = mapPrimaryPointCode || appSettings?.mapPrimaryPointCode || "";
 
   if (user?.role !== "admin") {
     return (
@@ -363,16 +376,57 @@ export default function Configuracion() {
 
   const refresh = () => utils.templates.list.invalidate();
 
+  useEffect(() => {
+    if (appSettings?.mapPrimaryPointCode) {
+      setMapPrimaryPointCode(appSettings.mapPrimaryPointCode);
+    }
+  }, [appSettings?.mapPrimaryPointCode]);
+
   return (
     <DashboardLayout>
       <div className="space-y-6 max-w-3xl">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-            <p className="text-muted-foreground text-sm mt-1">Manage survey templates and questions</p>
+            <p className="text-muted-foreground text-sm mt-1">Manage survey templates, questions, and map preferences</p>
           </div>
           <CreateTemplateDialog onCreated={refresh} />
         </div>
+
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Map default focus</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Select the main point that will be used as the default focus in the map views.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="text-sm font-medium block mb-1.5">Primary map point</label>
+              <select
+                value={effectiveMapPrimaryPointCode}
+                onChange={(e) => setMapPrimaryPointCode(e.target.value)}
+                className="w-full border border-border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="">Select a point</option>
+                {countingPoints.map((point) => (
+                  <option key={point.code} value={point.code}>{point.fullName}</option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-foreground mt-2">
+                This point will be used to center the Field Map and Counting Map when there is GPS data available for it.
+              </p>
+            </div>
+            <div className="flex justify-end">
+              <Button
+                onClick={() => saveMapSettings.mutate({ mapPrimaryPointCode: mapPrimaryPointCode || null })}
+                disabled={saveMapSettings.isPending || !effectiveMapPrimaryPointCode}
+              >
+                {saveMapSettings.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save map settings"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">

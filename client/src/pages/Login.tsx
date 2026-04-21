@@ -57,13 +57,13 @@ export default function Login() {
         {/* Logo / Branding */}
         <div className="flex flex-col items-center gap-3 text-center">
           <img
-            src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031419078/nHD7C8PRaURA7Ubm8Aop3k/logos-institucionales_324d47d4.jpg"
-            alt="Institutional logos"
+            src="/survexia-logo.png"
+            alt="Survexia logo"
             className="h-16 w-auto object-contain"
           />
           <div>
-            <h1 className="text-2xl font-bold text-foreground tracking-tight">Sevilla FeelingLAND Surveys</h1>
-            <p className="text-sm text-muted-foreground mt-1">Fieldwork System · Seville</p>
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">Survexia</h1>
+            <p className="text-sm text-muted-foreground mt-1">Research Made Intelligent</p>
           </div>
         </div>
 
@@ -87,7 +87,7 @@ export default function Login() {
                   autoCorrect="off"
                   value={username}
                   onChange={(e) => { setUsername(e.target.value); setError(null); }}
-                  placeholder="nombre.usuario"
+                  placeholder="username"
                   className="pl-9 h-11 text-base"
                   disabled={loading}
                 />
@@ -146,12 +146,12 @@ export default function Login() {
 
         <div className="flex flex-col items-center gap-3">
           <p className="text-center text-xs text-muted-foreground">
-            IATUR Study · <a href="https://organizus.es" target="_blank" rel="noopener noreferrer" className="hover:underline">Organizus.es</a>
+            Survexia · Research Made Intelligent
           </p>
           <img
-            src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031419078/nHD7C8PRaURA7Ubm8Aop3k/logos-institucionales_1f505402.jpg"
-            alt="Institutional logos: Seville City Council and Sevilla FeelingLand"
-            className="h-16 object-contain opacity-80"
+            src="/survexia-logo.png"
+            alt="Survexia logo"
+            className="h-16 object-contain opacity-90"
           />
         </div>
       </div>

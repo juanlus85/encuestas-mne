@@ -80,13 +80,13 @@ function EncuestadorHome() {
       <div className="bg-primary text-primary-foreground px-4 py-6 md:px-8">
         <div className="max-w-2xl mx-auto">
           <p className="text-primary-foreground/70 text-sm font-medium uppercase tracking-wider mb-1">
-            Sevilla FeelingLAND Surveys
+Survexia
           </p>
           <h1 className="text-2xl font-bold">{greeting}, {user?.name?.split(" ")[0]}</h1>
           <div className="flex items-center justify-between mt-1">
             <p className="text-primary-foreground/70 text-sm">
               {user?.identifier && <span className="font-mono bg-primary-foreground/10 px-2 py-0.5 rounded mr-2">{user.identifier}</span>}
-              Santa Cruz District · Seville
+Survexia field operations
             </p>
             <button
               onClick={logout}
@@ -214,7 +214,7 @@ function EncuestadorHome() {
 
         <div className="text-center pt-4 pb-2">
           <p className="text-xs text-muted-foreground">
-            IATUR Study · <a href="https://organizus.es" target="_blank" rel="noopener noreferrer" className="hover:underline text-muted-foreground">Organizus.es</a> · v1.0
+Survexia · Research Made Intelligent · v1.0
           </p>
         </div>
       </div>
@@ -272,7 +272,7 @@ function AdminHome() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Control Panel</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Tourism Mobility Study · Santa Cruz District, Seville
+Survexia research operations dashboard
           </p>
         </div>
 
@@ -387,7 +387,7 @@ function AdminHome() {
 
         <div className="text-right pt-2">
           <p className="text-xs text-muted-foreground">
-            IATUR Study · <a href="https://organizus.es" target="_blank" rel="noopener noreferrer" className="hover:underline">Organizus.es</a> · v1.0 · {new Date().toLocaleDateString("en-GB")}
+Survexia · Research Made Intelligent · v1.0 · {new Date().toLocaleDateString("en-GB")}
           </p>
         </div>
       </div>

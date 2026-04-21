@@ -1,22 +1,22 @@
 {
-  "name": "Encuestas Sevilla FeelingLAND",
-  "short_name": "Enc. Sevilla",
-  "description": "Encuestas de campo · Sevilla FeelingLAND",
+  "name": "Survexia",
+  "short_name": "Survexia",
+  "description": "Research Made Intelligent",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#1d4ed8",
+  "theme_color": "#0f766e",
   "orientation": "portrait-primary",
-  "lang": "es",
+  "lang": "en",
   "icons": [
     {
-      "src": "https://d2xsxph8kpxj0f.cloudfront.net/310419663031419078/nHD7C8PRaURA7Ubm8Aop3k/icon-192_f2d7f76c.png",
+      "src": "/survexia-logo.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "https://d2xsxph8kpxj0f.cloudfront.net/310419663031419078/nHD7C8PRaURA7Ubm8Aop3k/icon-512_45fd7304.png",
+      "src": "/survexia-logo.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

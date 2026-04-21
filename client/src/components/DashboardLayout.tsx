@@ -189,8 +189,8 @@ function DashboardLayoutContent({
               {!isCollapsed && (
                 <div className="flex items-center min-w-0 overflow-hidden">
                   <img
-                    src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031419078/nHD7C8PRaURA7Ubm8Aop3k/logos-institucionales_324d47d4.jpg"
-                    alt="Institutional logos"
+                    src="/survexia-logo.png"
+                    alt="Survexia logo"
                     className="h-10 w-auto max-w-full object-contain"
                   />
                 </div>
@@ -255,8 +255,7 @@ function DashboardLayoutContent({
             </button>
             {!isCollapsed && (
               <p className="text-xs text-muted-foreground px-2 pb-1">
-                {APP_VERSION} · {BUILD_DATE} ·{" "}
-                <a href="https://organizus.es" target="_blank" rel="noopener noreferrer" className="hover:underline">Organizus.es</a>
+                Survexia · {APP_VERSION} · {BUILD_DATE}
               </p>
             )}
           </SidebarFooter>
@@ -276,12 +275,12 @@ function DashboardLayoutContent({
           <div className="flex border-b h-14 items-center justify-between bg-background/95 px-4 backdrop-blur sticky top-0 z-40">
             <div className="flex items-center gap-3">
               <SidebarTrigger className="h-9 w-9 rounded-lg" />
-              <span className="font-medium text-sm">{activeMenuItem?.label ?? "Seville Surveys"}</span>
+              <span className="font-medium text-sm">{activeMenuItem?.label ?? "Survexia"}</span>
             </div>
             <div className="flex items-center">
               <img
-                src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031419078/nHD7C8PRaURA7Ubm8Aop3k/logos-institucionales_324d47d4.jpg"
-                alt="Logos"
+                src="/survexia-logo.png"
+                alt="Survexia logo"
                 className="h-8 w-auto object-contain"
               />
             </div>

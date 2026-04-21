@@ -1,18 +1,11 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
+import { DEFAULT_MAP_CENTER, resolveConfiguredMapCenter } from "@/lib/mapFocus";
 import { trpc } from "@/lib/trpc";
 import { Loader2, PersonStanding, Thermometer, MapPin } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type ViewMode = "heatmap" | "markers";
-
-const SURVEY_POINTS = [
-  "Mateos Gago",
-  "Agua",
-  "Rodrigo Caro",
-  "Pimienta",
-  "Mesón del Moro",
-];
 
 const API_KEY = import.meta.env.VITE_FRONTEND_FORGE_API_KEY;
 const FORGE_BASE_URL =
@@ -71,6 +64,9 @@ export default function MapaConteos() {
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
 
+  const { data: appSettings } = trpc.appSettings.get.useQuery();
+  const { data: countingPoints = [] } = trpc.countingPoints.list.useQuery();
+
   const { data: passes = [], isLoading } = trpc.passes.list.useQuery({
     dateFrom: dateFrom || undefined,
     dateTo: dateTo || undefined,
@@ -79,6 +75,11 @@ export default function MapaConteos() {
 
   const validPasses = (passes as any[]).filter(
     (p) => p.latitude != null && p.longitude != null
+  );
+
+  const defaultCenter = useMemo(
+    () => resolveConfiguredMapCenter(validPasses, appSettings?.mapPrimaryPointCode, DEFAULT_MAP_CENTER),
+    [validPasses, appSettings?.mapPrimaryPointCode],
   );
 
   const totalPersonas = validPasses.reduce((sum: number, p: any) => sum + (Number(p.count) ?? 1), 0);
@@ -99,7 +100,7 @@ export default function MapaConteos() {
         if (!mapInstanceRef.current) {
           mapInstanceRef.current = new window.google.maps.Map(mapContainerRef.current, {
             zoom: 17,
-            center: { lat: 37.3861, lng: -5.9915 },
+            center: defaultCenter,
             mapTypeControl: true,
             fullscreenControl: true,
             zoomControl: true,
@@ -110,7 +111,7 @@ export default function MapaConteos() {
           // Limpiar capas anteriores recreando el mapa en el mismo contenedor
           mapInstanceRef.current = new window.google.maps.Map(mapContainerRef.current, {
             zoom: 17,
-            center: { lat: 37.3861, lng: -5.9915 },
+            center: defaultCenter,
             mapTypeControl: true,
             fullscreenControl: true,
             zoomControl: true,
@@ -188,7 +189,7 @@ export default function MapaConteos() {
     return () => {
       cancelled = true;
     };
-  }, [isLoading, validPasses.length, mode, dateFrom, dateTo, surveyPoint]);
+  }, [isLoading, validPasses.length, mode, dateFrom, dateTo, surveyPoint, defaultCenter]);
 
   return (
     <DashboardLayout>
@@ -242,13 +243,14 @@ export default function MapaConteos() {
                 <select
                   value={surveyPoint}
                   onChange={(e) => setSurveyPoint(e.target.value)}
-                  className="border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
                 >
-                  <option value="">Todos los puntos</option>
-                  {SURVEY_POINTS.map((p) => (
-                    <option key={p} value={p}>{p}</option>
+                  <option value="">All points</option>
+                  {countingPoints.map((point) => (
+                    <option key={point.code} value={point.fullName}>{point.fullName}</option>
                   ))}
                 </select>
+
               </div>
 
               {/* Date filters */}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Users, ChevronLeft, Plus, CheckCircle2, ArrowRight, ArrowLeftRight, Play, Square, Timer } from "lucide-react";
 import { Link } from "wouter";
-import { SURVEY_POINTS, getFlowsForPoint, type SurveyPoint, type SurveySubPoint } from "../../../shared/surveyPoints";
+import { getFlowsForPoint, type CountingPoint as SurveyPoint, type CountingSubPoint as SurveySubPoint } from "../../../shared/countingPoints";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -23,6 +23,7 @@ function formatElapsed(seconds: number): string {
 
 export default function ConteoPeatonal() {
   const { user } = useAuth();
+  const { data: surveyPoints = [], isLoading: pointsLoading } = trpc.countingPoints.list.useQuery();
 
   // Pasos: punto → subpunto → conteo
   const [step, setStep] = useState<"punto" | "subpunto" | "conteo">("punto");
@@ -48,6 +49,29 @@ export default function ConteoPeatonal() {
   const [sessionStartedAt, setSessionStartedAt] = useState<Date | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [sessionTotal, setSessionTotal] = useState(0); // total de personas en esta sesión
+
+  // Mantener sincronizado el punto seleccionado con la lista dinámica
+  useEffect(() => {
+    if (!selectedPoint) return;
+
+    const freshPoint = surveyPoints.find((point) => point.code === selectedPoint.code);
+    if (!freshPoint) {
+      setStep("punto");
+      setSelectedPoint(null);
+      setSelectedSubPoint(null);
+      return;
+    }
+
+    setSelectedPoint(freshPoint);
+
+    if (selectedSubPoint) {
+      const freshSubPoint = freshPoint.subPoints.find((subPoint) => subPoint.code === selectedSubPoint.code) ?? null;
+      setSelectedSubPoint(freshSubPoint);
+      if (!freshSubPoint && step === "conteo") {
+        setStep("subpunto");
+      }
+    }
+  }, [surveyPoints, selectedPoint?.code, selectedSubPoint?.code, step]);
 
   // Scroll al inicio al cambiar de paso
   useEffect(() => {
@@ -211,7 +235,15 @@ export default function ConteoPeatonal() {
             <p className="text-sm text-gray-500">Choose the main point where you will perform the count</p>
           </div>
           <div className="space-y-3">
-            {SURVEY_POINTS.map((point) => (
+            {pointsLoading ? (
+              <div className="rounded-xl border border-gray-200 bg-white px-4 py-6 text-sm text-gray-500">
+                Loading counting points...
+              </div>
+            ) : surveyPoints.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-6 text-sm text-gray-500">
+                No counting points are configured yet.
+              </div>
+            ) : surveyPoints.map((point) => (
               <button
                 key={point.code}
                 onClick={() => { setSelectedPoint(point); setStep("subpunto"); }}

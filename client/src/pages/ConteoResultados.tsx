@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,9 +6,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { Users, MapPin, Clock, TrendingUp, Calendar } from "lucide-react";
-import { SURVEY_POINTS as SP } from "../../../shared/surveyPoints";
-
-const SURVEY_POINTS = ["Todos", ...SP.map((p) => p.fullName)];
 
 const TIME_GRANULARITIES = [
   { value: "hour", label: "Por hora" },
@@ -34,6 +31,8 @@ export default function ConteoResultados() {
   const [dateTo, setDateTo] = useState("");
 
   const { data: encuestadores = [] } = trpc.users.encuestadores.useQuery();
+  const { data: countingPoints = [] } = trpc.countingPoints.list.useQuery();
+  const surveyPointOptions = useMemo(() => ["Todos", ...countingPoints.map((point) => point.fullName)], [countingPoints]);
 
   const listInput = useMemo(() => ({
     surveyPoint: selectedPoint !== "Todos" ? selectedPoint : undefined,
@@ -130,7 +129,7 @@ export default function ConteoResultados() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {SURVEY_POINTS.map((p) => (
+                    {surveyPointOptions.map((p) => (
                       <SelectItem key={p} value={p}>{p}</SelectItem>
                     ))}
                   </SelectContent>

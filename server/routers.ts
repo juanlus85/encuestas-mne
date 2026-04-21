@@ -66,6 +66,16 @@ import {
   insertSurveyResponseFlat,
   getSurveyResponsesFlat,
 } from "./db";
+import {
+  createCountingPoint,
+  createCountingSubPoint,
+  deleteCountingPoint,
+  deleteCountingSubPoint,
+  listCountingPoints,
+  updateCountingPoint,
+  updateCountingSubPoint,
+} from "./countingPointsStore";
+import { getAppSettings, updateAppSettings } from "./appSettingsStore";
 import { hashPassword } from "./_core/localAuth";
 import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
@@ -1325,6 +1335,63 @@ export const appRouter = router({
         dateTo: z.string().optional(),
       }).optional())
       .query(({ input }) => getCountingSessions(input ?? {})),
+  }),
+
+  // ─── Counting Points ─────────────────────────────────────────────────────────────────────────
+
+  appSettings: router({
+    get: protectedProcedure.query(() => getAppSettings()),
+
+    update: adminProcedure
+      .input(z.object({
+        mapPrimaryPointCode: z.string().regex(/^\d{2}$/).nullable().optional(),
+      }))
+      .mutation(({ input }) => updateAppSettings(input)),
+  }),
+
+  countingPoints: router({
+    list: protectedProcedure.query(() => listCountingPoints()),
+
+    createPoint: adminProcedure
+      .input(z.object({
+        code: z.string().regex(/^\d{2}$/).optional(),
+        name: z.string().min(1),
+      }))
+      .mutation(({ input }) => createCountingPoint(input)),
+
+    updatePoint: adminProcedure
+      .input(z.object({
+        code: z.string().regex(/^\d{2}$/),
+        name: z.string().min(1),
+      }))
+      .mutation(({ input }) => updateCountingPoint(input)),
+
+    deletePoint: adminProcedure
+      .input(z.object({ code: z.string().regex(/^\d{2}$/) }))
+      .mutation(({ input }) => deleteCountingPoint(input)),
+
+    createSubPoint: adminProcedure
+      .input(z.object({
+        pointCode: z.string().regex(/^\d{2}$/),
+        code: z.string().regex(/^\d{2}\.\d{2}$/).optional(),
+        name: z.string().min(1),
+      }))
+      .mutation(({ input }) => createCountingSubPoint(input)),
+
+    updateSubPoint: adminProcedure
+      .input(z.object({
+        pointCode: z.string().regex(/^\d{2}$/),
+        code: z.string().regex(/^\d{2}\.\d{2}$/),
+        name: z.string().min(1),
+      }))
+      .mutation(({ input }) => updateCountingSubPoint(input)),
+
+    deleteSubPoint: adminProcedure
+      .input(z.object({
+        pointCode: z.string().regex(/^\d{2}$/),
+        code: z.string().regex(/^\d{2}\.\d{2}$/),
+      }))
+      .mutation(({ input }) => deleteCountingSubPoint(input)),
   }),
 
   // ─── Pedestrian Directions ────────────────────────────────────────────────────────────────────
