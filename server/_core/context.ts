@@ -1,11 +1,13 @@
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
 import type { User } from "../../drizzle/schema";
+import { getUserStudyMemberships } from "../db";
 import { sdk } from "./sdk";
 
 export type TrpcContext = {
   req: CreateExpressContextOptions["req"];
   res: CreateExpressContextOptions["res"];
   user: User | null;
+  activeStudyId: number | null;
 };
 
 export async function createContext(
@@ -20,9 +22,27 @@ export async function createContext(
     user = null;
   }
 
+  let activeStudyId: number | null = null;
+
+  if (user?.id) {
+    const explicitStudy = Number(
+      (opts.req.headers["x-study-id"] as string | undefined)
+      ?? opts.req.cookies?.activeStudyId
+      ?? opts.req.query?.studyId,
+    );
+
+    const memberships = await getUserStudyMemberships(user.id);
+    if (Number.isFinite(explicitStudy) && memberships.some((row) => row.study.id === explicitStudy)) {
+      activeStudyId = explicitStudy;
+    } else if (memberships.length > 0) {
+      activeStudyId = memberships[0].study.id;
+    }
+  }
+
   return {
     req: opts.req,
     res: opts.res,
     user,
+    activeStudyId,
   };
 }

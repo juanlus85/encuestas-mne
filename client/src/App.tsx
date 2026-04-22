@@ -21,6 +21,7 @@ import MapaConteos from "./pages/MapaConteos";
 import Cuotas from "./pages/Cuotas";
 import CierreTurno from "./pages/CierreTurno";
 import MisHorarios from "./pages/MisHorarios";
+import Studies from "./pages/Studies";
 
 // Resetea el scroll al inicio en cada cambio de ruta (fix para móvil)
 function ScrollToTop() {
@@ -47,6 +48,7 @@ function Router() {
         <Route path="/estadisticas" component={Estadisticas} />
         <Route path="/mapa" component={Mapa} />
         <Route path="/exportar" component={Exportar} />
+        <Route path="/studies" component={Studies} />
         <Route path="/usuarios" component={Usuarios} />
         <Route path="/configuracion" component={Configuracion} />
         <Route path="/conteo" component={ConteoPeatonal} />

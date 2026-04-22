@@ -3,7 +3,7 @@ import { z } from "zod";
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
+import { protectedProcedure, publicProcedure, router, studyProcedure } from "./_core/trpc";
 import {
   createPhoto,
   createPedestrianInterval,
@@ -12,6 +12,8 @@ import {
   createSurveyResponse,
   createSurveyTemplate,
   createUser,
+  createStudy,
+  createStudyUser,
   deletePhotosByResponse,
   deleteQuestion,
   deleteSurveyResponse,
@@ -32,6 +34,11 @@ import {
   getResponsesByDay,
   getResponsesByEncuestador,
   getResponsesByTimeSlot,
+  getStudies,
+  getStudyById,
+  getStudySettingsByStudyId,
+  getStudyUsers,
+  getUserStudyMemberships,
   getSurveyResponseById,
   getSurveyResponses,
   getSurveyResponsesByEncuestador,
@@ -42,9 +49,12 @@ import {
   updatePedestrianInterval,
   updatePedestrianSession,
   updateQuestion,
+  updateStudy,
   updateSurveyResponse,
   updateSurveyTemplate,
   updateUser,
+  updateStudyUser,
+  upsertStudySettings,
   updateUserPassword,
   upsertFieldMetric,
   createPedestrianPass,
@@ -164,20 +174,20 @@ const SURVEY_EXPORT_META_FIELDS: SurveyExportSchemaField[] = [
   { key: "GPS_m", label: "Precisión GPS (m)", defaultOn: false },
 ];
 
-async function buildSurveyExportSchema(templateId?: number): Promise<{
+async function buildSurveyExportSchema(templateId?: number, studyId?: number): Promise<{
   metaFields: SurveyExportSchemaField[];
   groups: SurveyExportSchemaGroup[];
   questionFields: Array<{ key: string; label: string; templateId: number; questionId: number }>;
 }> {
   const templateList = templateId
-    ? [await getSurveyTemplateById(templateId)].filter((template): template is NonNullable<Awaited<ReturnType<typeof getSurveyTemplateById>>> => Boolean(template))
-    : await getSurveyTemplates();
+    ? [await getSurveyTemplateById(templateId, studyId)].filter((template): template is NonNullable<Awaited<ReturnType<typeof getSurveyTemplateById>>> => Boolean(template))
+    : await getSurveyTemplates(studyId);
 
   const groups: SurveyExportSchemaGroup[] = [];
   const questionFields: Array<{ key: string; label: string; templateId: number; questionId: number }> = [];
 
   for (const template of templateList) {
-    const questions = (await getQuestionsByTemplate(template.id))
+    const questions = (await getQuestionsByTemplate(template.id, studyId))
       .slice()
       .sort((a, b) => a.order - b.order);
 
@@ -226,12 +236,168 @@ export const appRouter = router({
   system: systemRouter,
 
   auth: router({
-    me: publicProcedure.query((opts) => opts.ctx.user),
+    me: protectedProcedure.query(async ({ ctx }) => {
+      const memberships = ctx.user ? await getUserStudyMemberships(ctx.user.id) : [];
+      const activeStudy = ctx.activeStudyId ? await getStudyById(ctx.activeStudyId) : null;
+      return {
+        ...ctx.user,
+        activeStudyId: ctx.activeStudyId,
+        activeStudy,
+        studyMemberships: memberships,
+      };
+    }),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
     }),
+  }),
+
+  studies: router({
+    list: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.user.platformRole === "supervisor") {
+        return getStudies();
+      }
+
+      const memberships = await getUserStudyMemberships(ctx.user.id);
+      return memberships.map((row) => ({
+        ...row.study,
+        membership: row.membership,
+      }));
+    }),
+
+    current: protectedProcedure.query(async ({ ctx }) => {
+      if (!ctx.activeStudyId) return null;
+      const study = await getStudyById(ctx.activeStudyId);
+      if (!study) return null;
+      const settings = await getStudySettingsByStudyId(study.id);
+      const memberships = await getStudyUsers(study.id);
+      return { study, settings, memberships, activeStudyId: ctx.activeStudyId };
+    }),
+
+    create: protectedProcedure
+      .input(z.object({
+        code: z.string().min(2).max(64),
+        name: z.string().min(2).max(255),
+        description: z.string().optional(),
+        clientName: z.string().optional(),
+        defaultLanguage: z.enum(["es", "en"]).default("en"),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.platformRole !== "supervisor") {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Supervisor access required" });
+        }
+
+        await createStudy({
+          code: input.code,
+          name: input.name,
+          description: input.description,
+          clientName: input.clientName,
+          defaultLanguage: input.defaultLanguage,
+          createdBy: ctx.user.id,
+        });
+
+        const createdStudy = await getStudies().then((rows) => rows.find((row) => row.code === input.code));
+        if (!createdStudy) {
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Study could not be created" });
+        }
+
+        await createStudyUser({
+          studyId: createdStudy.id,
+          userId: ctx.user.id,
+          studyRole: "administrator",
+          isActive: true,
+        });
+
+        await upsertStudySettings({
+          studyId: createdStudy.id,
+          projectName: createdStudy.name,
+          exportProjectName: createdStudy.code,
+        });
+
+        return createdStudy;
+      }),
+
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number().int().positive(),
+        name: z.string().min(2).max(255).optional(),
+        description: z.string().nullable().optional(),
+        clientName: z.string().nullable().optional(),
+        status: z.enum(["draft", "active", "paused", "archived"]).optional(),
+        defaultLanguage: z.enum(["es", "en"]).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.platformRole !== "supervisor") {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Supervisor access required" });
+        }
+        const { id, ...data } = input;
+        await updateStudy(id, data);
+        return { success: true } as const;
+      }),
+
+    setActive: protectedProcedure
+      .input(z.object({ studyId: z.number().int().positive() }))
+      .mutation(async ({ ctx, input }) => {
+        const memberships = await getUserStudyMemberships(ctx.user.id);
+        if (!memberships.some((row) => row.study.id === input.studyId) && ctx.user.platformRole !== "supervisor") {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Study access denied" });
+        }
+        ctx.res.cookie("activeStudyId", String(input.studyId), {
+          httpOnly: false,
+          sameSite: "lax",
+          secure: false,
+          path: "/",
+        });
+        return { success: true, activeStudyId: input.studyId } as const;
+      }),
+
+    assignUser: protectedProcedure
+      .input(z.object({
+        studyId: z.number().int().positive(),
+        userId: z.number().int().positive(),
+        studyRole: z.enum(["administrator", "interviewer", "reviewer"]),
+        isActive: z.boolean().default(true),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.platformRole !== "supervisor") {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Supervisor access required" });
+        }
+        await createStudyUser(input);
+        return { success: true } as const;
+      }),
+
+    updateAssignment: protectedProcedure
+      .input(z.object({
+        id: z.number().int().positive(),
+        studyRole: z.enum(["administrator", "interviewer", "reviewer"]).optional(),
+        isActive: z.boolean().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.platformRole !== "supervisor") {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Supervisor access required" });
+        }
+        const { id, ...data } = input;
+        await updateStudyUser(id, data);
+        return { success: true } as const;
+      }),
+
+    updateSettings: protectedProcedure
+      .input(z.object({
+        studyId: z.number().int().positive(),
+        projectName: z.string().min(2),
+        exportProjectName: z.string().min(2),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const memberships = await getUserStudyMemberships(ctx.user.id);
+        const canManage = ctx.user.platformRole === "supervisor"
+          || memberships.some((row) => row.study.id === input.studyId && row.membership.studyRole === "administrator");
+        if (!canManage) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Study administration required" });
+        }
+        await upsertStudySettings(input);
+        return { success: true } as const;
+      }),
   }),
 
   // ─── Users ─────────────────────────────────────────────────────────────────
@@ -300,23 +466,23 @@ export const appRouter = router({
   // ─── Survey Templates ───────────────────────────────────────────────────────
 
   templates: router({
-    list: protectedProcedure.query(() => getSurveyTemplates()),
-    active: protectedProcedure.query(async ({ ctx }) => {
-      const all = await getActiveSurveyTemplates();
-      // Si el usuario es encuestador con tipo asignado, filtrar
+    list: studyProcedure.query(({ ctx }) => getSurveyTemplates(ctx.activeStudyId)),
+    active: studyProcedure.query(async ({ ctx }) => {
+      const all = (await getActiveSurveyTemplates()).filter((t) => t.studyId === ctx.activeStudyId);
       const assigned = (ctx.user as any).surveyTypeAssigned;
-      if (ctx.user.role === "encuestador" && assigned && assigned !== "ambos") {
-        return all.filter((t: any) => t.type === assigned);
+      if (ctx.user && ctx.user.role === "encuestador" && assigned && assigned !== "ambas") {
+        return all.filter((t) => t.type === assigned);
       }
       return all;
     }),
 
+
     byId: protectedProcedure
       .input(z.object({ id: z.number() }))
-      .query(async ({ input }) => {
-        const template = await getSurveyTemplateById(input.id);
+      .query(async ({ input, ctx }) => {
+        const template = await getSurveyTemplateById(input.id, ctx.activeStudyId ?? undefined);
         if (!template) throw new TRPCError({ code: "NOT_FOUND" });
-        const qs = await getQuestionsByTemplate(input.id);
+        const qs = await getQuestionsByTemplate(input.id, ctx.activeStudyId ?? undefined);
         return { ...template, questions: qs };
       }),
 
@@ -329,8 +495,8 @@ export const appRouter = router({
         descriptionEn: z.string().optional(),
         targetCount: z.number().default(0),
       }))
-      .mutation(async ({ input }) => {
-        await createSurveyTemplate(input);
+      .mutation(async ({ input, ctx }) => {
+        await createSurveyTemplate({ ...input, studyId: ctx.activeStudyId ?? undefined } as any);
         return { success: true };
       }),
 
@@ -355,9 +521,9 @@ export const appRouter = router({
   // ─── Questions ──────────────────────────────────────────────────────────────
 
   questions: router({
-    byTemplate: protectedProcedure
+    byTemplate: studyProcedure
       .input(z.object({ templateId: z.number() }))
-      .query(({ input }) => getQuestionsByTemplate(input.templateId)),
+      .query(({ input, ctx }) => getQuestionsByTemplate(input.templateId, ctx.activeStudyId)),
 
     create: adminProcedure
       .input(z.object({
@@ -370,8 +536,8 @@ export const appRouter = router({
         isRequired: z.boolean().default(true),
         requiresPhoto: z.boolean().default(false),
       }))
-      .mutation(async ({ input }) => {
-        await createQuestion(input as any);
+      .mutation(async ({ input, ctx }) => {
+        await createQuestion({ ...input, studyId: ctx.activeStudyId ?? undefined } as any);
         return { success: true };
       }),
 
@@ -490,6 +656,7 @@ export const appRouter = router({
           result = await createSurveyResponse({
             ...input,
             ...flatCols,
+            studyId: ctx.activeStudyId ?? undefined,
             encuestadorId: ctx.user.id,
             encuestadorName: ctx.user.name ?? "",
             encuestadorIdentifier: ctx.user.identifier ?? "",
@@ -858,7 +1025,7 @@ export const appRouter = router({
         return { success: true };
       }),
 
-    list: adminOrRevisorProcedure
+     list: studyProcedure
       .input(z.object({
         encuestadorId: z.number().optional(),
         templateId: z.number().optional(),
@@ -866,15 +1033,16 @@ export const appRouter = router({
         dateTo: z.date().optional(),
         status: z.string().optional(),
       }).optional())
-      .query(({ input }) => getSurveyResponses(input)),
+      .query(({ input, ctx }) => getSurveyResponses({ ...(input ?? {}), studyId: ctx.activeStudyId })),
+
 
     myList: encuestadorProcedure
-      .query(({ ctx }) => getSurveyResponsesByEncuestador(ctx.user.id)),
+      .query(({ ctx }) => getSurveyResponsesByEncuestador(ctx.user.id, ctx.activeStudyId ?? undefined)),
 
-    byId: protectedProcedure
+    byId: studyProcedure
       .input(z.object({ id: z.number() }))
-      .query(async ({ input }) => {
-        const response = await getSurveyResponseById(input.id);
+      .query(async ({ input, ctx }) => {
+        const response = await getSurveyResponseById(input.id, ctx.activeStudyId);
         if (!response) throw new TRPCError({ code: "NOT_FOUND" });
         const responsePhotos = await getPhotosByResponse(input.id);
         // Parse defensivo: en MySQL estándar (VPS) el campo JSON puede llegar como string
@@ -1003,8 +1171,9 @@ export const appRouter = router({
     // ── Estadísticas detalladas de visitantes ──────────────────────────────
     visitantesStats: adminOrRevisorProcedure
       .input(z.object({ dateFrom: z.date().optional(), dateTo: z.date().optional() }).optional())
-      .query(async ({ input }) => {
+      .query(async ({ input, ctx }) => {
         const responses = await getSurveyResponses({
+          studyId: ctx.activeStudyId ?? undefined,
           ...(input?.dateFrom ? { dateFrom: input.dateFrom } : {}),
           ...(input?.dateTo ? { dateTo: input.dateTo } : {}),
         });
@@ -1135,8 +1304,9 @@ export const appRouter = router({
     // ── Estadísticas detalladas de residentes ──────────────────────────────
     residentesStats: adminOrRevisorProcedure
       .input(z.object({ dateFrom: z.date().optional(), dateTo: z.date().optional() }).optional())
-      .query(async ({ input }) => {
+      .query(async ({ input, ctx }) => {
         const responses = await getSurveyResponses({
+          studyId: ctx.activeStudyId ?? undefined,
           ...(input?.dateFrom ? { dateFrom: input.dateFrom } : {}),
           ...(input?.dateTo ? { dateTo: input.dateTo } : {}),
         });
@@ -1442,6 +1612,7 @@ export const appRouter = router({
         const sessionDate = input.startedAt.toLocaleDateString("es-ES", { timeZone: "Europe/Madrid", year: "numeric", month: "2-digit", day: "2-digit" }).split("/").reverse().join("-");
         const result = await createPedestrianSession({
           ...input,
+          studyId: ctx.activeStudyId ?? null,
           date: sessionDate,
           encuestadorId: ctx.user.id,
           encuestadorName: ctx.user.name ?? "",
@@ -1512,15 +1683,15 @@ export const appRouter = router({
         dateFrom: z.string().optional(),
         dateTo: z.string().optional(),
       }).optional())
-      .query(({ input }) => getPedestrianSessions(input ?? {})),
+      .query(({ input, ctx }) => getPedestrianSessions({ ...(input ?? {}), studyId: ctx.activeStudyId ?? undefined })),
 
     mySessions: encuestadorProcedure
-      .query(({ ctx }) => getPedestrianSessions({ encuestadorId: ctx.user.id })),
+      .query(({ ctx }) => getPedestrianSessions({ encuestadorId: ctx.user.id, studyId: ctx.activeStudyId ?? undefined })),
 
     sessionDetail: protectedProcedure
       .input(z.object({ id: z.number() }))
-      .query(async ({ input }) => {
-        const session = await getPedestrianSessionById(input.id);
+      .query(async ({ input, ctx }) => {
+        const session = await getPedestrianSessionById(input.id, ctx.activeStudyId ?? undefined);
         if (!session) throw new TRPCError({ code: "NOT_FOUND" });
         const intervals = await getIntervalsBySession(input.id);
         return { ...session, intervals };
@@ -1546,6 +1717,7 @@ export const appRouter = router({
       }))
       .mutation(async ({ ctx, input }) => {
         return createPedestrianPass({
+          studyId: ctx.activeStudyId ?? null,
           encuestadorId: ctx.user.id,
           encuestadorName: ctx.user.name ?? undefined,
           encuestadorIdentifier: ctx.user.identifier ?? undefined,
@@ -1571,7 +1743,7 @@ export const appRouter = router({
         dateTo: z.string().optional(),
         directionId: z.number().optional(),
       }).optional())
-      .query(({ input }) => getPedestrianPasses(input ?? {})),
+      .query(({ input, ctx }) => getPedestrianPasses({ ...(input ?? {}), studyId: ctx.activeStudyId ?? undefined })),
 
     stats: adminOrRevisorProcedure
       .input(z.object({
@@ -1580,7 +1752,7 @@ export const appRouter = router({
         dateFrom: z.string().optional(),
         dateTo: z.string().optional(),
       }).optional())
-      .query(({ input }) => getPedestrianPassStats(input ?? {})),
+      .query(({ input, ctx }) => getPedestrianPassStats({ ...(input ?? {}), studyId: ctx.activeStudyId ?? undefined })),
   }),
 
 
@@ -1599,6 +1771,7 @@ export const appRouter = router({
       }))
       .mutation(async ({ ctx, input }) => {
         return createCountingSession({
+          studyId: ctx.activeStudyId ?? null,
           encuestadorId: ctx.user.id,
           encuestadorName: ctx.user.name ?? undefined,
           encuestadorIdentifier: ctx.user.identifier ?? undefined,
@@ -1633,13 +1806,13 @@ export const appRouter = router({
         dateFrom: z.string().optional(),
         dateTo: z.string().optional(),
       }).optional())
-      .query(({ input }) => getCountingSessions(input ?? {})),
+      .query(({ input, ctx }) => getCountingSessions({ ...(input ?? {}), studyId: ctx.activeStudyId ?? undefined })),
   }),
 
   // ─── Counting Points ─────────────────────────────────────────────────────────────────────────
 
   appSettings: router({
-    get: protectedProcedure.query(() => getAppSettings()),
+    get: protectedProcedure.query(({ ctx }) => getAppSettings(ctx.activeStudyId ?? undefined)),
 
     update: adminProcedure
       .input(z.object({
@@ -1658,7 +1831,7 @@ export const appRouter = router({
         enabledCharts: z.array(z.string().trim().min(1)).optional(),
         openAiApiKey: z.string().optional(),
       }))
-      .mutation(({ input }) => updateAppSettings(input)),
+      .mutation(({ input, ctx }) => updateAppSettings(input, ctx.activeStudyId ?? undefined)),
   }),
 
   countingPoints: router({
@@ -1711,10 +1884,10 @@ export const appRouter = router({
   directions: router({
     byPoint: protectedProcedure
       .input(z.object({ surveyPoint: z.string() }))
-      .query(({ input }) => getDirectionsByPoint(input.surveyPoint)),
+      .query(({ input, ctx }) => getDirectionsByPoint(input.surveyPoint, ctx.activeStudyId ?? undefined)),
 
     allPoints: protectedProcedure
-      .query(() => getAllDirectionPoints()),
+      .query(({ ctx }) => getAllDirectionPoints(ctx.activeStudyId ?? undefined)),
 
     create: adminProcedure
       .input(z.object({
@@ -1723,7 +1896,7 @@ export const appRouter = router({
         description: z.string().optional(),
         order: z.number().optional(),
       }))
-      .mutation(({ input }) => createPedestrianDirection(input)),
+      .mutation(({ input, ctx }) => createPedestrianDirection({ ...input, studyId: ctx.activeStudyId ?? undefined })),
 
     update: adminProcedure
       .input(z.object({
@@ -1753,8 +1926,8 @@ export const appRouter = router({
         dateFrom: z.string().optional(),
         dateTo: z.string().optional(),
       }).optional())
-      .query(async ({ input }) => {
-        const passes = await getPedestrianPasses(input ?? {});
+      .query(async ({ input, ctx }) => {
+        const passes = await getPedestrianPasses({ ...(input ?? {}), studyId: ctx.activeStudyId ?? undefined });
         const headers = [
           "ID", "Fecha", "Hora", "Tramo30min",
           "Punto_Nombre", "Punto_Codigo", "Sentido", "Origen_Codigo", "Destino_Codigo",
@@ -1806,8 +1979,8 @@ export const appRouter = router({
       .input(z.object({
         templateId: z.number().optional(),
       }).optional())
-      .query(async ({ input }) => {
-        const schema = await buildSurveyExportSchema(input?.templateId);
+      .query(async ({ input, ctx }) => {
+        const schema = await buildSurveyExportSchema(input?.templateId, ctx.activeStudyId ?? undefined);
         return {
           metaFields: schema.metaFields,
           groups: schema.groups,
@@ -1820,9 +1993,9 @@ export const appRouter = router({
         dateFrom: z.date().optional(),
         dateTo: z.date().optional(),
       }).optional())
-      .query(async ({ input }) => {
-        const responses = await getSurveyResponses(input);
-        const schema = await buildSurveyExportSchema(input?.templateId);
+      .query(async ({ input, ctx }) => {
+        const responses = await getSurveyResponses({ ...(input ?? {}), studyId: ctx.activeStudyId ?? undefined });
+        const schema = await buildSurveyExportSchema(input?.templateId, ctx.activeStudyId ?? undefined);
         const escape = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
         const fmtDate = (d: Date) => {
           const tz = new Intl.DateTimeFormat("es-ES", { timeZone: "Europe/Madrid", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
@@ -2072,8 +2245,8 @@ export const appRouter = router({
         dateFrom: z.string().optional(),
         dateTo: z.string().optional(),
       }).optional())
-      .query(async ({ input }) => {
-        let closures = await getAllShiftClosures();
+      .query(async ({ input, ctx }) => {
+        let closures = await getAllShiftClosures(ctx.activeStudyId ?? undefined);
         if (input?.encuestadorId) closures = closures.filter(c => c.encuestadorId === input.encuestadorId);
         if (input?.dateFrom) {
           const from = new Date(input.dateFrom);
@@ -2110,9 +2283,9 @@ export const appRouter = router({
   // ─── Turnos ────────────────────────────────────────────────────────────────
   shifts: router({
     // Admin: ver todos los turnos
-    getAll: adminProcedure.query(() => getAllShifts()),
+    getAll: adminProcedure.query(({ ctx }) => getAllShifts(ctx.activeStudyId ?? undefined)),
     // Encuestador: ver mis turnos
-    getMine: protectedProcedure.query(({ ctx }) => getShiftsByEncuestador(ctx.user.id)),
+    getMine: protectedProcedure.query(({ ctx }) => getShiftsByEncuestador(ctx.user.id, ctx.activeStudyId ?? undefined)),
     // Admin: crear turno
     create: adminProcedure
       .input(z.object({
@@ -2124,7 +2297,7 @@ export const appRouter = router({
         surveyType: z.enum(["visitantes", "residentes", "conteo"]).optional(),
         notes: z.string().optional(),
       }))
-      .mutation(({ input }) => createShift(input)),
+      .mutation(({ input, ctx }) => createShift({ ...input, studyId: ctx.activeStudyId ?? null })),
     // Admin: actualizar turno
     update: adminProcedure
       .input(z.object({
@@ -2162,6 +2335,7 @@ export const appRouter = router({
       }))
       .mutation(({ ctx, input }) =>
         createShiftClosure({
+          studyId: ctx.activeStudyId ?? null,
           encuestadorId: ctx.user.id,
           encuestadorName: ctx.user.name ?? undefined,
           closedAt: new Date(),
@@ -2170,10 +2344,10 @@ export const appRouter = router({
       ),
     // Encuestador: ver mis cierres
     getMine: protectedProcedure.query(({ ctx }) =>
-      getShiftClosuresByEncuestador(ctx.user.id)
+      getShiftClosuresByEncuestador(ctx.user.id, ctx.activeStudyId ?? undefined)
     ),
     // Admin/Revisor: ver todos los cierres
-    getAll: adminOrRevisorProcedure.query(() => getAllShiftClosures()),
+    getAll: adminOrRevisorProcedure.query(({ ctx }) => getAllShiftClosures(ctx.activeStudyId ?? undefined)),
     // Encuestador: resumen del día actual (encuestas, conteos, rechazos)
     todaySummary: protectedProcedure.query(async ({ ctx }) => {
       const today = new Date();
@@ -2181,15 +2355,15 @@ export const appRouter = router({
       const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
       const todayStr = today.toLocaleDateString("sv-SE", { timeZone: "Europe/Madrid" });
       // Encuestas del día
-      const allResponses = await getSurveyResponsesByEncuestador(ctx.user.id);
+      const allResponses = await getSurveyResponsesByEncuestador(ctx.user.id, ctx.activeStudyId ?? undefined);
       const todayEncuestas = allResponses.filter((r) => {
         const dStr = new Date(r.startedAt).toLocaleDateString("sv-SE", { timeZone: "Europe/Madrid" });
         return dStr === todayStr;
       });
       // Rechazos del día
-      const allRejections = await getSurveyRejections({ encuestadorId: ctx.user.id, dateFrom: todayStr, dateTo: todayStr });
+      const allRejections = await getSurveyRejections({ encuestadorId: ctx.user.id, dateFrom: todayStr, dateTo: todayStr, studyId: ctx.activeStudyId ?? undefined });
       // Conteos del día
-      const allPasses = await getPedestrianPasses({ encuestadorId: ctx.user.id, dateFrom: todayStr, dateTo: todayStr });
+      const allPasses = await getPedestrianPasses({ encuestadorId: ctx.user.id, dateFrom: todayStr, dateTo: todayStr, studyId: ctx.activeStudyId ?? undefined });
       const totalConteos = allPasses.reduce((sum, p) => sum + (p.count ?? 1), 0);
       return {
         totalEncuestas: todayEncuestas.length,
@@ -2205,10 +2379,10 @@ export const appRouter = router({
      * Devuelve el progreso actual de cuotas para visitantes y residentes.
      * Accesible por encuestadores, revisores y admins.
      */
-    progress: protectedProcedure.query(async () => {
-      const settings = await getAppSettings();
+    progress: protectedProcedure.query(async ({ ctx }) => {
+      const settings = await getAppSettings(ctx.activeStudyId ?? undefined);
       // Obtener todas las respuestas completas
-      const allResponses = await getSurveyResponses({ status: "completa" });
+      const allResponses = await getSurveyResponses({ studyId: ctx.activeStudyId ?? undefined, status: "completa" });
 
       // ─── VISITANTES ───────────────────────────────────────────────────────
       const visitantesResponses = allResponses.filter((r) => r.templateType === "visitantes");

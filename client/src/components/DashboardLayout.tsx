@@ -28,6 +28,7 @@ import {
   PanelLeft,
   Settings,
   Users,
+  FolderKanban,
   PersonStanding,
   Flame,
   Target,
@@ -35,11 +36,18 @@ import {
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
+import { trpc } from "@/lib/trpc";
 import { DashboardLayoutSkeleton } from "./DashboardLayoutSkeleton";
 import { Button } from "./ui/button";
 import { OfflineIndicator } from "./OfflineIndicator";
 
 // ─── Navigation config ────────────────────────────────────────────────────────
+
+const supervisorMenuItems = [
+  { icon: FolderKanban, label: "Studies", path: "/studies" },
+  { icon: Users, label: "Users", path: "/usuarios" },
+  { icon: Settings, label: "Settings", path: "/configuracion" },
+];
 
 const adminMenuItems = [
   { icon: LayoutDashboard, label: "Home", path: "/" },
@@ -127,6 +135,15 @@ function DashboardLayoutContent({
   setSidebarWidth: (w: number) => void;
 }) {
   const { user, logout } = useAuth();
+  const utils = trpc.useUtils();
+  const studiesQuery = trpc.studies.list.useQuery(undefined, { enabled: Boolean(user) });
+  const setActiveStudyMutation = trpc.studies.setActive.useMutation({
+    onSuccess: async () => {
+      await utils.auth.me.invalidate();
+      await utils.studies.current.invalidate();
+      await studiesQuery.refetch();
+    },
+  });
   const [location, setLocation] = useLocation();
   const { state, toggleSidebar } = useSidebar();
   const isCollapsed = state === "collapsed";
@@ -134,19 +151,32 @@ function DashboardLayoutContent({
   const sidebarRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
-  const menuItems = user?.role === "revisor" ? revisorMenuItems
+  const menuItems = user?.platformRole === "supervisor" ? supervisorMenuItems
+    : user?.role === "revisor" ? revisorMenuItems
     : user?.role === "encuestador" ? encuestadorMenuItems
     : adminMenuItems;
   const activeMenuItem = menuItems.find((item) => item.path === location);
 
-  const roleLabel = user?.role === "admin" ? "Administrator"
+  const roleLabel = user?.platformRole === "supervisor" ? "Supervisor"
+    : user?.role === "admin" ? "Administrator"
     : user?.role === "revisor" ? "Reviewer"
     : user?.role === "encuestador" ? "Interviewer"
     : "User";
+  const availableStudies = studiesQuery.data ?? [];
+  const hasActiveStudy = Boolean(user?.activeStudyId);
 
   useEffect(() => {
     if (isCollapsed) setIsResizing(false);
   }, [isCollapsed]);
+
+  useEffect(() => {
+    if (!user) return;
+    if (studiesQuery.isLoading) return;
+    if (hasActiveStudy) return;
+    if (location === "/studies") return;
+    if (availableStudies.length === 0 && user.platformRole !== "supervisor") return;
+    setLocation("/studies");
+  }, [availableStudies.length, hasActiveStudy, location, setLocation, studiesQuery.isLoading, user]);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -206,6 +236,35 @@ function DashboardLayoutContent({
                   Navigation
                 </SidebarGroupLabel>
               )}
+              {!isCollapsed && availableStudies.length > 0 && (
+                <div className="px-3 mb-3 space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-[10px] uppercase tracking-[0.16em] text-sidebar-foreground/40">Active study</p>
+                    {!hasActiveStudy && (
+                      <button
+                        type="button"
+                        onClick={() => setLocation("/studies")}
+                        className="text-[10px] uppercase tracking-[0.16em] text-sidebar-primary"
+                      >
+                        Select
+                      </button>
+                    )}
+                  </div>
+                  <select
+                    className="flex h-9 w-full rounded-md border border-sidebar-border bg-sidebar px-2 text-sm text-sidebar-foreground"
+                    value={user?.activeStudyId ?? ""}
+                    onChange={(e) => setActiveStudyMutation.mutate({ studyId: Number(e.target.value) })}
+                    disabled={setActiveStudyMutation.isPending}
+                  >
+                    {!hasActiveStudy && <option value="">Select a study</option>}
+                    {availableStudies.map((study: any) => (
+                      <option key={study.id} value={study.id}>
+                        {study.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <SidebarMenu className="px-2 gap-0.5">
                 {menuItems.map((item) => {
                   const isActive = location === item.path || (item.path !== "/" && location.startsWith(item.path));
@@ -242,6 +301,19 @@ function DashboardLayoutContent({
                     {user?.name || "User"}
                   </p>
                   <p className="text-xs text-sidebar-foreground/50 truncate mt-0.5">{roleLabel}</p>
+                  {user?.activeStudy?.name ? (
+                    <p className="text-[11px] text-sidebar-foreground/40 truncate mt-0.5">{user.activeStudy.name}</p>
+                  ) : availableStudies.length > 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => setLocation("/studies")}
+                      className="text-[11px] text-sidebar-primary truncate mt-0.5 text-left"
+                    >
+                      Select an active study
+                    </button>
+                  ) : (
+                    <p className="text-[11px] text-sidebar-foreground/40 truncate mt-0.5">No study assigned yet</p>
+                  )}
                 </div>
               )}
             </div>
@@ -287,7 +359,14 @@ function DashboardLayoutContent({
           </div>
         )}
 
-        <main className="flex-1 p-4 md:p-6">{children}</main>
+        <main className="flex-1 p-4 md:p-6 space-y-4">
+          {!hasActiveStudy && availableStudies.length > 0 && location !== "/studies" && (
+            <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-foreground">
+              Please select an active study before continuing. All templates, responses, counts and exports now work inside the currently selected study.
+            </div>
+          )}
+          {children}
+        </main>
       </SidebarInset>
     </>
   );

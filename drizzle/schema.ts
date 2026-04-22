@@ -20,6 +20,7 @@ export const users = mysqlTable("users", {
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["admin", "encuestador", "revisor", "user"]).default("user").notNull(),
+  platformRole: mysqlEnum("platformRole", ["supervisor", "user"]).default("user").notNull(),
   // Login propio (username + password)
   username: varchar("username", { length: 64 }).unique(),
   passwordHash: varchar("passwordHash", { length: 255 }),
@@ -35,10 +36,71 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
+// ─── Studies ──────────────────────────────────────────────────────────────────
+
+export const studies = mysqlTable("studies", {
+  id: int("id").autoincrement().primaryKey(),
+  code: varchar("code", { length: 64 }).notNull().unique(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  status: mysqlEnum("status", ["draft", "active", "paused", "archived"]).default("active").notNull(),
+  clientName: varchar("clientName", { length: 255 }),
+  defaultLanguage: mysqlEnum("defaultLanguage", ["es", "en"]).default("en").notNull(),
+  startDate: varchar("startDate", { length: 10 }),
+  endDate: varchar("endDate", { length: 10 }),
+  createdBy: int("createdBy"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Study = typeof studies.$inferSelect;
+export type InsertStudy = typeof studies.$inferInsert;
+
+export const studyUsers = mysqlTable("study_users", {
+  id: int("id").autoincrement().primaryKey(),
+  studyId: int("studyId").notNull(),
+  userId: int("userId").notNull(),
+  studyRole: mysqlEnum("studyRole", ["administrator", "interviewer", "reviewer"]).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  assignmentNotes: text("assignmentNotes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type StudyUser = typeof studyUsers.$inferSelect;
+export type InsertStudyUser = typeof studyUsers.$inferInsert;
+
+export const studySettings = mysqlTable("study_settings", {
+  id: int("id").autoincrement().primaryKey(),
+  studyId: int("studyId").notNull().unique(),
+  projectName: varchar("projectName", { length: 255 }).notNull(),
+  exportProjectName: varchar("exportProjectName", { length: 255 }).notNull(),
+  mapPrimaryPointCode: varchar("mapPrimaryPointCode", { length: 32 }),
+  surveyTargetTotal: int("surveyTargetTotal").default(0).notNull(),
+  surveyTargetResidents: int("surveyTargetResidents").default(0).notNull(),
+  surveyTargetVisitors: int("surveyTargetVisitors").default(0).notNull(),
+  surveyWeeklyTargetTotal: int("surveyWeeklyTargetTotal").default(0).notNull(),
+  surveyWeeklyTargetResidents: int("surveyWeeklyTargetResidents").default(0).notNull(),
+  surveyWeeklyTargetVisitors: int("surveyWeeklyTargetVisitors").default(0).notNull(),
+  quotasEnabled: boolean("quotasEnabled").default(true).notNull(),
+  residentQuotaTotal: int("residentQuotaTotal").default(0).notNull(),
+  visitorQuotaTotal: int("visitorQuotaTotal").default(0).notNull(),
+  enabledCharts: json("enabledCharts"),
+  openAiApiKey: text("openAiApiKey"),
+  brandLogoLight: varchar("brandLogoLight", { length: 512 }),
+  brandLogoDark: varchar("brandLogoDark", { length: 512 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type StudySettings = typeof studySettings.$inferSelect;
+export type InsertStudySettings = typeof studySettings.$inferInsert;
+
 // ─── Survey Templates ─────────────────────────────────────────────────────────
 
 export const surveyTemplates = mysqlTable("survey_templates", {
   id: int("id").autoincrement().primaryKey(),
+  studyId: int("studyId"),
   name: varchar("name", { length: 255 }).notNull(),
   nameEn: varchar("nameEn", { length: 255 }),
   type: mysqlEnum("type", ["residentes", "visitantes"]).notNull(),
@@ -57,6 +119,7 @@ export type InsertSurveyTemplate = typeof surveyTemplates.$inferInsert;
 
 export const questions = mysqlTable("questions", {
   id: int("id").autoincrement().primaryKey(),
+  studyId: int("studyId"),
   templateId: int("templateId").notNull(),
   order: int("order").notNull().default(0),
   type: mysqlEnum("type", ["single_choice", "multiple_choice", "text", "scale", "yes_no", "number"]).notNull(),
@@ -75,6 +138,7 @@ export type InsertQuestion = typeof questions.$inferInsert;
 
 export const surveyResponses = mysqlTable("survey_responses", {
   id: int("id").autoincrement().primaryKey(),
+  studyId: int("studyId"),
   templateId: int("templateId").notNull(),
   encuestadorId: int("encuestadorId").notNull(),
 
@@ -240,6 +304,7 @@ export type InsertSurveyResponse = typeof surveyResponses.$inferInsert;
 
 export const photos = mysqlTable("photos", {
   id: int("id").autoincrement().primaryKey(),
+  studyId: int("studyId"),
   responseId: int("responseId").notNull(),
   questionId: int("questionId"),
   fileKey: varchar("fileKey", { length: 512 }).notNull(),
@@ -256,6 +321,7 @@ export type InsertPhoto = typeof photos.$inferInsert;
 
 export const fieldMetrics = mysqlTable("field_metrics", {
   id: int("id").autoincrement().primaryKey(),
+  studyId: int("studyId"),
   encuestadorId: int("encuestadorId").notNull(),
   date: varchar("date", { length: 10 }).notNull(), // YYYY-MM-DD
   templateId: int("templateId"),
@@ -282,6 +348,7 @@ export type InsertFieldMetric = typeof fieldMetrics.$inferInsert;
  */
 export const pedestrianSessions = mysqlTable("pedestrian_sessions", {
   id: int("id").autoincrement().primaryKey(),
+  studyId: int("studyId"),
   encuestadorId: int("encuestadorId").notNull(),
   encuestadorName: varchar("encuestadorName", { length: 255 }),
   encuestadorIdentifier: varchar("encuestadorIdentifier", { length: 32 }),
@@ -347,6 +414,7 @@ export type InsertPedestrianInterval = typeof pedestrianIntervals.$inferInsert;
  */
 export const pedestrianDirections = mysqlTable("pedestrian_directions", {
   id: int("id").autoincrement().primaryKey(),
+  studyId: int("studyId"),
   surveyPoint: varchar("surveyPoint", { length: 255 }).notNull(), // nombre del punto
   label: varchar("label", { length: 128 }).notNull(),             // ej: "A → B"
   description: text("description"),                               // descripción opcional
@@ -366,6 +434,7 @@ export type InsertPedestrianDirection = typeof pedestrianDirections.$inferInsert
  */
 export const pedestrianPasses = mysqlTable("pedestrian_passes", {
   id: int("id").autoincrement().primaryKey(),
+  studyId: int("studyId"),
   encuestadorId: int("encuestadorId").notNull(),
   encuestadorName: varchar("encuestadorName", { length: 255 }),
   encuestadorIdentifier: varchar("encuestadorIdentifier", { length: 32 }),
@@ -403,6 +472,7 @@ export type InsertPedestrianPass = typeof pedestrianPasses.$inferInsert;
  */
 export const countingSessions = mysqlTable("counting_sessions", {
   id: int("id").autoincrement().primaryKey(),
+  studyId: int("studyId"),
   encuestadorId: int("encuestadorId").notNull(),
   encuestadorName: varchar("encuestadorName", { length: 255 }),
   encuestadorIdentifier: varchar("encuestadorIdentifier", { length: 32 }),
@@ -440,6 +510,7 @@ export type InsertCountingSession = typeof countingSessions.$inferInsert;
  */
 export const surveyRejections = mysqlTable("survey_rejections", {
   id: int("id").autoincrement().primaryKey(),
+  studyId: int("studyId"),
   encuestadorId: int("encuestadorId").notNull(),
   encuestadorName: varchar("encuestadorName", { length: 255 }),
   encuestadorIdentifier: varchar("encuestadorIdentifier", { length: 32 }),
@@ -474,6 +545,7 @@ export type InsertSurveyRejection = typeof surveyRejections.$inferInsert;
  */
 export const shifts = mysqlTable("shifts", {
   id: int("id").autoincrement().primaryKey(),
+  studyId: int("studyId"),
   encuestadorId: int("encuestadorId").notNull(),
   // Fecha del turno (YYYY-MM-DD)
   shiftDate: varchar("shiftDate", { length: 10 }).notNull(),
@@ -499,6 +571,7 @@ export type InsertShift = typeof shifts.$inferInsert;
  */
 export const shiftClosures = mysqlTable("shift_closures", {
   id: int("id").autoincrement().primaryKey(),
+  studyId: int("studyId"),
   encuestadorId: int("encuestadorId").notNull(),
   encuestadorName: varchar("encuestadorName", { length: 255 }),
   shiftId: int("shiftId"), // Puede ser null si el turno no está asignado en BD
@@ -542,6 +615,7 @@ export type InsertShiftClosure = typeof shiftClosures.$inferInsert;
  */
 export const surveyAnswers = mysqlTable("survey_answers", {
   id: int("id").autoincrement().primaryKey(),
+  studyId: int("studyId"),
   // FK a la encuesta principal
   surveyId: int("surveyId").notNull(),
   // Identificación de la pregunta
@@ -600,6 +674,7 @@ export type InsertSurveyAnswer = typeof surveyAnswers.$inferInsert;
  */
 export const surveyResponsesFlat = mysqlTable("survey_responses_flat", {
   id: int("id").autoincrement().primaryKey(),
+  studyId: int("studyId"),
   // FK a la encuesta principal
   surveyId: int("surveyId").notNull(),
   // Tipo de encuesta

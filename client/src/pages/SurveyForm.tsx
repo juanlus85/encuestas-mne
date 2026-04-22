@@ -477,8 +477,6 @@ export default function SurveyForm() {
 
   const canProceed = () => {
     if (currentStep === 0) {
-      // El punto de encuesta es obligatorio para visitantes
-      if (isVisitantes && !surveyPoint) return false;
       return true;
     }
     if (!currentQuestion) return true;
@@ -749,33 +747,6 @@ export default function SurveyForm() {
               )}
             </div>
 
-            {/* Survey point */}
-            <div>
-              <label className="text-sm font-medium text-foreground block mb-2">
-                Survey point
-                {isVisitantes && <span className="text-destructive ml-1">*</span>}
-              </label>
-              <div className="grid grid-cols-1 gap-2">
-                {[
-                  ...SURVEY_POINTS,
-                  ...(!isVisitantes ? [{ val: "Other", label: "Other" }] : []),
-                ].map(({ val, label }) => (
-                  <button
-                    key={val}
-                    type="button"
-                    onClick={() => setSurveyPoint(val)}
-                    className={`py-3 px-4 rounded-lg border-2 text-sm font-medium text-left transition-all ${
-                      surveyPoint === val
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border hover:border-primary/50 bg-background"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* Datos automáticos */}
             <div className="bg-muted/50 rounded-xl p-4 text-sm space-y-2">
               <p className="text-muted-foreground font-medium mb-1">Automatically assigned data:</p>
@@ -903,10 +874,6 @@ export default function SurveyForm() {
                 <span className="font-medium">
                   {user?.name}{user?.identifier ? ` (${user.identifier})` : ""}
                 </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Point</span>
-                <span className="font-medium">{surveyPoint || "—"}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Franja</span>

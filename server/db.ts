@@ -8,6 +8,9 @@ import {
   InsertSurveyResponse,
   InsertSurveyTemplate,
   InsertUser,
+  InsertStudy,
+  InsertStudySettings,
+  InsertStudyUser,
   photos,
   questions,
   surveyAnswers,
@@ -17,6 +20,9 @@ import {
   surveyResponses,
   surveyTemplates,
   users,
+  studies,
+  studySettings,
+  studyUsers,
   shifts,
   shiftClosures,
   InsertShift,
@@ -125,13 +131,113 @@ export async function updateUserPassword(id: number, passwordHash: string) {
   await db.update(users).set({ passwordHash }).where(eq(users.id, id));
 }
 
-// ─── Survey Templates ─────────────────────────────────────────────────────────
+// ─── Studies ─────────────────────────────────────────────────────────────────
 
-export async function getSurveyTemplates() {
+export async function getStudies() {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(surveyTemplates).orderBy(surveyTemplates.name);
+  return db.select().from(studies).orderBy(studies.name);
 }
+
+export async function getStudyById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(studies).where(eq(studies.id, id)).limit(1);
+  return result[0];
+}
+
+export async function getStudyByCode(code: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(studies).where(eq(studies.code, code)).limit(1);
+  return result[0];
+}
+
+export async function createStudy(data: InsertStudy) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(studies).values(data);
+}
+
+export async function updateStudy(id: number, data: Partial<InsertStudy>) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(studies).set(data).where(eq(studies.id, id));
+}
+
+export async function getStudyUsers(studyId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(studyUsers).where(eq(studyUsers.studyId, studyId)).orderBy(studyUsers.id);
+}
+
+export async function getUserStudyMemberships(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({
+    membership: studyUsers,
+    study: studies,
+  })
+    .from(studyUsers)
+    .innerJoin(studies, eq(studyUsers.studyId, studies.id))
+    .where(eq(studyUsers.userId, userId))
+    .orderBy(studies.name);
+}
+
+export async function createStudyUser(data: InsertStudyUser) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(studyUsers).values(data);
+}
+
+export async function updateStudyUser(id: number, data: Partial<InsertStudyUser>) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(studyUsers).set(data).where(eq(studyUsers.id, id));
+}
+
+export async function getStudySettingsByStudyId(studyId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(studySettings).where(eq(studySettings.studyId, studyId)).limit(1);
+  return result[0];
+}
+
+export async function upsertStudySettings(data: InsertStudySettings) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(studySettings).values(data).onDuplicateKeyUpdate({
+    set: {
+      projectName: data.projectName,
+      exportProjectName: data.exportProjectName,
+      mapPrimaryPointCode: data.mapPrimaryPointCode ?? null,
+      surveyTargetTotal: data.surveyTargetTotal,
+      surveyTargetResidents: data.surveyTargetResidents,
+      surveyTargetVisitors: data.surveyTargetVisitors,
+      surveyWeeklyTargetTotal: data.surveyWeeklyTargetTotal,
+      surveyWeeklyTargetResidents: data.surveyWeeklyTargetResidents,
+      surveyWeeklyTargetVisitors: data.surveyWeeklyTargetVisitors,
+      quotasEnabled: data.quotasEnabled,
+      residentQuotaTotal: data.residentQuotaTotal,
+      visitorQuotaTotal: data.visitorQuotaTotal,
+      enabledCharts: data.enabledCharts ?? null,
+      openAiApiKey: data.openAiApiKey ?? null,
+      brandLogoLight: data.brandLogoLight ?? null,
+      brandLogoDark: data.brandLogoDark ?? null,
+    },
+  });
+}
+
+// ─── Survey Templates ─────────────────────────────────────────────────────────
+
+export async function getSurveyTemplates(studyId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions = [eq(surveyTemplates.isActive, true)];
+  if (studyId) conditions.push(eq(surveyTemplates.studyId, studyId));
+  return db.select().from(surveyTemplates).where(and(...conditions));
+}
+
 
 export async function getActiveSurveyTemplates() {
   const db = await getDb();
@@ -139,10 +245,12 @@ export async function getActiveSurveyTemplates() {
   return db.select().from(surveyTemplates).where(eq(surveyTemplates.isActive, true));
 }
 
-export async function getSurveyTemplateById(id: number) {
+export async function getSurveyTemplateById(id: number, studyId?: number) {
   const db = await getDb();
   if (!db) return undefined;
-  const result = await db.select().from(surveyTemplates).where(eq(surveyTemplates.id, id)).limit(1);
+  const conditions = [eq(surveyTemplates.id, id)];
+  if (studyId) conditions.push(eq(surveyTemplates.studyId, studyId));
+  const result = await db.select().from(surveyTemplates).where(and(...conditions)).limit(1);
   return result[0];
 }
 
@@ -160,10 +268,12 @@ export async function updateSurveyTemplate(id: number, data: Partial<InsertSurve
 
 // ─── Questions ────────────────────────────────────────────────────────────────
 
-export async function getQuestionsByTemplate(templateId: number) {
+export async function getQuestionsByTemplate(templateId: number, studyId?: number) {
   const db = await getDb();
   if (!db) return [];
-  const rows = await db.select().from(questions).where(eq(questions.templateId, templateId)).orderBy(questions.order);
+  const conditions = [eq(questions.templateId, templateId)];
+  if (studyId) conditions.push(eq(questions.studyId, studyId));
+  const rows = await db.select().from(questions).where(and(...conditions)).orderBy(questions.order);
   // MySQL estándar puede devolver campos json como string — parsear defensivamente
   return rows.map((q) => ({
     ...q,
@@ -274,6 +384,7 @@ export async function insertSurveyAnswers(rows: InsertSurveyAnswer[]) {
 }
 
 export async function getSurveyResponses(filters?: {
+  studyId?: number;
   encuestadorId?: number;
   templateId?: number;
   dateFrom?: Date;
@@ -283,6 +394,7 @@ export async function getSurveyResponses(filters?: {
   const db = await getDb();
   if (!db) return [];
   const conditions = [];
+  if (filters?.studyId) conditions.push(eq(surveyResponses.studyId, filters.studyId));
   if (filters?.encuestadorId) conditions.push(eq(surveyResponses.encuestadorId, filters.encuestadorId));
   if (filters?.templateId) conditions.push(eq(surveyResponses.templateId, filters.templateId));
   if (filters?.dateFrom) conditions.push(gte(surveyResponses.startedAt, filters.dateFrom));
@@ -343,18 +455,22 @@ export async function getSurveyResponses(filters?: {
   return query;
 }
 
-export async function getSurveyResponseById(id: number) {
+export async function getSurveyResponseById(id: number, studyId?: number) {
   const db = await getDb();
   if (!db) return undefined;
-  const result = await db.select().from(surveyResponses).where(eq(surveyResponses.id, id)).limit(1);
+  const conditions = [eq(surveyResponses.id, id)];
+  if (studyId) conditions.push(eq(surveyResponses.studyId, studyId));
+  const result = await db.select().from(surveyResponses).where(and(...conditions)).limit(1);
   return result[0];
 }
 
-export async function getSurveyResponsesByEncuestador(encuestadorId: number) {
+export async function getSurveyResponsesByEncuestador(encuestadorId: number, studyId?: number) {
   const db = await getDb();
   if (!db) return [];
+  const conditions = [eq(surveyResponses.encuestadorId, encuestadorId)];
+  if (studyId) conditions.push(eq(surveyResponses.studyId, studyId));
   return db.select().from(surveyResponses)
-    .where(eq(surveyResponses.encuestadorId, encuestadorId))
+    .where(and(...conditions))
     .orderBy(desc(surveyResponses.startedAt))
     .limit(50);
 }
@@ -533,14 +649,17 @@ export async function updatePedestrianSession(id: number, data: Partial<InsertPe
   await db.update(pedestrianSessions).set(data as any).where(eq(pedestrianSessions.id, id));
 }
 
-export async function getPedestrianSessionById(id: number) {
+export async function getPedestrianSessionById(id: number, studyId?: number) {
   const db = await getDb();
   if (!db) return undefined;
-  const result = await db.select().from(pedestrianSessions).where(eq(pedestrianSessions.id, id)).limit(1);
+  const conditions = [eq(pedestrianSessions.id, id)];
+  if (studyId) conditions.push(eq(pedestrianSessions.studyId, studyId));
+  const result = await db.select().from(pedestrianSessions).where(and(...conditions)).limit(1);
   return result[0];
 }
 
 export async function getPedestrianSessions(filters?: {
+  studyId?: number;
   encuestadorId?: number;
   dateFrom?: string;
   dateTo?: string;
@@ -548,6 +667,7 @@ export async function getPedestrianSessions(filters?: {
   const db = await getDb();
   if (!db) return [];
   const conditions: any[] = [];
+  if (filters?.studyId) conditions.push(eq(pedestrianSessions.studyId, filters.studyId));
   if (filters?.encuestadorId) conditions.push(eq(pedestrianSessions.encuestadorId, filters.encuestadorId));
   if (filters?.dateFrom) conditions.push(gte(pedestrianSessions.date, filters.dateFrom));
   if (filters?.dateTo) conditions.push(lte(pedestrianSessions.date, filters.dateTo));
@@ -584,27 +704,31 @@ import {
   InsertPedestrianPass,
 } from "../drizzle/schema";
 
-export async function getDirectionsByPoint(surveyPoint: string) {
+export async function getDirectionsByPoint(surveyPoint: string, studyId?: number) {
   const db = await getDb();
   if (!db) return [];
+  const conditions = [eq(pedestrianDirections.surveyPoint, surveyPoint), eq(pedestrianDirections.isActive, true)];
+  if (studyId) conditions.push(eq(pedestrianDirections.studyId, studyId));
   return db.select().from(pedestrianDirections)
-    .where(and(eq(pedestrianDirections.surveyPoint, surveyPoint), eq(pedestrianDirections.isActive, true)))
+    .where(and(...conditions))
     .orderBy(pedestrianDirections.order, pedestrianDirections.id);
 }
 
-export async function getAllDirectionPoints() {
+export async function getAllDirectionPoints(studyId?: number) {
   const db = await getDb();
   if (!db) return [];
-  const rows = await db.select({ surveyPoint: pedestrianDirections.surveyPoint })
-    .from(pedestrianDirections)
-    .groupBy(pedestrianDirections.surveyPoint);
+  const query = db.select({ surveyPoint: pedestrianDirections.surveyPoint }).from(pedestrianDirections);
+  const rows = studyId
+    ? await query.where(eq(pedestrianDirections.studyId, studyId)).groupBy(pedestrianDirections.surveyPoint)
+    : await query.groupBy(pedestrianDirections.surveyPoint);
   return rows.map(r => r.surveyPoint);
 }
 
-export async function createPedestrianDirection(data: { surveyPoint: string; label: string; description?: string; order?: number }) {
+export async function createPedestrianDirection(data: { studyId?: number; surveyPoint: string; label: string; description?: string; order?: number }) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
   const result = await db.insert(pedestrianDirections).values({
+    studyId: data.studyId ?? null,
     surveyPoint: data.surveyPoint,
     label: data.label,
     description: data.description ?? null,
@@ -636,6 +760,7 @@ export async function createPedestrianPass(data: InsertPedestrianPass) {
 }
 
 export async function getPedestrianPasses(filters?: {
+  studyId?: number;
   encuestadorId?: number;
   surveyPoint?: string;
   dateFrom?: string;
@@ -645,6 +770,7 @@ export async function getPedestrianPasses(filters?: {
   const db = await getDb();
   if (!db) return [];
   const conditions: any[] = [];
+  if (filters?.studyId) conditions.push(eq(pedestrianPasses.studyId, filters.studyId));
   if (filters?.encuestadorId) conditions.push(eq(pedestrianPasses.encuestadorId, filters.encuestadorId));
   if (filters?.surveyPoint) conditions.push(eq(pedestrianPasses.surveyPoint, filters.surveyPoint));
   if (filters?.directionId) conditions.push(eq(pedestrianPasses.directionId, filters.directionId));
@@ -662,6 +788,7 @@ export async function getPedestrianPasses(filters?: {
 }
 
 export async function getPedestrianPassStats(filters?: {
+  studyId?: number;
   surveyPoint?: string;
   dateFrom?: string;
   dateTo?: string;
@@ -704,6 +831,7 @@ export async function createSurveyRejection(data: InsertSurveyRejection) {
 }
 
 export async function getSurveyRejections(filters?: {
+  studyId?: number;
   encuestadorId?: number;
   surveyType?: "residentes" | "visitantes";
   surveyPoint?: string;
@@ -713,6 +841,7 @@ export async function getSurveyRejections(filters?: {
   const db = await getDb();
   if (!db) return [];
   const conditions: any[] = [];
+  if (filters?.studyId) conditions.push(eq(surveyRejections.studyId, filters.studyId));
   if (filters?.encuestadorId) conditions.push(eq(surveyRejections.encuestadorId, filters.encuestadorId));
   if (filters?.surveyType) conditions.push(eq(surveyRejections.surveyType, filters.surveyType));
   if (filters?.surveyPoint) conditions.push(eq(surveyRejections.surveyPoint, filters.surveyPoint));
@@ -728,6 +857,7 @@ export async function getSurveyRejections(filters?: {
 }
 
 export async function getSurveyRejectionStats(filters?: {
+  studyId?: number;
   encuestadorId?: number;
   surveyType?: "residentes" | "visitantes";
   dateFrom?: string;
@@ -758,18 +888,22 @@ export async function createShift(data: InsertShift) {
   return result;
 }
 
-export async function getShiftsByEncuestador(encuestadorId: number) {
+export async function getShiftsByEncuestador(encuestadorId: number, studyId?: number) {
   const db = await getDb();
   if (!db) return [];
+  const conditions = [eq(shifts.encuestadorId, encuestadorId)];
+  if (studyId) conditions.push(eq(shifts.studyId, studyId));
   return db.select().from(shifts)
-    .where(eq(shifts.encuestadorId, encuestadorId))
+    .where(and(...conditions))
     .orderBy(desc(shifts.shiftDate));
 }
 
-export async function getAllShifts() {
+export async function getAllShifts(studyId?: number) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(shifts).orderBy(desc(shifts.shiftDate));
+  const query = db.select().from(shifts).orderBy(desc(shifts.shiftDate));
+  if (studyId) return query.where(eq(shifts.studyId, studyId));
+  return query;
 }
 
 export async function updateShift(id: number, data: Partial<InsertShift>) {
@@ -793,18 +927,22 @@ export async function createShiftClosure(data: InsertShiftClosure) {
   return result;
 }
 
-export async function getShiftClosuresByEncuestador(encuestadorId: number) {
+export async function getShiftClosuresByEncuestador(encuestadorId: number, studyId?: number) {
   const db = await getDb();
   if (!db) return [];
+  const conditions = [eq(shiftClosures.encuestadorId, encuestadorId)];
+  if (studyId) conditions.push(eq(shiftClosures.studyId, studyId));
   return db.select().from(shiftClosures)
-    .where(eq(shiftClosures.encuestadorId, encuestadorId))
+    .where(and(...conditions))
     .orderBy(desc(shiftClosures.closedAt));
 }
 
-export async function getAllShiftClosures() {
+export async function getAllShiftClosures(studyId?: number) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(shiftClosures).orderBy(desc(shiftClosures.closedAt));
+  const query = db.select().from(shiftClosures).orderBy(desc(shiftClosures.closedAt));
+  if (studyId) return query.where(eq(shiftClosures.studyId, studyId));
+  return query;
 }
 
 // ─── Última localización de encuestadores ─────────────────────────────────────────────
@@ -891,6 +1029,7 @@ export async function finishCountingSession(id: number, data: {
 }
 
 export async function getCountingSessions(filters?: {
+  studyId?: number;
   encuestadorId?: number;
   surveyPointCode?: string;
   dateFrom?: string;
@@ -899,6 +1038,7 @@ export async function getCountingSessions(filters?: {
   const db = await getDb();
   if (!db) return [];
   const conditions: any[] = [];
+  if (filters?.studyId) conditions.push(eq(countingSessions.studyId, filters.studyId));
   if (filters?.encuestadorId) conditions.push(eq(countingSessions.encuestadorId, filters.encuestadorId));
   if (filters?.surveyPointCode) conditions.push(eq(countingSessions.surveyPointCode, filters.surveyPointCode));
   if (filters?.dateFrom) conditions.push(gte(countingSessions.startedAt, new Date(filters.dateFrom)));

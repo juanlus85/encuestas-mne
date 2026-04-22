@@ -1,5 +1,6 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { getStudySettingsByStudyId, upsertStudySettings } from "./db";
 
 export interface AppSettings {
   projectName: string;
@@ -106,7 +107,7 @@ async function ensureStore() {
   }
 }
 
-export async function getAppSettings(): Promise<AppSettings> {
+async function getLegacyAppSettings(): Promise<AppSettings> {
   await ensureStore();
   const raw = await fs.readFile(STORE_PATH, "utf8");
   const parsed = JSON.parse(raw) as Partial<AppSettings>;
@@ -116,14 +117,72 @@ export async function getAppSettings(): Promise<AppSettings> {
   });
 }
 
-export async function updateAppSettings(input: Partial<AppSettings>): Promise<AppSettings> {
-  const current = await getAppSettings();
+export async function getAppSettings(studyId?: number): Promise<AppSettings> {
+  const legacySettings = await getLegacyAppSettings();
+  if (!studyId) {
+    return legacySettings;
+  }
+
+  const studySettings = await getStudySettingsByStudyId(studyId);
+  if (!studySettings) {
+    return legacySettings;
+  }
+
+  return normalizeSettings({
+    ...legacySettings,
+    projectName: studySettings.projectName,
+    exportProjectName: studySettings.exportProjectName,
+    mapPrimaryPointCode: studySettings.mapPrimaryPointCode,
+    surveyTargetTotal: studySettings.surveyTargetTotal,
+    surveyTargetResidents: studySettings.surveyTargetResidents,
+    surveyTargetVisitors: studySettings.surveyTargetVisitors,
+    surveyWeeklyTargetTotal: studySettings.surveyWeeklyTargetTotal,
+    surveyWeeklyTargetResidents: studySettings.surveyWeeklyTargetResidents,
+    surveyWeeklyTargetVisitors: studySettings.surveyWeeklyTargetVisitors,
+    quotasEnabled: studySettings.quotasEnabled,
+    residentQuotaTotal: studySettings.residentQuotaTotal,
+    visitorQuotaTotal: studySettings.visitorQuotaTotal,
+    enabledCharts: Array.isArray(studySettings.enabledCharts) ? studySettings.enabledCharts as string[] : legacySettings.enabledCharts,
+    openAiApiKey: studySettings.openAiApiKey ?? legacySettings.openAiApiKey,
+  });
+}
+
+export async function updateAppSettings(input: Partial<AppSettings>, studyId?: number): Promise<AppSettings> {
+  if (!studyId) {
+    const current = await getLegacyAppSettings();
+    const next = normalizeSettings({
+      ...current,
+      ...input,
+    });
+
+    await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
+    await fs.writeFile(STORE_PATH, JSON.stringify(next, null, 2));
+    return next;
+  }
+
+  const current = await getAppSettings(studyId);
   const next = normalizeSettings({
     ...current,
     ...input,
   });
 
-  await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
-  await fs.writeFile(STORE_PATH, JSON.stringify(next, null, 2));
+  await upsertStudySettings({
+    studyId,
+    projectName: next.projectName,
+    exportProjectName: next.exportProjectName,
+    mapPrimaryPointCode: next.mapPrimaryPointCode,
+    surveyTargetTotal: next.surveyTargetTotal,
+    surveyTargetResidents: next.surveyTargetResidents,
+    surveyTargetVisitors: next.surveyTargetVisitors,
+    surveyWeeklyTargetTotal: next.surveyWeeklyTargetTotal,
+    surveyWeeklyTargetResidents: next.surveyWeeklyTargetResidents,
+    surveyWeeklyTargetVisitors: next.surveyWeeklyTargetVisitors,
+    quotasEnabled: next.quotasEnabled,
+    residentQuotaTotal: next.residentQuotaTotal,
+    visitorQuotaTotal: next.visitorQuotaTotal,
+    enabledCharts: next.enabledCharts,
+    openAiApiKey: next.openAiApiKey,
+  });
+
   return next;
 }

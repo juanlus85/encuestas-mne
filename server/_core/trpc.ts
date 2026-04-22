@@ -27,6 +27,41 @@ const requireUser = t.middleware(async opts => {
 
 export const protectedProcedure = t.procedure.use(requireUser);
 
+export const studyProcedure = protectedProcedure.use(
+  t.middleware(async opts => {
+    const { ctx, next } = opts;
+
+    if (!ctx.activeStudyId) {
+      throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Active study required" });
+    }
+
+    return next({
+      ctx: {
+        ...ctx,
+        user: ctx.user,
+        activeStudyId: ctx.activeStudyId,
+      },
+    });
+  }),
+);
+
+export const supervisorProcedure = protectedProcedure.use(
+  t.middleware(async opts => {
+    const { ctx, next } = opts;
+
+    if (!ctx.user || ctx.user.platformRole !== 'supervisor') {
+      throw new TRPCError({ code: "FORBIDDEN", message: "Supervisor access required" });
+    }
+
+    return next({
+      ctx: {
+        ...ctx,
+        user: ctx.user,
+      },
+    });
+  }),
+);
+
 export const adminProcedure = t.procedure.use(
   t.middleware(async opts => {
     const { ctx, next } = opts;
