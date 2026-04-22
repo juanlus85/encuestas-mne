@@ -191,6 +191,57 @@ export async function deleteQuestion(id: number) {
 
 // ─── Survey Responses ─────────────────────────────────────────────────────────
 
+export async function updateSurveyResponse(id: number, data: Partial<InsertSurveyResponse>) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(surveyResponses).set(data).where(eq(surveyResponses.id, id));
+}
+
+export async function deleteSurveyResponse(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(surveyResponses).where(eq(surveyResponses.id, id));
+}
+
+export async function deleteSurveyAnswersBySurveyId(surveyId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(surveyAnswers).where(eq(surveyAnswers.surveyId, surveyId));
+}
+
+export async function deleteSurveyResponseFlatBySurveyId(surveyId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(surveyResponsesFlat).where(eq(surveyResponsesFlat.surveyId, surveyId));
+}
+
+export async function replaceSurveyAnswers(surveyId: number, rows: InsertSurveyAnswer[]) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(surveyAnswers).where(eq(surveyAnswers.surveyId, surveyId));
+  if (rows.length === 0) return;
+  const BATCH = 50;
+  for (let i = 0; i < rows.length; i += BATCH) {
+    await db.insert(surveyAnswers).values(rows.slice(i, i + BATCH));
+  }
+}
+
+export async function replaceSurveyResponseFlat(surveyId: number, row: InsertSurveyResponseFlat | null) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(surveyResponsesFlat).where(eq(surveyResponsesFlat.surveyId, surveyId));
+  if (!row) return;
+  await db.insert(surveyResponsesFlat).values(row);
+}
+
+export async function deletePhotosByResponse(responseId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(photos).where(eq(photos.responseId, responseId));
+}
+
+// ─── Survey Responses ─────────────────────────────────────────────────────────
+
 export async function createSurveyResponse(data: InsertSurveyResponse) {
   const db = await getDb();
   if (!db) return null;

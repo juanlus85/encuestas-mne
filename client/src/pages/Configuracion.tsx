@@ -15,6 +15,7 @@ import {
   ChevronUp,
   ClipboardList,
   Loader2,
+  Pencil,
   Plus,
   Trash2,
 } from "lucide-react";
@@ -30,61 +31,102 @@ const QUESTION_TYPES = [
   { value: "number", label: "Number" },
 ];
 
-function QuestionForm({
+function buildQuestionFormState(question?: any) {
+  return {
+    text: question?.text ?? "",
+    textEn: question?.textEn ?? "",
+    type: question?.type ?? "single_choice",
+    isRequired: question?.isRequired ?? true,
+    requiresPhoto: question?.requiresPhoto ?? false,
+    options:
+      Array.isArray(question?.options) && question.options.length > 0
+        ? question.options.map((opt: any, index: number) => ({
+            value: opt?.value ?? `opt${index + 1}`,
+            label: opt?.label ?? "",
+            labelEn: opt?.labelEn ?? "",
+          }))
+        : [{ value: "opt1", label: "", labelEn: "" }],
+  };
+}
+
+function QuestionDialog({
   templateId,
   order,
-  onCreated,
+  question,
+  trigger,
+  onSaved,
 }: {
   templateId: number;
   order: number;
-  onCreated: () => void;
+  question?: any;
+  trigger: React.ReactNode;
+  onSaved: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({
-    text: "",
-    textEn: "",
-    type: "single_choice",
-    isRequired: true,
-    requiresPhoto: false,
-    options: [{ value: "opt1", label: "", labelEn: "" }],
-  });
+  const [form, setForm] = useState(() => buildQuestionFormState(question));
+
+  useEffect(() => {
+    if (open) {
+      setForm(buildQuestionFormState(question));
+    }
+  }, [open, question]);
 
   const createMutation = trpc.questions.create.useMutation({
     onSuccess: () => {
       setOpen(false);
-      onCreated();
+      onSaved();
       toast.success("Question added");
     },
     onError: () => toast.error("Error creating question"),
   });
 
+  const updateMutation = trpc.questions.update.useMutation({
+    onSuccess: () => {
+      setOpen(false);
+      onSaved();
+      toast.success("Question updated");
+    },
+    onError: () => toast.error("Error updating question"),
+  });
+
   const hasOptions = ["single_choice", "multiple_choice"].includes(form.type);
+  const isEditing = Boolean(question);
+  const busy = createMutation.isPending || updateMutation.isPending;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createMutation.mutate({
-      templateId,
+    const payload = {
       order,
       text: form.text,
       textEn: form.textEn || undefined,
       type: form.type as any,
       isRequired: form.isRequired,
       requiresPhoto: form.requiresPhoto,
-      options: hasOptions ? form.options.filter((o) => o.label.trim()) : undefined,
-    });
+      options: hasOptions
+        ? form.options
+            .filter((o: { label: string }) => o.label.trim())
+            .map((o: { value: string; label: string; labelEn: string }, index: number) => ({
+              value: (o.value || o.label || `opt${index + 1}`).toLowerCase().replace(/\s+/g, "_"),
+              label: o.label.trim(),
+              labelEn: o.labelEn?.trim() || undefined,
+            }))
+        : undefined,
+    };
+
+    if (isEditing) {
+      updateMutation.mutate({ id: question.id, ...payload });
+      return;
+    }
+
+    createMutation.mutate({ templateId, ...payload });
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="w-full border-dashed">
-          <Plus className="h-4 w-4 mr-1.5" />
-          Add question
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>New question</DialogTitle>
+          <DialogTitle>{isEditing ? "Edit question" : "New question"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div>
@@ -125,7 +167,7 @@ function QuestionForm({
             <div>
               <label className="text-sm font-medium block mb-2">Answer options</label>
               <div className="space-y-2">
-                {form.options.map((opt, i) => (
+                {form.options.map((opt: { value: string; label: string; labelEn: string }, i: number) => (
                   <div key={i} className="flex gap-2 items-center">
                     <input
                       type="text"
@@ -151,7 +193,7 @@ function QuestionForm({
                     />
                     <button
                       type="button"
-                      onClick={() => setForm({ ...form, options: form.options.filter((_, j) => j !== i) })}
+                      onClick={() => setForm({ ...form, options: form.options.filter((_: { value: string; label: string; labelEn: string }, j: number) => j !== i) })}
                       className="text-destructive hover:text-destructive/80 p-1"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -193,8 +235,8 @@ function QuestionForm({
 
           <div className="flex gap-3 pt-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)} className="flex-1">Cancel</Button>
-            <Button type="submit" className="flex-1" disabled={createMutation.isPending}>
-              {createMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save question"}
+            <Button type="submit" className="flex-1" disabled={busy}>
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : isEditing ? "Save changes" : "Save question"}
             </Button>
           </div>
         </form>
@@ -205,14 +247,35 @@ function QuestionForm({
 
 function TemplateCard({ template, onRefresh }: { template: any; onRefresh: () => void }) {
   const [expanded, setExpanded] = useState(false);
-  const { data: questions = [] } = trpc.questions.byTemplate.useQuery(
+  const questionsQuery = trpc.questions.byTemplate.useQuery(
     { templateId: template.id },
     { enabled: expanded }
   );
+  const questions = questionsQuery.data ?? [];
 
   const toggleMutation = trpc.templates.update.useMutation({
     onSuccess: () => { onRefresh(); toast.success("Template updated"); },
   });
+
+  const deleteQuestionMutation = trpc.questions.delete.useMutation({
+    onSuccess: async () => {
+      await questionsQuery.refetch();
+      onRefresh();
+      toast.success("Question deleted");
+    },
+    onError: () => toast.error("Error deleting question"),
+  });
+
+  const refreshQuestions = async () => {
+    await questionsQuery.refetch();
+    onRefresh();
+  };
+
+  const handleDeleteQuestion = (question: any) => {
+    const confirmed = window.confirm(`Delete the question \"${question.textEn || question.text}\"?`);
+    if (!confirmed) return;
+    deleteQuestionMutation.mutate({ id: question.id });
+  };
 
   return (
     <Card className="border-0 shadow-sm">
@@ -276,14 +339,44 @@ function TemplateCard({ template, onRefresh }: { template: any; onRefresh: () =>
                       {q.requiresPhoto && <span className="text-xs text-blue-600">📷 Photo</span>}
                     </div>
                   </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <QuestionDialog
+                      templateId={template.id}
+                      order={q.order}
+                      question={q}
+                      onSaved={refreshQuestions}
+                      trigger={
+                        <Button variant="outline" size="sm" type="button">
+                          <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                          Edit
+                        </Button>
+                      }
+                    />
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      type="button"
+                      onClick={() => handleDeleteQuestion(q)}
+                      disabled={deleteQuestionMutation.isPending}
+                    >
+                      <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                      Delete
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
           )}
-          <QuestionForm
+          <QuestionDialog
             templateId={template.id}
-            order={questions.length + 1}
-            onCreated={() => { onRefresh(); }}
+            order={(questions[questions.length - 1]?.order ?? questions.length) + 1}
+            onSaved={refreshQuestions}
+            trigger={
+              <Button variant="outline" size="sm" className="w-full border-dashed" type="button">
+                <Plus className="h-4 w-4 mr-1.5" />
+                Add question
+              </Button>
+            }
           />
         </CardContent>
       )}

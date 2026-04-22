@@ -662,27 +662,34 @@ export default function SurveyForm() {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Top bar */}
       <div className="bg-primary text-primary-foreground sticky top-0 z-30">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <button
             onClick={() => setLocation("/")}
-            className="flex items-center gap-1.5 text-primary-foreground/80 hover:text-primary-foreground transition-colors"
+            className="flex items-center gap-1.5 text-primary-foreground/80 hover:text-primary-foreground transition-colors shrink-0"
           >
             <X className="h-5 w-5" />
           </button>
-          <div className="text-center">
+          <div className="flex items-center gap-3 min-w-0 flex-1 justify-center">
+            <img
+              src="/survexia-logo-dark.png"
+              alt="Survexia logo"
+              className="h-8 w-auto object-contain shrink-0"
+            />
+            <div className="text-center min-w-0">
             <p className="text-sm font-semibold leading-tight">{templateData.name}</p>
             {templateData.nameEn && (
               <p className="text-xs text-primary-foreground/70 italic">{templateData.nameEn}</p>
             )}
-            <p className="text-xs text-primary-foreground/60">
-              {currentStep === 0
-                ? "Field data"
-                : currentStep <= totalSteps
-                  ? `Question ${currentStep} of ${totalSteps}`
-                  : "Summary"}
-            </p>
+              <p className="text-xs text-primary-foreground/60">
+                {currentStep === 0
+                  ? "Field data"
+                  : currentStep <= totalSteps
+                    ? `Question ${currentStep} of ${totalSteps}`
+                    : "Summary"}
+              </p>
+            </div>
           </div>
-          <div className="w-8" />
+          <div className="w-8 shrink-0" />
         </div>
 
         {/* Progress bar */}

@@ -79,9 +79,11 @@ function EncuestadorHome() {
     <div className="min-h-screen bg-background pb-20">
       <div className="bg-primary text-primary-foreground px-4 py-6 md:px-8">
         <div className="max-w-2xl mx-auto">
-          <p className="text-primary-foreground/70 text-sm font-medium uppercase tracking-wider mb-1">
-Survexia
-          </p>
+          <img
+            src="/survexia-logo-dark.png"
+            alt="Survexia logo"
+            className="mb-3 h-12 w-auto object-contain"
+          />
           <h1 className="text-2xl font-bold">{greeting}, {user?.name?.split(" ")[0]}</h1>
           <div className="flex items-center justify-between mt-1">
             <p className="text-primary-foreground/70 text-sm">

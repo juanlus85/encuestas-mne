@@ -1,6 +1,13 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { trpc } from "@/lib/trpc";
 import {
   Camera,
@@ -10,9 +17,12 @@ import {
   Filter,
   Loader2,
   MapPin,
+  Pencil,
   Search,
+  Trash2,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 // ─── Filters ──────────────────────────────────────────────────────────────────
 
@@ -86,15 +96,263 @@ function FilterBar({
 
 // ─── Response row ─────────────────────────────────────────────────────────────
 
-function ResponseRow({ response, templates }: { response: any; templates: any[] }) {
+function formatAnswerForInput(answer: any, type: string) {
+  if (type === "multiple_choice") return Array.isArray(answer) ? answer : [];
+  if (answer === null || answer === undefined) return "";
+  return String(answer);
+}
+
+function EditResponseDialog({ response, onSaved }: { response: any; onSaved: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [surveyPoint, setSurveyPoint] = useState("");
+  const [status, setStatus] = useState<"completa" | "incompleta" | "rechazada" | "sustitucion">("completa");
+  const [language, setLanguage] = useState<"es" | "en">("en");
+  const [answers, setAnswers] = useState<Record<number, any>>({});
+
+  const detailQuery = trpc.responses.byId.useQuery({ id: response.id }, { enabled: open });
+  const templateQuery = trpc.templates.byId.useQuery({ id: response.templateId }, { enabled: open });
+
+  useEffect(() => {
+    if (!open || !detailQuery.data || !templateQuery.data) return;
+    setSurveyPoint(detailQuery.data.surveyPoint ?? "");
+    setStatus((detailQuery.data.status ?? "completa") as any);
+    setLanguage((detailQuery.data.language ?? "en") as any);
+    const nextAnswers: Record<number, any> = {};
+    for (const answer of detailQuery.data.answers as Array<{ questionId: number; answer: any }>) {
+      const question = templateQuery.data.questions.find((q: any) => q.id === answer.questionId);
+      nextAnswers[answer.questionId] = formatAnswerForInput(answer.answer, question?.type ?? "text");
+    }
+    setAnswers(nextAnswers);
+  }, [open, detailQuery.data, templateQuery.data]);
+
+  const updateMutation = trpc.responses.update.useMutation({
+    onSuccess: () => {
+      setOpen(false);
+      onSaved();
+      toast.success("Survey updated");
+    },
+    onError: (error) => toast.error(error.message || "Error updating survey"),
+  });
+
+  const questions = (templateQuery.data?.questions ?? []).filter((q: any) => !q.text.startsWith("META:"));
+  const busy = updateMutation.isPending || detailQuery.isLoading || templateQuery.isLoading;
+
+  const setAnswer = (questionId: number, value: any) => {
+    setAnswers((prev) => ({ ...prev, [questionId]: value }));
+  };
+
+  const renderQuestionInput = (question: any) => {
+    const value = answers[question.id] ?? (question.type === "multiple_choice" ? [] : "");
+
+    if (question.type === "single_choice" || question.type === "yes_no") {
+      const baseOptions = Array.isArray(question.options) ? question.options : [];
+      const options = question.type === "yes_no" && baseOptions.length === 0
+        ? [
+            { value: "yes", labelEn: "Yes", label: "Sí" },
+            { value: "no", labelEn: "No", label: "No" },
+          ]
+        : baseOptions;
+      return (
+        <select
+          value={value}
+          onChange={(e) => setAnswer(question.id, e.target.value)}
+          className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          <option value="">Select an option</option>
+          {options.map((option: any) => (
+            <option key={option.value} value={option.value}>{option.labelEn || option.label || option.value}</option>
+          ))}
+        </select>
+      );
+    }
+
+    if (question.type === "multiple_choice") {
+      const selectedValues = Array.isArray(value) ? value : [];
+      return (
+        <div className="space-y-2 rounded-lg border border-border bg-muted/20 p-3">
+          {(Array.isArray(question.options) ? question.options : []).map((option: any) => {
+            const checked = selectedValues.includes(option.value);
+            return (
+              <label key={option.value} className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={(e) => {
+                    if (e.target.checked) setAnswer(question.id, [...selectedValues, option.value]);
+                    else setAnswer(question.id, selectedValues.filter((item: string) => item !== option.value));
+                  }}
+                />
+                <span>{option.labelEn || option.label || option.value}</span>
+              </label>
+            );
+          })}
+        </div>
+      );
+    }
+
+    if (question.type === "scale") {
+      return (
+        <select
+          value={value}
+          onChange={(e) => setAnswer(question.id, e.target.value)}
+          className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          <option value="">Select a value</option>
+          {[1, 2, 3, 4, 5].map((option) => (
+            <option key={option} value={String(option)}>{option}</option>
+          ))}
+        </select>
+      );
+    }
+
+    if (question.type === "number") {
+      return (
+        <input
+          type="number"
+          value={value}
+          onChange={(e) => setAnswer(question.id, e.target.value)}
+          className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        />
+      );
+    }
+
+    return (
+      <textarea
+        value={value}
+        onChange={(e) => setAnswer(question.id, e.target.value)}
+        rows={question.type === "text" ? 3 : 2}
+        className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+      />
+    );
+  };
+
+  const handleSave = () => {
+    if (!detailQuery.data) return;
+    updateMutation.mutate({
+      id: response.id,
+      templateId: response.templateId,
+      surveyPoint: surveyPoint || undefined,
+      timeSlot: detailQuery.data.timeSlot || undefined,
+      windowCode: detailQuery.data.windowCode || undefined,
+      latitude: detailQuery.data.latitude != null ? Number(detailQuery.data.latitude) : undefined,
+      longitude: detailQuery.data.longitude != null ? Number(detailQuery.data.longitude) : undefined,
+      gpsAccuracy: detailQuery.data.gpsAccuracy != null ? Number(detailQuery.data.gpsAccuracy) : undefined,
+      startedAt: detailQuery.data.startedAt ? new Date(detailQuery.data.startedAt) : undefined,
+      finishedAt: detailQuery.data.finishedAt ? new Date(detailQuery.data.finishedAt) : undefined,
+      language,
+      status,
+      deviceInfo: detailQuery.data.deviceInfo || undefined,
+      earlyExit: detailQuery.data.earlyExit ?? false,
+      answers: questions.map((question: any) => ({
+        questionId: question.id,
+        answer: answers[question.id] ?? (question.type === "multiple_choice" ? [] : ""),
+      })),
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm" type="button">
+          <Pencil className="h-3.5 w-3.5 mr-1.5" />
+          Edit
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit survey #{response.id}</DialogTitle>
+        </DialogHeader>
+        {busy && !detailQuery.data ? (
+          <div className="flex items-center gap-2 py-8 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />Loading survey...
+          </div>
+        ) : (
+          <div className="space-y-6 mt-2">
+            <div className="grid gap-4 md:grid-cols-3">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">Survey point</label>
+                <input
+                  type="text"
+                  value={surveyPoint}
+                  onChange={(e) => setSurveyPoint(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">Status</label>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value as any)}
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="completa">Complete</option>
+                  <option value="incompleta">Incomplete</option>
+                  <option value="rechazada">Rejected</option>
+                  <option value="sustitucion">Replacement</option>
+                </select>
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">Language</label>
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value as any)}
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="en">EN</option>
+                  <option value="es">ES</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {questions.map((question: any, index: number) => (
+                <div key={question.id} className="rounded-xl border border-border p-4 space-y-2">
+                  <div>
+                    <p className="text-sm font-semibold">{index + 1}. {question.textEn || question.text}</p>
+                    {question.textEn && question.textEn !== question.text && (
+                      <p className="text-xs text-muted-foreground mt-1">Default text: {question.text}</p>
+                    )}
+                  </div>
+                  {renderQuestionInput(question)}
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button type="button" onClick={handleSave} disabled={updateMutation.isPending}>
+                {updateMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save changes"}
+              </Button>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ResponseRow({ response, templates, onRefresh }: { response: any; templates: any[]; onRefresh: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const { data: detail } = trpc.responses.byId.useQuery(
     { id: response.id },
     { enabled: expanded }
   );
 
+  const deleteMutation = trpc.responses.delete.useMutation({
+    onSuccess: () => {
+      onRefresh();
+      toast.success("Survey deleted");
+    },
+    onError: (error) => toast.error(error.message || "Error deleting survey"),
+  });
+
   const template = templates.find((t) => t.id === response.templateId);
-  const answers = Array.isArray(response.answers) ? response.answers : [];
+
+  const handleDelete = () => {
+    const confirmed = window.confirm(`Delete survey #${response.id}? This action cannot be undone.`);
+    if (!confirmed) return;
+    deleteMutation.mutate({ id: response.id });
+  };
 
   return (
     <>
@@ -110,10 +368,10 @@ function ResponseRow({ response, templates }: { response: any; templates: any[] 
         <td className="px-4 py-3 text-sm font-medium">{response.encuestadorName}</td>
         <td className="px-4 py-3 text-xs text-muted-foreground font-mono">{response.encuestadorIdentifier}</td>
         <td className="px-4 py-3 text-sm">
-          {new Date(response.startedAt).toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "numeric" })}
+          {new Date(response.startedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })}
         </td>
         <td className="px-4 py-3 text-sm">
-          {new Date(response.startedAt).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}
+          {new Date(response.startedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
         </td>
         <td className="px-4 py-3 text-sm text-muted-foreground">{response.surveyPoint || "—"}</td>
         <td className="px-4 py-3">
@@ -133,13 +391,21 @@ function ResponseRow({ response, templates }: { response: any; templates: any[] 
           <span className={`badge-${response.status}`}>{response.status}</span>
         </td>
         <td className="px-4 py-3">
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="flex items-center gap-1 text-xs text-primary hover:underline"
-          >
-            {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-            {expanded ? "Hide" : "View"}
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <EditResponseDialog response={response} onSaved={onRefresh} />
+            <Button variant="destructive" size="sm" type="button" onClick={handleDelete} disabled={deleteMutation.isPending}>
+              <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+              Delete
+            </Button>
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className="flex items-center gap-1 text-xs text-primary hover:underline"
+              type="button"
+            >
+              {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+              {expanded ? "Hide" : "View"}
+            </button>
+          </div>
         </td>
       </tr>
 
@@ -152,7 +418,6 @@ function ResponseRow({ response, templates }: { response: any; templates: any[] 
               </div>
             ) : (
               <div className="grid md:grid-cols-2 gap-4">
-                {/* Answers */}
                 <div>
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Answers</p>
                   <div className="space-y-2">
@@ -165,7 +430,6 @@ function ResponseRow({ response, templates }: { response: any; templates: any[] 
                   </div>
                 </div>
 
-                {/* Photos */}
                 {detail.photos && detail.photos.length > 0 && (
                   <div>
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Photos ({detail.photos.length})</p>
@@ -182,7 +446,6 @@ function ResponseRow({ response, templates }: { response: any; templates: any[] 
                   </div>
                 )}
 
-                {/* Metadata */}
                 <div className="md:col-span-2 border-t border-border pt-3">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                     <div>
@@ -195,11 +458,11 @@ function ResponseRow({ response, templates }: { response: any; templates: any[] 
                     </div>
                     <div>
                       <span className="text-muted-foreground">Start: </span>
-                      <span className="font-medium">{new Date(detail.startedAt).toLocaleTimeString("es-ES")}</span>
+                      <span className="font-medium">{new Date(detail.startedAt).toLocaleTimeString("en-GB")}</span>
                     </div>
                     <div>
                       <span className="text-muted-foreground">End: </span>
-                      <span className="font-medium">{detail.finishedAt ? new Date(detail.finishedAt).toLocaleTimeString("es-ES") : "—"}</span>
+                      <span className="font-medium">{detail.finishedAt ? new Date(detail.finishedAt).toLocaleTimeString("en-GB") : "—"}</span>
                     </div>
                   </div>
                 </div>
@@ -215,11 +478,13 @@ function ResponseRow({ response, templates }: { response: any; templates: any[] 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 export default function Resultados() {
+  const utils = trpc.useUtils();
   const [filters, setFilters] = useState({
     dateFrom: "",
     dateTo: "",
     encuestadorId: undefined as number | undefined,
     templateId: undefined as number | undefined,
+    status: "",
   });
 
   const { data: encuestadores = [] } = trpc.users.encuestadores.useQuery();
@@ -229,7 +494,13 @@ export default function Resultados() {
     templateId: filters.templateId,
     dateFrom: filters.dateFrom ? new Date(filters.dateFrom) : undefined,
     dateTo: filters.dateTo ? new Date(filters.dateTo + "T23:59:59") : undefined,
+    status: filters.status || undefined,
   });
+
+  const refreshResponses = async () => {
+    await utils.responses.list.invalidate();
+    await utils.responses.byId.invalidate();
+  };
 
   return (
     <DashboardLayout>
@@ -290,7 +561,7 @@ export default function Resultados() {
                 </thead>
                 <tbody>
                   {responses.map((r) => (
-                    <ResponseRow key={r.id} response={r} templates={templates} />
+                    <ResponseRow key={r.id} response={r} templates={templates} onRefresh={refreshResponses} />
                   ))}
                 </tbody>
               </table>

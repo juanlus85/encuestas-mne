@@ -12,7 +12,11 @@ import {
   createSurveyResponse,
   createSurveyTemplate,
   createUser,
+  deletePhotosByResponse,
   deleteQuestion,
+  deleteSurveyResponse,
+  deleteSurveyAnswersBySurveyId,
+  deleteSurveyResponseFlatBySurveyId,
   getActiveSurveyTemplates,
   getAllUsers,
   getDashboardStats,
@@ -33,9 +37,12 @@ import {
   getSurveyResponsesByEncuestador,
   getSurveyTemplateById,
   getSurveyTemplates,
+  replaceSurveyAnswers,
+  replaceSurveyResponseFlat,
   updatePedestrianInterval,
   updatePedestrianSession,
   updateQuestion,
+  updateSurveyResponse,
   updateSurveyTemplate,
   updateUser,
   updateUserPassword,
@@ -372,6 +379,7 @@ export const appRouter = router({
       .input(z.object({
         id: z.number(),
         order: z.number().optional(),
+        type: z.enum(["single_choice", "multiple_choice", "text", "scale", "yes_no", "number"]).optional(),
         text: z.string().optional(),
         textEn: z.string().optional(),
         options: z.any().optional(),
@@ -631,6 +639,223 @@ export const appRouter = router({
           }
         }
         return { success: true, id: surveyId };
+      }),
+
+    update: adminOrRevisorProcedure
+      .input(z.object({
+        id: z.number(),
+        templateId: z.number(),
+        surveyPoint: z.string().optional(),
+        timeSlot: z.enum(["manana", "mediodia", "tarde", "noche", "fin_semana"]).optional(),
+        windowCode: z.string().optional(),
+        latitude: z.number().optional(),
+        longitude: z.number().optional(),
+        gpsAccuracy: z.number().optional(),
+        startedAt: z.date().optional(),
+        finishedAt: z.date().optional(),
+        language: z.enum(["es", "en"]).default("es"),
+        answers: z.array(z.object({ questionId: z.number(), answer: z.any() })),
+        status: z.enum(["completa", "incompleta", "rechazada", "sustitucion"]).default("completa"),
+        deviceInfo: z.string().optional(),
+        earlyExit: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const existing = await getSurveyResponseById(input.id);
+        if (!existing) throw new TRPCError({ code: "NOT_FOUND" });
+
+        let flatCols: Record<string, string | null> = {};
+        try {
+          const tplQuestions = await getQuestionsByTemplate(input.templateId);
+          const tpl = await getSurveyTemplateById(input.templateId);
+          const sType = (tpl?.type ?? "visitantes") as "visitantes" | "residentes";
+          const metaCount = sType === "visitantes" ? 6 : 4;
+          const qMapById = new Map(tplQuestions.map((q) => [q.id, q]));
+          const answerByOrder: Record<number, string> = {};
+          for (const a of input.answers) {
+            const q = qMapById.get(a.questionId);
+            if (!q) continue;
+            const rawVal = a.answer;
+            let strVal: string;
+            if (Array.isArray(rawVal)) strVal = JSON.stringify(rawVal);
+            else if (rawVal === null || rawVal === undefined) strVal = "";
+            else strVal = String(rawVal);
+            answerByOrder[q.order] = strVal;
+          }
+          const realQuestions = tplQuestions.filter((q) => !q.text.startsWith("META:"));
+          for (const q of realQuestions) {
+            const colIdx = q.order - metaCount;
+            const rawVal = answerByOrder[q.order] ?? null;
+            if (sType === "visitantes") {
+              const colName = `v_p${String(colIdx).padStart(2, "0")}`;
+              flatCols[colName] = encodeAnswer(rawVal);
+            } else if (colIdx === 36) {
+              let vals: string[] = [];
+              try { vals = rawVal ? JSON.parse(rawVal) : []; } catch { vals = rawVal ? [rawVal] : []; }
+              flatCols["r_p35a"] = encodeAnswer(vals[0] ?? null);
+              flatCols["r_p35b"] = encodeAnswer(vals[1] ?? null);
+              flatCols["r_p35c"] = encodeAnswer(vals[2] ?? null);
+            } else {
+              const colName = `r_p${String(colIdx).padStart(2, "0")}`;
+              flatCols[colName] = encodeAnswer(rawVal);
+            }
+          }
+          if (sType === "residentes") {
+            const viveCentro = flatCols["r_p02"] as string | null;
+            if (viveCentro === "1" || viveCentro?.toLowerCase() === "si" || viveCentro?.toLowerCase() === "sí") {
+              flatCols["seccion037"] = "1";
+            } else if (viveCentro === "2" || viveCentro?.toLowerCase() === "no") {
+              flatCols["seccion037"] = "2";
+            }
+          }
+        } catch (err) {
+          console.error("[responses.update] Error construyendo columnas planas:", err);
+        }
+
+        await updateSurveyResponse(input.id, {
+          templateId: input.templateId,
+          surveyPoint: input.surveyPoint,
+          timeSlot: input.timeSlot,
+          windowCode: input.windowCode,
+          latitude: input.latitude?.toString(),
+          longitude: input.longitude?.toString(),
+          gpsAccuracy: input.gpsAccuracy?.toString(),
+          startedAt: input.startedAt,
+          finishedAt: input.finishedAt,
+          language: input.language,
+          answers: input.answers,
+          status: input.status,
+          deviceInfo: input.deviceInfo,
+          earlyExit: input.earlyExit,
+          ...flatCols,
+        } as any);
+
+        if (input.status === "completa") {
+          try {
+            const templateQuestions = await getQuestionsByTemplate(input.templateId);
+            const qMap = new Map(templateQuestions.map((q) => [q.id, q]));
+            const template = await getSurveyTemplateById(input.templateId);
+            const surveyType = (template?.type ?? "visitantes") as "visitantes" | "residentes";
+            const recordedAt = input.finishedAt ?? new Date();
+            const answerRows = input.answers.map((a, idx) => {
+              const q = qMap.get(a.questionId);
+              const opts = (q?.options as Array<{ value: string; label: string; labelEn?: string }> | null) ?? [];
+              const rawVal = a.answer;
+              let answerValue: string;
+              if (Array.isArray(rawVal)) answerValue = JSON.stringify(rawVal);
+              else if (rawVal === null || rawVal === undefined) answerValue = "";
+              else answerValue = String(rawVal);
+              let labelEs: string | undefined;
+              let labelEn: string | undefined;
+              if (opts.length > 0) {
+                if (Array.isArray(rawVal)) {
+                  const labels = (rawVal as string[]).map((v) => {
+                    const opt = opts.find((o) => o.value === v);
+                    return opt ? { es: opt.label, en: opt.labelEn ?? opt.label } : { es: v, en: v };
+                  });
+                  labelEs = labels.map((l) => l.es).join(", ");
+                  labelEn = labels.map((l) => l.en).join(", ");
+                } else {
+                  const opt = opts.find((o) => o.value === String(rawVal));
+                  if (opt) { labelEs = opt.label; labelEn = opt.labelEn ?? opt.label; }
+                }
+              }
+              const prefix = surveyType === "visitantes" ? "V" : "R";
+              const order = q?.order ?? idx + 1;
+              const questionCode = `${prefix}${String(order).padStart(2, "0")}`;
+              return {
+                surveyId: input.id,
+                questionCode,
+                questionId: a.questionId,
+                questionTextEs: q?.text ?? "",
+                questionTextEn: q?.textEn ?? q?.text ?? "",
+                answerValue,
+                answerLabelEs: labelEs,
+                answerLabelEn: labelEn,
+                surveyType,
+                surveyPoint: input.surveyPoint,
+                encuestadorId: existing.encuestadorId,
+                encuestadorName: existing.encuestadorName ?? "",
+                encuestadorIdentifier: existing.encuestadorIdentifier ?? "",
+                recordedAt,
+              };
+            });
+            await replaceSurveyAnswers(input.id, answerRows as any);
+          } catch (err) {
+            console.error("[survey_answers] Error al reemplazar respuestas normalizadas:", err);
+          }
+          try {
+            const template2 = await getSurveyTemplateById(input.templateId);
+            const surveyType2 = (template2?.type ?? "visitantes") as "visitantes" | "residentes";
+            const templateQuestions2 = await getQuestionsByTemplate(input.templateId);
+            const realQuestions = templateQuestions2.filter((q) => !q.text.startsWith("META:"));
+            const metaCount = surveyType2 === "visitantes" ? 6 : 4;
+            const qMap2 = new Map(templateQuestions2.map((q) => [q.id, q]));
+            const answerByOrder: Record<number, string> = {};
+            for (const a of input.answers) {
+              const q = qMap2.get(a.questionId);
+              if (!q) continue;
+              const rawVal = a.answer;
+              let strVal: string;
+              if (Array.isArray(rawVal)) strVal = JSON.stringify(rawVal);
+              else if (rawVal === null || rawVal === undefined) strVal = "";
+              else strVal = String(rawVal);
+              answerByOrder[q.order] = strVal;
+            }
+            const flatRow: Record<string, unknown> = {
+              surveyId: input.id,
+              surveyType: surveyType2,
+              surveyPoint: input.surveyPoint,
+              timeSlot: input.timeSlot,
+              windowCode: input.windowCode,
+              minuteStart: existing.minuteStart != null ? String(existing.minuteStart) : undefined,
+              minuteEnd: existing.minuteEnd != null ? String(existing.minuteEnd) : undefined,
+              encuestadorId: existing.encuestadorId,
+              encuestadorName: existing.encuestadorName ?? "",
+              encuestadorCode: existing.encuestadorIdentifier ?? "",
+              startedAt: input.startedAt ?? existing.startedAt,
+              finishedAt: input.finishedAt,
+              latitude: input.latitude?.toString(),
+              longitude: input.longitude?.toString(),
+              gpsAccuracy: input.gpsAccuracy?.toString(),
+              language: input.language,
+              status: input.status,
+              earlyExit: input.earlyExit ?? false,
+            };
+            const prefix2 = surveyType2 === "visitantes" ? "v" : "r";
+            for (const q of realQuestions) {
+              const colIdx = q.order - metaCount;
+              const colName = `${prefix2}${String(colIdx).padStart(2, "0")}`;
+              const rawAns = (answerByOrder[q.order] ?? null) as string | null;
+              flatRow[colName] = encodeAnswer(rawAns);
+            }
+            if (surveyType2 === "residentes") {
+              const viveCentro = flatRow["r02"] as string | null;
+              if (viveCentro === "1" || viveCentro?.toLowerCase() === "si" || viveCentro?.toLowerCase() === "sí") {
+                flatRow["seccion037"] = 1;
+              } else if (viveCentro === "2" || viveCentro?.toLowerCase() === "no") {
+                flatRow["seccion037"] = 2;
+              }
+            }
+            await replaceSurveyResponseFlat(input.id, flatRow as any);
+          } catch (err) {
+            console.error("[survey_responses_flat] Error al reemplazar fila plana:", err);
+          }
+        } else {
+          await replaceSurveyAnswers(input.id, []);
+          await replaceSurveyResponseFlat(input.id, null);
+        }
+
+        return { success: true, id: input.id };
+      }),
+
+    delete: adminOrRevisorProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await deletePhotosByResponse(input.id);
+        await deleteSurveyAnswersBySurveyId(input.id);
+        await deleteSurveyResponseFlatBySurveyId(input.id);
+        await deleteSurveyResponse(input.id);
+        return { success: true };
       }),
 
     list: adminOrRevisorProcedure
@@ -1142,11 +1367,11 @@ export const appRouter = router({
           .where(where)
           .groupBy(pedestrianPasses.surveyPointCode);
 
-        // Consolidar: inicializar todos los puntos con 0 y acumular los reales
-        const { SURVEY_POINTS } = await import('../shared/surveyPoints');
-        const puntoMap = new Map<string, { name: string; value: number; registros: number }>();
-        for (const p of SURVEY_POINTS) {
-          puntoMap.set(p.code, { name: p.fullName, value: 0, registros: 0 });
+        // Consolidar: inicializar todos los puntos configurados en el proyecto y acumular los reales
+        const configuredPoints = await listCountingPoints();
+        const puntoMap = new Map<string, { code: string; name: string; value: number; registros: number }>();
+        for (const p of configuredPoints) {
+          puntoMap.set(p.code, { code: p.code, name: p.fullName, value: 0, registros: 0 });
         }
         for (const r of byPuntoRows) {
           const code = (r.puntoCode ?? "").trim();
@@ -1156,7 +1381,7 @@ export const appRouter = router({
             existing.value += Number(r.total ?? 0);
             existing.registros += Number(r.registros ?? 0);
           } else {
-            puntoMap.set(code, { name: code, value: Number(r.total ?? 0), registros: Number(r.registros ?? 0) });
+            puntoMap.set(code, { code, name: code, value: Number(r.total ?? 0), registros: Number(r.registros ?? 0) });
           }
         }
 
@@ -1187,7 +1412,7 @@ export const appRouter = router({
 
         return {
           total: totalPersons,
-          byPunto: allPuntos.sort((a, b) => a.name.localeCompare(b.name)),
+          byPunto: allPuntos.sort((a, b) => a.code.localeCompare(b.code)).map(({ code: _code, ...point }) => point),
           byTramo: Object.entries(byTramo).sort(([a], [b]) => a.localeCompare(b)).map(([name, value]) => ({ name, value })),
           bySentido: bySentidoRows.map((r) => ({ name: r.sentido ?? "Sin sentido", value: Number(r.total ?? 0) })).sort((a, b) => b.value - a.value).slice(0, 15),
           sessions: sessionRows.map((s) => ({
