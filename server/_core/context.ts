@@ -1,4 +1,5 @@
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
+import { parse as parseCookieHeader } from "cookie";
 import type { User } from "../../drizzle/schema";
 import { getStudies, getStudyById, getUserStudyMemberships } from "../db";
 import { sdk } from "./sdk";
@@ -25,9 +26,10 @@ export async function createContext(
   let activeStudyId: number | null = null;
 
   if (user?.id) {
+    const parsedCookies = parseCookieHeader(opts.req.headers.cookie ?? "");
     const explicitStudy = Number(
       (opts.req.headers["x-study-id"] as string | undefined)
-      ?? opts.req.cookies?.activeStudyId
+      ?? parsedCookies.activeStudyId
       ?? opts.req.query?.studyId,
     );
 
