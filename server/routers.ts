@@ -468,7 +468,7 @@ export const appRouter = router({
   templates: router({
     list: studyProcedure.query(({ ctx }) => getSurveyTemplates(ctx.activeStudyId)),
     active: studyProcedure.query(async ({ ctx }) => {
-      const all = (await getActiveSurveyTemplates()).filter((t) => t.studyId === ctx.activeStudyId);
+      const all = await getActiveSurveyTemplates(ctx.activeStudyId);
       const assigned = (ctx.user as any).surveyTypeAssigned;
       if (ctx.user && ctx.user.role === "encuestador" && assigned && assigned !== "ambas") {
         return all.filter((t) => t.type === assigned);
@@ -1166,9 +1166,9 @@ export const appRouter = router({
         dateTo: z.date().optional(),
         encuestadorId: z.number().optional(),
       }).optional())
-      .query(({ input }) => getGpsLocations(input)),
+      .query(({ input, ctx }) => getGpsLocations({ ...(input ?? {}), studyId: ctx.activeStudyId ?? undefined })),
     latestLocations: adminOrRevisorProcedure
-      .query(() => getLatestEncuestadorLocations()),
+      .query(({ ctx }) => getLatestEncuestadorLocations(ctx.activeStudyId ?? undefined)),
 
     // ── Estadísticas detalladas de visitantes ──────────────────────────────
     visitantesStats: adminOrRevisorProcedure
@@ -1520,17 +1520,18 @@ export const appRouter = router({
     // ── Estadísticas de conteos peatonales ────────────────────────────────
     conteosStats: adminOrRevisorProcedure
       .input(z.object({ dateFrom: z.date().optional(), dateTo: z.date().optional() }).optional())
-      .query(async ({ input }) => {
+      .query(async ({ input, ctx }) => {
         const { getDb } = await import('./db');
         const { pedestrianPasses, countingSessions } = await import('../drizzle/schema');
-        const { sql, and, gte, lte } = await import('drizzle-orm');
+        const { sql, and, eq, gte, lte } = await import('drizzle-orm');
         const db = await getDb();
         if (!db) return { total: 0, byPunto: [], byTramo: [], bySentido: [], sessions: [] };
 
-        const conditions: any[] = [];
-        if (input?.dateFrom) conditions.push(gte(pedestrianPasses.recordedAt, input.dateFrom));
-        if (input?.dateTo) conditions.push(lte(pedestrianPasses.recordedAt, input.dateTo));
-        const where = conditions.length > 0 ? and(...conditions) : undefined;
+        const passConditions: any[] = [];
+        if (ctx.activeStudyId) passConditions.push(eq(pedestrianPasses.studyId, ctx.activeStudyId));
+        if (input?.dateFrom) passConditions.push(gte(pedestrianPasses.recordedAt, input.dateFrom));
+        if (input?.dateTo) passConditions.push(lte(pedestrianPasses.recordedAt, input.dateTo));
+        const where = passConditions.length > 0 ? and(...passConditions) : undefined;
 
         // Total y por punto principal (agrupado SOLO por surveyPointCode)
         const byPuntoRows = await db
@@ -1581,7 +1582,12 @@ export const appRouter = router({
           .groupBy(pedestrianPasses.directionLabel);
 
         // Sesiones
-        const sessionRows = await db.select().from(countingSessions);
+        const sessionConditions: any[] = [];
+        if (ctx.activeStudyId) sessionConditions.push(eq(countingSessions.studyId, ctx.activeStudyId));
+        if (input?.dateFrom) sessionConditions.push(gte(countingSessions.startedAt, input.dateFrom));
+        if (input?.dateTo) sessionConditions.push(lte(countingSessions.startedAt, input.dateTo));
+        const sessionRows = await db.select().from(countingSessions)
+          .where(sessionConditions.length > 0 ? and(...sessionConditions) : undefined);
 
         const allPuntos = Array.from(puntoMap.values());
         const totalPersons = allPuntos.reduce((acc, r) => acc + r.value, 0);

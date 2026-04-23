@@ -259,10 +259,12 @@ export async function getSurveyTemplates(studyId?: number) {
 }
 
 
-export async function getActiveSurveyTemplates() {
+export async function getActiveSurveyTemplates(studyId?: number) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(surveyTemplates).where(eq(surveyTemplates.isActive, true));
+  const conditions = [eq(surveyTemplates.isActive, true)];
+  if (studyId) conditions.push(eq(surveyTemplates.studyId, studyId));
+  return db.select().from(surveyTemplates).where(and(...conditions));
 }
 
 export async function getSurveyTemplateById(id: number, studyId?: number) {
@@ -632,10 +634,11 @@ export async function getResponsesByTimeSlot(filters?: { studyId?: number; dateF
   return query;
 }
 
-export async function getGpsLocations(filters?: { dateFrom?: Date; dateTo?: Date; encuestadorId?: number }) {
+export async function getGpsLocations(filters?: { studyId?: number; dateFrom?: Date; dateTo?: Date; encuestadorId?: number }) {
   const db = await getDb();
   if (!db) return [];
   const conditions = [sql`${surveyResponses.latitude} IS NOT NULL`];
+  if (filters?.studyId) conditions.push(eq(surveyResponses.studyId, filters.studyId));
   if (filters?.encuestadorId) conditions.push(eq(surveyResponses.encuestadorId, filters.encuestadorId));
   if (filters?.dateFrom) conditions.push(gte(surveyResponses.startedAt, filters.dateFrom));
   if (filters?.dateTo) conditions.push(lte(surveyResponses.startedAt, filters.dateTo));
@@ -973,10 +976,10 @@ export async function getAllShiftClosures(studyId?: number) {
 }
 
 // ─── Última localización de encuestadores ─────────────────────────────────────────────
-export async function getLatestEncuestadorLocations() {
+export async function getLatestEncuestadorLocations(studyId?: number) {
   const db = await getDb();
   if (!db) return [];
-  // Get the most recent GPS location for each encuestador
+  const studyFilter = studyId ? sql` AND studyId = ${studyId}` : sql``;
   const result = await db.execute(sql`
     SELECT 
       sr.encuestadorId,
@@ -991,10 +994,10 @@ export async function getLatestEncuestadorLocations() {
     INNER JOIN (
       SELECT encuestadorId, MAX(startedAt) AS maxDate
       FROM survey_responses
-      WHERE latitude IS NOT NULL AND encuestadorId IS NOT NULL
+      WHERE latitude IS NOT NULL AND encuestadorId IS NOT NULL ${studyFilter}
       GROUP BY encuestadorId
     ) latest ON sr.encuestadorId = latest.encuestadorId AND sr.startedAt = latest.maxDate
-    WHERE sr.latitude IS NOT NULL
+    WHERE sr.latitude IS NOT NULL ${studyFilter}
     ORDER BY sr.startedAt DESC
   `);
   return ((result[0] as unknown) as any[]).map((row: any) => ({
