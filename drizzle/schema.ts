@@ -86,6 +86,7 @@ export const studySettings = mysqlTable("study_settings", {
   residentQuotaTotal: int("residentQuotaTotal").default(0).notNull(),
   visitorQuotaTotal: int("visitorQuotaTotal").default(0).notNull(),
   enabledCharts: json("enabledCharts"),
+  countingPointsJson: json("countingPointsJson"),
   openAiApiKey: text("openAiApiKey"),
   brandLogoLight: varchar("brandLogoLight", { length: 512 }),
   brandLogoDark: varchar("brandLogoDark", { length: 512 }),

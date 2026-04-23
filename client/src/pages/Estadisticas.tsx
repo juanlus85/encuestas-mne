@@ -1012,9 +1012,9 @@ export default function Estadisticas() {
   const [dateTo, setDateTo] = useState("");
   const [activeTab, setActiveTab] = useState("general");
   const { data: appSettings } = trpc.appSettings.get.useQuery();
-  const surveyTargetResidents = appSettings?.surveyTargetResidents ?? 300;
-  const surveyTargetVisitors = appSettings?.surveyTargetVisitors ?? 450;
-  const surveyTargetTotal = appSettings?.surveyTargetTotal ?? 750;
+  const surveyTargetResidents = appSettings?.surveyTargetResidents ?? 0;
+  const surveyTargetVisitors = appSettings?.surveyTargetVisitors ?? 0;
+  const surveyTargetTotal = appSettings?.surveyTargetTotal ?? 0;
 
   return (
     <DashboardLayout>

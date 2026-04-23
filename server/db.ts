@@ -28,6 +28,7 @@ import {
   InsertShift,
   InsertShiftClosure,
 } from "../drizzle/schema";
+import type { CountingPoint } from "../shared/countingPoints";
 import { ENV } from "./_core/env";
 
 /**
@@ -104,6 +105,13 @@ export async function getEncuestadores() {
   const db = await getDb();
   if (!db) return [];
   return db.select().from(users).where(eq(users.role, "encuestador")).orderBy(users.name);
+}
+
+export async function getUserById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+  return result[0];
 }
 
 export async function updateUser(id: number, data: Partial<InsertUser>) {
@@ -248,7 +256,30 @@ export async function upsertStudySettings(data: InsertStudySettings) {
   });
 }
 
-// ─── Survey Templates ─────────────────────────────────────────────────────────
+export async function upsertStudyCountingPoints(studyId: number, countingPointsJson: CountingPoint[]) {
+  const db = await getDb();
+  if (!db) return;
+
+  const existing = await getStudySettingsByStudyId(studyId);
+  if (existing) {
+    await db.update(studySettings)
+      .set({ countingPointsJson })
+      .where(eq(studySettings.studyId, studyId));
+    return;
+  }
+
+  const study = await getStudyById(studyId);
+  if (!study) {
+    throw new Error("Study not found");
+  }
+
+  await db.insert(studySettings).values({
+    studyId,
+    projectName: study.name,
+    exportProjectName: study.code,
+    countingPointsJson,
+  });
+}
 
 export async function getSurveyTemplates(studyId?: number) {
   const db = await getDb();
@@ -257,7 +288,6 @@ export async function getSurveyTemplates(studyId?: number) {
   if (studyId) conditions.push(eq(surveyTemplates.studyId, studyId));
   return db.select().from(surveyTemplates).where(and(...conditions));
 }
-
 
 export async function getActiveSurveyTemplates(studyId?: number) {
   const db = await getDb();

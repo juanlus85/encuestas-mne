@@ -7,8 +7,9 @@ import {
   type CountingPoint,
   type CountingSubPoint,
 } from "@shared/countingPoints";
+import { getStudySettingsByStudyId, upsertStudyCountingPoints } from "./db";
 
-const STORE_PATH = path.resolve(import.meta.dirname, "..", "data", "counting-points.json");
+const LEGACY_STORE_PATH = path.resolve(import.meta.dirname, "..", "data", "counting-points.json");
 
 function sortPoints(points: CountingPoint[]) {
   return [...points]
@@ -25,25 +26,84 @@ function sortPoints(points: CountingPoint[]) {
     }));
 }
 
-async function ensureStore() {
+function normalizeSubPoint(input: unknown): CountingSubPoint | null {
+  if (!input || typeof input !== "object") return null;
+  const subPoint = input as Partial<CountingSubPoint>;
+  const code = typeof subPoint.code === "string" ? subPoint.code.trim() : "";
+  const name = typeof subPoint.name === "string" ? subPoint.name.trim() : "";
+  if (!code || !name) return null;
+  return {
+    code,
+    name,
+    fullName: formatSubPointFullName(code, name),
+  };
+}
+
+function normalizePoints(input: unknown, fallback: CountingPoint[] = SURVEY_POINTS): CountingPoint[] {
+  if (!Array.isArray(input)) {
+    return sortPoints(fallback);
+  }
+
+  const normalized = input
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const point = item as Partial<CountingPoint>;
+      const code = typeof point.code === "string" ? point.code.trim() : "";
+      const name = typeof point.name === "string" ? point.name.trim() : "";
+      if (!code || !name) return null;
+
+      return {
+        code,
+        name,
+        fullName: formatPointFullName(code, name),
+        subPoints: Array.isArray(point.subPoints)
+          ? point.subPoints.map((subPoint) => normalizeSubPoint(subPoint)).filter((subPoint): subPoint is CountingSubPoint => Boolean(subPoint))
+          : [],
+      } satisfies CountingPoint;
+    })
+    .filter((point): point is CountingPoint => Boolean(point));
+
+  return normalized.length > 0 ? sortPoints(normalized) : sortPoints(fallback);
+}
+
+async function ensureLegacyStore() {
   try {
-    await fs.access(STORE_PATH);
+    await fs.access(LEGACY_STORE_PATH);
   } catch {
-    await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
-    await fs.writeFile(STORE_PATH, JSON.stringify(sortPoints(SURVEY_POINTS), null, 2));
+    await fs.mkdir(path.dirname(LEGACY_STORE_PATH), { recursive: true });
+    await fs.writeFile(LEGACY_STORE_PATH, JSON.stringify(sortPoints(SURVEY_POINTS), null, 2));
   }
 }
 
-async function readStore() {
-  await ensureStore();
-  const raw = await fs.readFile(STORE_PATH, "utf8");
-  const parsed = JSON.parse(raw) as CountingPoint[];
-  return sortPoints(parsed);
+async function readLegacyStore() {
+  try {
+    await ensureLegacyStore();
+    const raw = await fs.readFile(LEGACY_STORE_PATH, "utf8");
+    return normalizePoints(JSON.parse(raw));
+  } catch {
+    return sortPoints(SURVEY_POINTS);
+  }
 }
 
-async function writeStore(points: CountingPoint[]) {
-  await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
-  await fs.writeFile(STORE_PATH, JSON.stringify(sortPoints(points), null, 2));
+async function readStore(studyId?: number) {
+  if (!studyId) {
+    return readLegacyStore();
+  }
+
+  const studySettings = await getStudySettingsByStudyId(studyId);
+  if (Array.isArray(studySettings?.countingPointsJson)) {
+    return normalizePoints(studySettings.countingPointsJson);
+  }
+
+  const legacyPoints = await readLegacyStore();
+  await upsertStudyCountingPoints(studyId, legacyPoints);
+  return legacyPoints;
+}
+
+async function writeStore(studyId: number, points: CountingPoint[]) {
+  const normalized = sortPoints(points);
+  await upsertStudyCountingPoints(studyId, normalized);
+  return normalized;
 }
 
 function assertPointCode(code: string) {
@@ -71,12 +131,12 @@ function nextSubPointCode(point: CountingPoint) {
   return `${point.code}.${String(max + 1).padStart(2, "0")}`;
 }
 
-export async function listCountingPoints() {
-  return readStore();
+export async function listCountingPoints(studyId?: number) {
+  return readStore(studyId);
 }
 
-export async function createCountingPoint(input: { code?: string; name: string }) {
-  const points = await readStore();
+export async function createCountingPoint(studyId: number, input: { code?: string; name: string }) {
+  const points = await readStore(studyId);
   const code = (input.code?.trim() || nextPointCode(points)).padStart(2, "0");
   const name = input.name.trim();
 
@@ -91,13 +151,11 @@ export async function createCountingPoint(input: { code?: string; name: string }
     subPoints: [],
   };
 
-  const next = [...points, point];
-  await writeStore(next);
-  return sortPoints(next);
+  return writeStore(studyId, [...points, point]);
 }
 
-export async function updateCountingPoint(input: { code: string; name: string }) {
-  const points = await readStore();
+export async function updateCountingPoint(studyId: number, input: { code: string; name: string }) {
+  const points = await readStore(studyId);
   const name = input.name.trim();
   if (!name) throw new Error("Point name is required");
 
@@ -115,20 +173,18 @@ export async function updateCountingPoint(input: { code: string; name: string })
     throw new Error("Point not found");
   }
 
-  await writeStore(next);
-  return sortPoints(next);
+  return writeStore(studyId, next);
 }
 
-export async function deleteCountingPoint(input: { code: string }) {
-  const points = await readStore();
+export async function deleteCountingPoint(studyId: number, input: { code: string }) {
+  const points = await readStore(studyId);
   const next = points.filter((point) => point.code !== input.code);
   if (next.length === points.length) throw new Error("Point not found");
-  await writeStore(next);
-  return sortPoints(next);
+  return writeStore(studyId, next);
 }
 
-export async function createCountingSubPoint(input: { pointCode: string; code?: string; name: string }) {
-  const points = await readStore();
+export async function createCountingSubPoint(studyId: number, input: { pointCode: string; code?: string; name: string }) {
+  const points = await readStore(studyId);
   const point = points.find((item) => item.code === input.pointCode);
   if (!point) throw new Error("Point not found");
 
@@ -153,12 +209,11 @@ export async function createCountingSubPoint(input: { pointCode: string; code?: 
       : item,
   );
 
-  await writeStore(next);
-  return sortPoints(next);
+  return writeStore(studyId, next);
 }
 
-export async function updateCountingSubPoint(input: { pointCode: string; code: string; name: string }) {
-  const points = await readStore();
+export async function updateCountingSubPoint(studyId: number, input: { pointCode: string; code: string; name: string }) {
+  const points = await readStore(studyId);
   const name = input.name.trim();
   if (!name) throw new Error("Subpoint name is required");
 
@@ -181,12 +236,11 @@ export async function updateCountingSubPoint(input: { pointCode: string; code: s
   });
 
   if (!found) throw new Error("Subpoint not found");
-  await writeStore(next);
-  return sortPoints(next);
+  return writeStore(studyId, next);
 }
 
-export async function deleteCountingSubPoint(input: { pointCode: string; code: string }) {
-  const points = await readStore();
+export async function deleteCountingSubPoint(studyId: number, input: { pointCode: string; code: string }) {
+  const points = await readStore(studyId);
   let found = false;
 
   const next = points.map((point) => {
@@ -202,6 +256,5 @@ export async function deleteCountingSubPoint(input: { pointCode: string; code: s
   });
 
   if (!found) throw new Error("Subpoint not found");
-  await writeStore(next);
-  return sortPoints(next);
+  return writeStore(studyId, next);
 }

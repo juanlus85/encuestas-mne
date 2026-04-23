@@ -257,9 +257,9 @@ function AdminHome() {
   const { data: encuestadores } = trpc.users.encuestadores.useQuery();
   const { data: appSettings } = trpc.appSettings.get.useQuery();
 
-  const TARGET_RESIDENTES = Number(appSettings?.surveyTargetResidents ?? 300);
-  const TARGET_VISITANTES = Number(appSettings?.surveyTargetVisitors ?? 450);
-  const TARGET_TOTAL = Number(appSettings?.surveyTargetTotal ?? 750);
+  const TARGET_RESIDENTES = Number(appSettings?.surveyTargetResidents ?? 0);
+  const TARGET_VISITANTES = Number(appSettings?.surveyTargetVisitors ?? 0);
+  const TARGET_TOTAL = Number(appSettings?.surveyTargetTotal ?? 0);
 
   const residentes = Number(stats?.residentes ?? 0);
   const visitantes = Number(stats?.visitantes ?? 0);

@@ -24,6 +24,7 @@ import {
   getDashboardStats,
   getEncuestadores,
   getFieldMetrics,
+  getUserById,
   getGpsLocations,
   getLatestEncuestadorLocations,
   getIntervalsBySession,
@@ -309,10 +310,23 @@ export const appRouter = router({
           isActive: true,
         });
 
+        const defaultSettings = await getAppSettings();
         await upsertStudySettings({
           studyId: createdStudy.id,
           projectName: createdStudy.name,
           exportProjectName: createdStudy.code,
+          mapPrimaryPointCode: defaultSettings.mapPrimaryPointCode,
+          surveyTargetTotal: defaultSettings.surveyTargetTotal,
+          surveyTargetResidents: defaultSettings.surveyTargetResidents,
+          surveyTargetVisitors: defaultSettings.surveyTargetVisitors,
+          surveyWeeklyTargetTotal: defaultSettings.surveyWeeklyTargetTotal,
+          surveyWeeklyTargetResidents: defaultSettings.surveyWeeklyTargetResidents,
+          surveyWeeklyTargetVisitors: defaultSettings.surveyWeeklyTargetVisitors,
+          quotasEnabled: defaultSettings.quotasEnabled,
+          residentQuotaTotal: defaultSettings.residentQuotaTotal,
+          visitorQuotaTotal: defaultSettings.visitorQuotaTotal,
+          enabledCharts: defaultSettings.enabledCharts,
+          openAiApiKey: defaultSettings.openAiApiKey,
         });
 
         return createdStudy;
@@ -363,8 +377,34 @@ export const appRouter = router({
         if (ctx.user.platformRole !== "supervisor") {
           throw new TRPCError({ code: "FORBIDDEN", message: "Supervisor access required" });
         }
+
+        const user = await getUserById(input.userId);
+        if (!user) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+        }
+
+        const isInterviewerAssignment = input.studyRole === "interviewer" || user.role === "encuestador";
+        if (isInterviewerAssignment) {
+          const memberships = await getUserStudyMemberships(input.userId);
+          await Promise.all(
+            memberships
+              .filter((row) => row.membership.studyRole === "interviewer" && row.membership.studyId !== input.studyId && row.membership.isActive)
+              .map((row) => updateStudyUser(row.membership.id, { isActive: false })),
+          );
+        }
+
+        const existingAssignments = await getStudyUsers(input.studyId);
+        const existingAssignment = [...existingAssignments].reverse().find((row) => row.userId === input.userId);
+        if (existingAssignment) {
+          await updateStudyUser(existingAssignment.id, {
+            studyRole: input.studyRole,
+            isActive: input.isActive,
+          });
+          return { success: true, reassigned: isInterviewerAssignment } as const;
+        }
+
         await createStudyUser(input);
-        return { success: true } as const;
+        return { success: true, reassigned: isInterviewerAssignment } as const;
       }),
 
     updateAssignment: protectedProcedure
@@ -1545,7 +1585,7 @@ export const appRouter = router({
           .groupBy(pedestrianPasses.surveyPointCode);
 
         // Consolidar: inicializar todos los puntos configurados en el proyecto y acumular los reales
-        const configuredPoints = await listCountingPoints();
+        const configuredPoints = await listCountingPoints(ctx.activeStudyId ?? undefined);
         const puntoMap = new Map<string, { code: string; name: string; value: number; registros: number }>();
         for (const p of configuredPoints) {
           puntoMap.set(p.code, { code: p.code, name: p.fullName, value: 0, registros: 0 });
@@ -1847,25 +1887,40 @@ export const appRouter = router({
   }),
 
   countingPoints: router({
-    list: protectedProcedure.query(() => listCountingPoints()),
+    list: protectedProcedure.query(({ ctx }) => listCountingPoints(ctx.activeStudyId ?? undefined)),
 
     createPoint: adminProcedure
       .input(z.object({
         code: z.string().regex(/^\d{2}$/).optional(),
         name: z.string().min(1),
       }))
-      .mutation(({ input }) => createCountingPoint(input)),
+      .mutation(({ input, ctx }) => {
+        if (!ctx.activeStudyId) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Active study required" });
+        }
+        return createCountingPoint(ctx.activeStudyId, input);
+      }),
 
     updatePoint: adminProcedure
       .input(z.object({
         code: z.string().regex(/^\d{2}$/),
         name: z.string().min(1),
       }))
-      .mutation(({ input }) => updateCountingPoint(input)),
+      .mutation(({ input, ctx }) => {
+        if (!ctx.activeStudyId) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Active study required" });
+        }
+        return updateCountingPoint(ctx.activeStudyId, input);
+      }),
 
     deletePoint: adminProcedure
       .input(z.object({ code: z.string().regex(/^\d{2}$/) }))
-      .mutation(({ input }) => deleteCountingPoint(input)),
+      .mutation(({ input, ctx }) => {
+        if (!ctx.activeStudyId) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Active study required" });
+        }
+        return deleteCountingPoint(ctx.activeStudyId, input);
+      }),
 
     createSubPoint: adminProcedure
       .input(z.object({
@@ -1873,7 +1928,12 @@ export const appRouter = router({
         code: z.string().regex(/^\d{2}\.\d{2}$/).optional(),
         name: z.string().min(1),
       }))
-      .mutation(({ input }) => createCountingSubPoint(input)),
+      .mutation(({ input, ctx }) => {
+        if (!ctx.activeStudyId) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Active study required" });
+        }
+        return createCountingSubPoint(ctx.activeStudyId, input);
+      }),
 
     updateSubPoint: adminProcedure
       .input(z.object({
@@ -1881,14 +1941,24 @@ export const appRouter = router({
         code: z.string().regex(/^\d{2}\.\d{2}$/),
         name: z.string().min(1),
       }))
-      .mutation(({ input }) => updateCountingSubPoint(input)),
+      .mutation(({ input, ctx }) => {
+        if (!ctx.activeStudyId) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Active study required" });
+        }
+        return updateCountingSubPoint(ctx.activeStudyId, input);
+      }),
 
     deleteSubPoint: adminProcedure
       .input(z.object({
         pointCode: z.string().regex(/^\d{2}$/),
         code: z.string().regex(/^\d{2}\.\d{2}$/),
       }))
-      .mutation(({ input }) => deleteCountingSubPoint(input)),
+      .mutation(({ input, ctx }) => {
+        if (!ctx.activeStudyId) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Active study required" });
+        }
+        return deleteCountingSubPoint(ctx.activeStudyId, input);
+      }),
   }),
 
   // ─── Pedestrian Directions ────────────────────────────────────────────────────────────────────
