@@ -470,7 +470,7 @@ export const appRouter = router({
     active: studyProcedure.query(async ({ ctx }) => {
       const all = await getActiveSurveyTemplates(ctx.activeStudyId);
       const assigned = (ctx.user as any).surveyTypeAssigned;
-      if (ctx.user && ctx.user.role === "encuestador" && assigned && assigned !== "ambas") {
+      if (ctx.user && ctx.user.role === "encuestador" && assigned && assigned !== "ambos") {
         return all.filter((t) => t.type === assigned);
       }
       return all;
