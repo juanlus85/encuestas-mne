@@ -45,8 +45,6 @@ import { OfflineIndicator } from "./OfflineIndicator";
 
 const supervisorMenuItems = [
   { icon: FolderKanban, label: "Studies", path: "/studies" },
-  { icon: Users, label: "Users", path: "/usuarios" },
-  { icon: Settings, label: "Settings", path: "/configuracion" },
 ];
 
 const adminMenuItems = [

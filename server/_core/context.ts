@@ -1,6 +1,6 @@
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
 import type { User } from "../../drizzle/schema";
-import { getUserStudyMemberships } from "../db";
+import { getStudies, getStudyById, getUserStudyMemberships } from "../db";
 import { sdk } from "./sdk";
 
 export type TrpcContext = {
@@ -32,7 +32,20 @@ export async function createContext(
     );
 
     const memberships = await getUserStudyMemberships(user.id);
-    if (Number.isFinite(explicitStudy) && memberships.some((row) => row.study.id === explicitStudy)) {
+
+    if (user.platformRole === "supervisor") {
+      if (Number.isFinite(explicitStudy)) {
+        const selectedStudy = await getStudyById(explicitStudy);
+        if (selectedStudy) {
+          activeStudyId = selectedStudy.id;
+        }
+      }
+
+      if (!activeStudyId) {
+        const allStudies = await getStudies();
+        activeStudyId = allStudies[0]?.id ?? null;
+      }
+    } else if (Number.isFinite(explicitStudy) && memberships.some((row) => row.study.id === explicitStudy)) {
       activeStudyId = explicitStudy;
     } else if (memberships.length > 0) {
       activeStudyId = memberships[0].study.id;
