@@ -138,11 +138,35 @@ function DashboardLayoutContent({
   const { user, logout } = useAuth();
   const utils = trpc.useUtils();
   const studiesQuery = trpc.studies.list.useQuery(undefined, { enabled: Boolean(user) });
+  const refreshActiveStudyContext = async () => {
+    await Promise.all([
+      utils.auth.me.invalidate(),
+      utils.studies.invalidate(),
+      utils.users.invalidate(),
+      utils.templates.invalidate(),
+      utils.questions.invalidate(),
+      utils.responses.invalidate(),
+      utils.photos.invalidate(),
+      utils.fieldMetrics.invalidate(),
+      utils.dashboard.invalidate(),
+      utils.pedestrian.invalidate(),
+      utils.passes.invalidate(),
+      utils.countingSessions.invalidate(),
+      utils.appSettings.invalidate(),
+      utils.countingPoints.invalidate(),
+      utils.directions.invalidate(),
+      utils.export.invalidate(),
+      utils.exportExtra.invalidate(),
+      utils.shifts.invalidate(),
+      utils.shiftClosures.invalidate(),
+      utils.quotas.invalidate(),
+      studiesQuery.refetch(),
+    ]);
+  };
+
   const setActiveStudyMutation = trpc.studies.setActive.useMutation({
     onSuccess: async () => {
-      await utils.auth.me.invalidate();
-      await utils.studies.current.invalidate();
-      await studiesQuery.refetch();
+      await refreshActiveStudyContext();
     },
   });
   const [location, setLocation] = useLocation();

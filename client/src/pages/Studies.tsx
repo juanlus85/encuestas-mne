@@ -138,9 +138,25 @@ export default function StudiesPage() {
   const refreshStudyData = async () => {
     await Promise.all([
       utils.auth.me.invalidate(),
-      utils.studies.list.invalidate(),
-      utils.studies.current.invalidate(),
-      utils.users.list.invalidate(),
+      utils.studies.invalidate(),
+      utils.users.invalidate(),
+      utils.templates.invalidate(),
+      utils.questions.invalidate(),
+      utils.responses.invalidate(),
+      utils.photos.invalidate(),
+      utils.fieldMetrics.invalidate(),
+      utils.dashboard.invalidate(),
+      utils.pedestrian.invalidate(),
+      utils.passes.invalidate(),
+      utils.countingSessions.invalidate(),
+      utils.appSettings.invalidate(),
+      utils.countingPoints.invalidate(),
+      utils.directions.invalidate(),
+      utils.export.invalidate(),
+      utils.exportExtra.invalidate(),
+      utils.shifts.invalidate(),
+      utils.shiftClosures.invalidate(),
+      utils.quotas.invalidate(),
     ]);
   };
 
