@@ -1044,7 +1044,7 @@ export const appRouter = router({
       .query(async ({ input, ctx }) => {
         const response = await getSurveyResponseById(input.id, ctx.activeStudyId);
         if (!response) throw new TRPCError({ code: "NOT_FOUND" });
-        const responsePhotos = await getPhotosByResponse(input.id);
+        const responsePhotos = await getPhotosByResponse(input.id, ctx.activeStudyId ?? undefined);
         // Parse defensivo: en MySQL estándar (VPS) el campo JSON puede llegar como string
         const rawAnswers = response.answers;
         const parsedAnswers = typeof rawAnswers === "string"
@@ -1109,11 +1109,12 @@ export const appRouter = router({
         dateFrom: z.date().optional(),
         dateTo: z.date().optional(),
       }).optional())
-      .query(({ input }) => getFieldMetrics(input ? {
+      .query(({ input, ctx }) => getFieldMetrics(input ? {
+        studyId: ctx.activeStudyId ?? undefined,
         encuestadorId: input.encuestadorId,
         dateFrom: input.dateFrom ? new Date(input.dateFrom).toLocaleDateString("sv-SE", { timeZone: "Europe/Madrid" }) : undefined,
         dateTo: input.dateTo ? new Date(input.dateTo).toLocaleDateString("sv-SE", { timeZone: "Europe/Madrid" }) : undefined,
-      } : undefined)),
+      } : { studyId: ctx.activeStudyId ?? undefined })),
   }),
 
   // ─── Dashboard ──────────────────────────────────────────────────────────────
@@ -1125,29 +1126,30 @@ export const appRouter = router({
         dateTo: z.date().optional(),
         encuestadorId: z.number().optional(),
       }).optional())
-      .query(({ input }) => getDashboardStats(input)),
+      .query(({ input, ctx }) => getDashboardStats({ ...(input ?? {}), studyId: ctx.activeStudyId ?? undefined })),
 
     byDay: adminOrRevisorProcedure
       .input(z.object({ dateFrom: z.date().optional(), dateTo: z.date().optional() }).optional())
-      .query(({ input }) => getResponsesByDay(input)),
+      .query(({ input, ctx }) => getResponsesByDay({ ...(input ?? {}), studyId: ctx.activeStudyId ?? undefined })),
 
     byEncuestador: adminOrRevisorProcedure
       .input(z.object({ dateFrom: z.date().optional(), dateTo: z.date().optional() }).optional())
-      .query(({ input }) => getResponsesByEncuestador(input)),
+      .query(({ input, ctx }) => getResponsesByEncuestador({ ...(input ?? {}), studyId: ctx.activeStudyId ?? undefined })),
 
     byTimeSlot: adminOrRevisorProcedure
       .input(z.object({ dateFrom: z.date().optional(), dateTo: z.date().optional() }).optional())
-      .query(({ input }) => getResponsesByTimeSlot(input)),
+      .query(({ input, ctx }) => getResponsesByTimeSlot({ ...(input ?? {}), studyId: ctx.activeStudyId ?? undefined })),
 
     byStatus: adminOrRevisorProcedure
       .input(z.object({ dateFrom: z.date().optional(), dateTo: z.date().optional() }).optional())
-      .query(async ({ input }) => {
+      .query(async ({ input, ctx }) => {
         const { getDb } = await import('./db');
         const { surveyResponses } = await import('../drizzle/schema');
-        const { sql, and, gte, lte } = await import('drizzle-orm');
+        const { sql, and, eq, gte, lte } = await import('drizzle-orm');
         const db = await getDb();
         if (!db) return [];
         const conditions = [];
+        if (ctx.activeStudyId) conditions.push(eq(surveyResponses.studyId, ctx.activeStudyId));
         if (input?.dateFrom) conditions.push(gte(surveyResponses.startedAt, input.dateFrom));
         if (input?.dateTo) conditions.push(lte(surveyResponses.startedAt, input.dateTo));
         const rows = await db
@@ -1324,7 +1326,7 @@ export const appRouter = router({
         // Buscar el template de residentes activo y cargar sus preguntas
         const { getDb } = await import('./db');
         const { questions: questionsTable, surveyTemplates: templatesTable } = await import('../drizzle/schema');
-        const { eq: eqOp, like } = await import('drizzle-orm');
+        const { and: andOp, eq: eqOp, like } = await import('drizzle-orm');
         const db = await getDb();
 
         // Mapa: prefijo de texto → questionId (se rellena dinámicamente)
@@ -1332,7 +1334,11 @@ export const appRouter = router({
         if (db) {
           // Buscar templateId de residentes
           const tmplRows = await db.select().from(templatesTable)
-            .where(eqOp(templatesTable.type, 'residentes')).limit(1);
+            .where(
+              ctx.activeStudyId
+                ? andOp(eqOp(templatesTable.type, 'residentes'), eqOp(templatesTable.studyId, ctx.activeStudyId))
+                : eqOp(templatesTable.type, 'residentes')
+            ).limit(1);
           if (tmplRows.length > 0) {
             const tmplId = tmplRows[0].id;
             const qRows = await db.select().from(questionsTable)
@@ -2073,8 +2079,8 @@ export const appRouter = router({
         dateFrom: z.date().optional(),
         dateTo: z.date().optional(),
       }).optional())
-      .query(async ({ input }) => {
-        const rows = await getSurveyResponsesFlat(input);
+      .query(async ({ input, ctx }) => {
+        const rows = await getSurveyResponsesFlat({ ...(input ?? {}), studyId: ctx.activeStudyId ?? undefined });
         // Cabeceras metadatos
         const metaHeaders = [
           "ID", "Tipo", "Punto", "Franja", "Ventana", "MinutoInicio", "MinutoFin",

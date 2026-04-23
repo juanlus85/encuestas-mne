@@ -503,10 +503,12 @@ export async function createPhoto(data: InsertPhoto) {
   await db.insert(photos).values(data);
 }
 
-export async function getPhotosByResponse(responseId: number) {
+export async function getPhotosByResponse(responseId: number, studyId?: number) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(photos).where(eq(photos.responseId, responseId));
+  const conditions = [eq(photos.responseId, responseId)];
+  if (studyId) conditions.push(eq(photos.studyId, studyId));
+  return db.select().from(photos).where(and(...conditions));
 }
 
 // ─── Field Metrics ────────────────────────────────────────────────────────────
@@ -525,10 +527,11 @@ export async function upsertFieldMetric(data: InsertFieldMetric) {
   });
 }
 
-export async function getFieldMetrics(filters?: { encuestadorId?: number; dateFrom?: string; dateTo?: string }) {
+export async function getFieldMetrics(filters?: { studyId?: number; encuestadorId?: number; dateFrom?: string; dateTo?: string }) {
   const db = await getDb();
   if (!db) return [];
   const conditions = [];
+  if (filters?.studyId) conditions.push(eq(fieldMetrics.studyId, filters.studyId));
   if (filters?.encuestadorId) conditions.push(eq(fieldMetrics.encuestadorId, filters.encuestadorId));
   if (filters?.dateFrom) conditions.push(gte(fieldMetrics.date, filters.dateFrom));
   if (filters?.dateTo) conditions.push(lte(fieldMetrics.date, filters.dateTo));
@@ -539,11 +542,12 @@ export async function getFieldMetrics(filters?: { encuestadorId?: number; dateFr
 
 // ─── Dashboard Stats ──────────────────────────────────────────────────────────
 
-export async function getDashboardStats(filters?: { dateFrom?: Date; dateTo?: Date; encuestadorId?: number }) {
+export async function getDashboardStats(filters?: { studyId?: number; dateFrom?: Date; dateTo?: Date; encuestadorId?: number }) {
   const db = await getDb();
   if (!db) return null;
 
   const conditions = [eq(surveyResponses.status, "completa")];
+  if (filters?.studyId) conditions.push(eq(surveyResponses.studyId, filters.studyId));
   if (filters?.encuestadorId) conditions.push(eq(surveyResponses.encuestadorId, filters.encuestadorId));
   if (filters?.dateFrom) conditions.push(gte(surveyResponses.startedAt, filters.dateFrom));
   if (filters?.dateTo) conditions.push(lte(surveyResponses.startedAt, filters.dateTo));
@@ -560,10 +564,11 @@ export async function getDashboardStats(filters?: { dateFrom?: Date; dateTo?: Da
   return totals;
 }
 
-export async function getResponsesByDay(filters?: { dateFrom?: Date; dateTo?: Date }) {
+export async function getResponsesByDay(filters?: { studyId?: number; dateFrom?: Date; dateTo?: Date }) {
   const db = await getDb();
   if (!db) return [];
   const conditions: any[] = [];
+  if (filters?.studyId) conditions.push(eq(surveyResponses.studyId, filters.studyId));
   if (filters?.dateFrom) conditions.push(gte(surveyResponses.startedAt, filters.dateFrom));
   if (filters?.dateTo) conditions.push(lte(surveyResponses.startedAt, filters.dateTo));
 
@@ -582,10 +587,11 @@ export async function getResponsesByDay(filters?: { dateFrom?: Date; dateTo?: Da
   return query;
 }
 
-export async function getResponsesByEncuestador(filters?: { dateFrom?: Date; dateTo?: Date }) {
+export async function getResponsesByEncuestador(filters?: { studyId?: number; dateFrom?: Date; dateTo?: Date }) {
   const db = await getDb();
   if (!db) return [];
   const conditions: any[] = [];
+  if (filters?.studyId) conditions.push(eq(surveyResponses.studyId, filters.studyId));
   if (filters?.dateFrom) conditions.push(gte(surveyResponses.startedAt, filters.dateFrom));
   if (filters?.dateTo) conditions.push(lte(surveyResponses.startedAt, filters.dateTo));
 
@@ -606,10 +612,11 @@ export async function getResponsesByEncuestador(filters?: { dateFrom?: Date; dat
   return query;
 }
 
-export async function getResponsesByTimeSlot(filters?: { dateFrom?: Date; dateTo?: Date }) {
+export async function getResponsesByTimeSlot(filters?: { studyId?: number; dateFrom?: Date; dateTo?: Date }) {
   const db = await getDb();
   if (!db) return [];
   const conditions: any[] = [];
+  if (filters?.studyId) conditions.push(eq(surveyResponses.studyId, filters.studyId));
   if (filters?.dateFrom) conditions.push(gte(surveyResponses.startedAt, filters.dateFrom));
   if (filters?.dateTo) conditions.push(lte(surveyResponses.startedAt, filters.dateTo));
 
@@ -1007,6 +1014,7 @@ export async function getLatestEncuestadorLocations() {
  * Usada para la exportación CSV plana (una fila por encuesta, columna por pregunta).
  */
 export async function getSurveyResponsesFlat(filters?: {
+  studyId?: number;
   encuestadorId?: number;
   surveyType?: string;
   dateFrom?: Date;
@@ -1016,6 +1024,7 @@ export async function getSurveyResponsesFlat(filters?: {
   if (!db) return [];
   const rows = await db.select().from(surveyResponsesFlat).orderBy(surveyResponsesFlat.startedAt);
   return rows.filter((r) => {
+    if (filters?.studyId && r.studyId !== filters.studyId) return false;
     if (filters?.encuestadorId && r.encuestadorId !== filters.encuestadorId) return false;
     if (filters?.surveyType && r.surveyType !== filters.surveyType) return false;
     if (filters?.dateFrom && r.startedAt < filters.dateFrom) return false;
