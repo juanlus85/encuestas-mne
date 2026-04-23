@@ -50,6 +50,7 @@ const supervisorMenuItems = [
 ];
 
 const adminMenuItems = [
+  { icon: FolderKanban, label: "Studies", path: "/studies" },
   { icon: LayoutDashboard, label: "Home", path: "/" },
   { icon: BarChart3, label: "Statistics", path: "/estadisticas" },
   { icon: Map, label: "Field Map", path: "/mapa" },
@@ -64,6 +65,7 @@ const adminMenuItems = [
 ];
 
 const revisorMenuItems = [
+  { icon: FolderKanban, label: "Studies", path: "/studies" },
   { icon: LayoutDashboard, label: "Home", path: "/" },
   { icon: BarChart3, label: "Statistics", path: "/estadisticas" },
   { icon: Map, label: "Field Map", path: "/mapa" },
@@ -75,6 +77,7 @@ const revisorMenuItems = [
 ];
 
 const encuestadorMenuItems = [
+  { icon: FolderKanban, label: "Studies", path: "/studies" },
   { icon: LayoutDashboard, label: "Home", path: "/" },
   { icon: ClipboardList, label: "New Survey", path: "/encuesta" },
   { icon: PersonStanding, label: "Pedestrian Counting", path: "/conteo" },

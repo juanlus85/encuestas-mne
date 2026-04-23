@@ -168,7 +168,27 @@ export async function updateStudy(id: number, data: Partial<InsertStudy>) {
 export async function getStudyUsers(studyId: number) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(studyUsers).where(eq(studyUsers.studyId, studyId)).orderBy(studyUsers.id);
+  return db.select({
+    id: studyUsers.id,
+    studyId: studyUsers.studyId,
+    userId: studyUsers.userId,
+    studyRole: studyUsers.studyRole,
+    isActive: studyUsers.isActive,
+    assignmentNotes: studyUsers.assignmentNotes,
+    createdAt: studyUsers.createdAt,
+    updatedAt: studyUsers.updatedAt,
+    userName: users.name,
+    userEmail: users.email,
+    userIdentifier: users.identifier,
+    username: users.username,
+    userRole: users.role,
+    userPlatformRole: users.platformRole,
+    isUserActive: users.isActive,
+  })
+    .from(studyUsers)
+    .innerJoin(users, eq(studyUsers.userId, users.id))
+    .where(eq(studyUsers.studyId, studyId))
+    .orderBy(studyUsers.id);
 }
 
 export async function getUserStudyMemberships(userId: number) {
@@ -180,7 +200,7 @@ export async function getUserStudyMemberships(userId: number) {
   })
     .from(studyUsers)
     .innerJoin(studies, eq(studyUsers.studyId, studies.id))
-    .where(eq(studyUsers.userId, userId))
+    .where(and(eq(studyUsers.userId, userId), eq(studyUsers.isActive, true)))
     .orderBy(studies.name);
 }
 

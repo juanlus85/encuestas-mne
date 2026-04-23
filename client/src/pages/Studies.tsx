@@ -63,6 +63,24 @@ function StudyStatusBadge({ status }: { status?: string | null }) {
   );
 }
 
+function getUserDisplayName(user: any) {
+  return user?.userName
+    || user?.name
+    || user?.username
+    || user?.email
+    || user?.userIdentifier
+    || user?.identifier
+    || `User ${user?.userId ?? user?.id}`;
+}
+
+function getUserSecondaryLabel(user: any) {
+  return user?.userIdentifier
+    || user?.identifier
+    || user?.email
+    || user?.username
+    || "No identifier";
+}
+
 export default function StudiesPage() {
   const { user } = useAuth({ redirectOnUnauthenticated: true });
   const [, setLocation] = useLocation();
@@ -526,7 +544,7 @@ export default function StudiesPage() {
                                 <option value="">Select a user</option>
                                 {availableUsers.map((candidate: any) => (
                                   <option key={candidate.id} value={candidate.id}>
-                                    {candidate.name || `User ${candidate.id}`} {candidate.identifier ? `· ${candidate.identifier}` : ""}
+                                    {getUserDisplayName(candidate)} {getUserSecondaryLabel(candidate) !== getUserDisplayName(candidate) ? `· ${getUserSecondaryLabel(candidate)}` : ""}
                                   </option>
                                 ))}
                               </select>
@@ -570,9 +588,9 @@ export default function StudiesPage() {
                                 <div key={membership.id} className="rounded-lg border p-4">
                                   <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                                     <div>
-                                      <p className="text-sm font-medium">{membership.userName || `User ${membership.userId}`}</p>
+                                      <p className="text-sm font-medium">{getUserDisplayName(membership)}</p>
                                       <p className="text-xs text-muted-foreground">
-                                        {membership.userIdentifier || "No identifier"}
+                                        {getUserSecondaryLabel(membership)}
                                         {membership.userRole ? ` · Base role: ${membership.userRole}` : ""}
                                       </p>
                                     </div>
